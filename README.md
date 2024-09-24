@@ -25,7 +25,7 @@ Camunda `pyzeebe` library which we use to deploy the extracted models to a Zeebe
 To build the Docker image, run the following command:
 
 ```shell
-docker build -t camunda-extract-deploy .
+docker build -t bp3global/wm-extract-deploy .
 ```
 
 # Running the Docker container
@@ -47,7 +47,7 @@ docker run -it --rm \
     -e CICD_SERVER_HOST="<The host of the GIT server. Only needed if using GitLab>" \
     -e CICD_ACCESS_TOKEN="<CI platform access token>" \
     -e CICD_REPOSITORY_PATH="<The path of the repository>" \
-        camunda-extract-deploy extract
+        bp3global/wm-extract-deploy:latest extract
 ```
 
 ## Tag
@@ -61,7 +61,7 @@ docker run -it --rm \
     -e CICD_ACCESS_TOKEN="<CI platform access token>" \
     -e CICD_REPOSITORY_PATH="<The path of the repository>" \
     -e PROJECT_TAG="<The tag to create>" \
-        camunda-extract-deploy tag
+        bp3global/wm-extract-deploy:latest tag
 ```
 
 # Deploy
@@ -75,7 +75,7 @@ docker run -it --rm \
     -e CAMUNDA_CLUSTER_ID="<Zeebe cluster Id>" \
     -e CAMUNDA_CLUSTER_REGION="<Zeebe region>" \
     -e PROJECT_TAG="<The tag of the resources to deploy>"
-        camunda-extract-deploy deploy
+        bp3global/wm-extract-deploy:latest deploy
 ```
 
 # Suppported Environment Variables
