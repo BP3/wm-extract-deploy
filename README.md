@@ -39,42 +39,59 @@ To extract process models from Web Modeler project and commit to a local `git` r
 ```shell
 docker run -it --rm \
     --mount type=bind,src=${PWD},dst=/local --workdir /local \
-    -e CAMUNDA_WM_CLIENT_ID="<Client Id>" \
-    -e CAMUNDA_WM_CLIENT_SECRET="<Client secret>" \
-    -e CAMUNDA_WM_PROJECT="<The WM project to extract from>" \
-    -e GIT_USERNAME="<Git Username>" \
-    -e GIT_USER_EMAIL="<Git Email address>" \
-    -e SKIP_CI="<Indicate (\"true\" | \"false\") if you want to run any pipelines or not on the commit>" \
-    -e CICD_PLATFORM="Indicate which SCM platform is being used, such as \"gitlab\", \"github\" or \"bitbucket\"" \
-    -e CICD_SERVER_HOST="<The host of the GIT server. Only needed if using GitLab>" \
-    -e CICD_ACCESS_TOKEN="<CI platform access token>" \
-    -e CICD_REPOSITORY_PATH="<The path of the repository>" \
-        bp3global/wm-extract-deploy extract
+      -e CAMUNDA_WM_CLIENT_ID="<Client Id>" \
+      -e CAMUNDA_WM_CLIENT_SECRET="<Client secret>" \
+      -e CAMUNDA_WM_PROJECT="<The WM project to extract from>" \
+      -e GIT_USERNAME="<Git Username>" \
+      -e GIT_USER_EMAIL="<Git Email address>" \
+      -e SKIP_CI="<Indicate (\"true\" | \"false\") if you want to run any pipelines or not on the commit>" \
+      -e CICD_PLATFORM="Indicate which SCM platform is being used, such as \"gitlab\", \"github\" or \"bitbucket\"" \
+      -e CICD_SERVER_HOST="<The host of the GIT server. Only needed if using GitLab>" \
+      -e CICD_ACCESS_TOKEN="<CI platform access token>" \
+      -e CICD_REPOSITORY_PATH="<The path of the repository>" \
+          bp3global/wm-extract-deploy extract
 ```
 # Deploy
 This will deploy the tagged commit to the target Zeebe cluster:
 
+For SaaS deployments:
 ```shell
 docker run -it --rm \
     --mount type=bind,src=${PWD},dst=/local --workdir /local \
-    -e ZEEBE_CLIENT_ID="<Zeebe client Id>" \
-    -e ZEEBE_CLIENT_SECRET="<Zeebe client secret>" \
-    -e CAMUNDA_CLUSTER_ID="<Zeebe cluster Id>" \
-    -e CAMUNDA_CLUSTER_REGION="<Zeebe region>" \
-    -e PROJECT_TAG="<The tag of the resources to deploy>"
-        bp3global/wm-extract-deploy deploy
+      -e ZEEBE_CLIENT_ID="<Zeebe client Id>" \
+      -e ZEEBE_CLIENT_SECRET="<Zeebe client secret>" \
+      -e CAMUNDA_CLUSTER_ID="<Zeebe cluster Id>" \
+      -e CAMUNDA_CLUSTER_REGION="<Zeebe region>" \
+      -e PROJECT_TAG="<The tag of the resources to deploy>"
+          bp3global/wm-extract-deploy deploy
 ```
 
-# Suppported Environment Variables
+For Self Managed deployments:
+```shell
+docker run -it --rm \
+    --mount type=bind,src=${PWD},dst=/local --workdir /local \
+      -e ZEEBE_CLIENT_ID="<Zeebe client Id>" \
+      -e ZEEBE_CLIENT_SECRET="<Zeebe client secret>" \
+      -e CAMUNDA_CLUSTER_HOST="<Zeebe gateway hostname>" \
+      -e CAMUNDA_CLUSTER_PORT="<Zeebe gateway port>" \
+      -e PROJECT_TAG="<The tag of the resources to deploy>"
+          bp3global/wm-extract-deploy deploy
+```
+
+# Supported Environment Variables
 
 | EnvVar                   | Description                                                                                                    | Optional?                                                                                                                       |
 |--------------------------|----------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| CAMUNDA_CLUSTER_HOST     | The hostname or IP of the Camunda cluster gateway                                                              | Required for "deploy" operation in Self managed environments                                                                    |
+| CAMUNDA_CLUSTER_ID       | The Id of the Camunda SaaS cluster                                                                             | Required for "deploy" operation in SaaS environments                                                                            |
+| CAMUNDA_CLUSTER_PORT     | The port number of the Camunda cluster gateway                                                                 | Required for "deploy" operation in Self managed environments                                                                    |
+| CAMUNDA_CLUSTER_REGION   | The region code the cluster is running in                                                                      | Required for "deploy" operation in SaaS environments                                                                            |
+| CAMUNDA_WM_AUTH          | The Authentication Host for Self-Managed (if not the same as CAMUNDA_WM_HOST)                                  | Optional (default = `CAMUNDA_WM_HOST`)                                                                                          |
 | CAMUNDA_WM_CLIENT_ID     | The client Id of the Web Modeler client credentials                                                            | Required for "extract" operation                                                                                                |
 | CAMUNDA_WM_CLIENT_SECRET | The client secret of the Web Modeler client credentials                                                        | Required for "extract" operation                                                                                                |
 | CAMUNDA_WM_HOST          | The hostname of the Web Modeler installation                                                                   | Optional (default = `cloud.camunda.io`)                                                                                         |
 | CAMUNDA_WM_PROJECT       | The name given to the Web Modeler Project that is to be extracted                                              | Optional for "extract" operation. If not provided then the project Id from `wm-project-id` file in the repository will be used) |
-| CAMUNDA_CLUSTER_ID       | The Id of the Camunda SaaS cluster                                                                             | Required for "deploy" operation                                                                                                 |
-| CAMUNDA_CLUSTER_REGION   | The region code the cluster is running in                                                                      | Required for "deploy" operation                                                                                                 |
+| CAMUNDA_WM_SSL           | Whether to use an SSL connection or not                                                                        | Optional (default = `true`)                                                                                                     |
 | COMMIT_MSG               | The message applied to the extract commit                                                                      | Optional (default = `Updated by Camunda extract-deploy pipeline`)                                                               |
 | GIT_EMAIL                | The Git email address used for committing extracted Web Modeler files                                          | Required for "extract" operation                                                                                                |
 | GIT_USERNAME             | The Git user name used for committing extracted Web Modeler files                                              | Required for "extract" operation                                                                                                |
@@ -85,6 +102,7 @@ docker run -it --rm \
 | CICD_SERVER_HOST         | The GitLab server host                                                                                         | Optional for "extract" operation. For on-premise GitLab, otherwise defaults to "gitlab.com"                                     |
 | PROJECT_TAG              | The label given to the tags created and also the tag that is checked out and deploy                            | Required for "deploy" operation                                                                                                 |
 | SKIP_CI                  | Indicates if upon commit, we do or do not want any pipelines to be executed. The options are "true" or "false" | Required for "extract" operation                                                                                                |
+| WM_PROJECT_METADATA_FILE | The name of the web modeller project configuration file                                                        | Optional for "extract" operation (default = `config.yml` for saving, `config.yml/yaml/json` for reading)                        |
 | ZEEBE_CLIENT_ID          | The client Id of the Zeebe client credentials                                                                  | Required for "deploy" operation                                                                                                 |
 | ZEEBE_CLIENT_SECRET      | The client secret of the Zeebe client credentials                                                              | Required for "deploy" operation                                                                                                 |
 
