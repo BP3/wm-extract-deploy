@@ -16,17 +16,20 @@ been defined at the group level and so are simply re-used as shown.
 
 ![GitLab CI/CD environment variable configuration](images/gl-cicd-env-vars.png)
 
-## Scenario 1: SaaS
+## Pre-requisites
+The following items are needed to run the extraction:
 
-* SaaS Web Modeler with a project called `xxyyzz`
-* GitLab repo `repo-name`
-   * Repo has a file `config.json` in the root directory that contains at least the Id of the WM project
+* Web Modeler with a project:
+  * Make a note of the name and UUID of the project, where the UUID can be extracted from the URL of the Web Modeller project, e.g. `aaaa-bbbb-cccc-dddd-eeee` from https://modeler.camunda.io/projects/aaaa-bbbb-cccc-dddd-eeee--my-project
+* A GitLab repository:
+  * Make a note of its full path, for example `/mygroup/myrepository`
+  * Repository has a file called `config.json` in the root directory, that contains at least the Id of the WM project, e.g.:
 
 ```json
 {
   "project": {
-    "id": "<UUID>",
-    "name": "xxyyzz"
+    "id": "aaaa-bbbb-cccc-dddd-eeee",
+    "name": "My Project"
   }
 }
 ```
