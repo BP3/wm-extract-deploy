@@ -36,12 +36,15 @@ The container can be run in the following modes, as described below:
 ## Extract
 To extract process models from Web Modeler project and commit to a local `git` repository:
 
+For SaaS environments:
 ```shell
 docker run -it --rm \
     --mount type=bind,src=${PWD},dst=/local --workdir /local \
       -e CAMUNDA_WM_CLIENT_ID="<Client Id>" \
       -e CAMUNDA_WM_CLIENT_SECRET="<Client secret>" \
       -e CAMUNDA_WM_PROJECT="<The WM project to extract from>" \
+      -e CAMUNDA_WM_HOST="<Web Modeller hostname>" \
+      -e CAMUNDA_WM_AUTH="<Keycloak hostname, if different to the WM_HOST>" \
       -e GIT_USERNAME="<Git Username>" \
       -e GIT_USER_EMAIL="<Git Email address>" \
       -e SKIP_CI="<Indicate (\"true\" | \"false\") if you want to run any pipelines or not on the commit>" \
@@ -51,6 +54,26 @@ docker run -it --rm \
       -e CICD_REPOSITORY_PATH="<The path of the repository>" \
           bp3global/wm-extract-deploy extract
 ```
+
+For Self managed environments:
+```shell
+docker run -it --rm \
+    --mount type=bind,src=${PWD},dst=/local --workdir /local \
+      -e CAMUNDA_WM_CLIENT_ID="<Client Id>" \
+      -e CAMUNDA_WM_CLIENT_SECRET="<Client secret>" \
+      -e CAMUNDA_WM_PROJECT="<The WM project to extract from>" \
+      -e CAMUNDA_WM_HOST="<Web Modeller hostname>" \
+      -e CAMUNDA_WM_AUTH="<Keycloak hostname, if different to the WM_HOST>" \
+      -e GIT_USERNAME="<Git Username>" \
+      -e GIT_USER_EMAIL="<Git Email address>" \
+      -e SKIP_CI="<Indicate (\"true\" | \"false\") if you want to run any pipelines or not on the commit>" \
+      -e CICD_PLATFORM="Indicate which SCM platform is being used, such as \"gitlab\", \"github\" or \"bitbucket\"" \
+      -e CICD_SERVER_HOST="<The host of the GIT server. Only needed if using GitLab>" \
+      -e CICD_ACCESS_TOKEN="<CI platform access token>" \
+      -e CICD_REPOSITORY_PATH="<The path of the repository>" \
+          bp3global/wm-extract-deploy extract
+```
+
 # Deploy
 This will deploy the tagged commit to the target Zeebe cluster:
 
@@ -140,3 +163,43 @@ Task was destroyed but it is pending!
 task: <Task pending name='Task-2' coro=<UnaryUnaryCall._invoke() running at /usr/local/lib/python3.12/site-packages/grpc/aio/_call.py:577>>
 sys:1: RuntimeWarning: coroutine 'UnaryUnaryCall._invoke' was never awaited
 ```
+
+# Using a local Zebee docker stack for development
+If you are running the extract/deploy app on the same host as the Zebee docker stack (i.e. on a developer's computer) you need to make some changes to the Docker compose file for the Zeebe stack in order for the authentication to work between the local containers.
+
+In the directory with the Camunda 8 docker-compose file you should edit the `.env` file and change the `HOST` variable from `localhost` to your hosts IP address.
+
+The Web modeller docker compose does not use these environment variables, so we need to update them individually. Open the `docker-compose-web-modeler.yaml` file in your text editor of choice and update the following environment variable lines, replacing `localhost` in the URLs with `${HOST}` while leaving the port number intact:
+
+- RESTAPI_OAUTH2_TOKEN_ISSUER
+- RESTAPI_SERVER_URL
+- SERVER_URL
+- OAUTH2_TOKEN_ISSUER
+
+Save the changes and then create the docker container as usual. You will need to use your IP address rather than localhost when accessing any of the exposed services (i.e. Operate, Web Modeler etc.) but otherwise they should function as normal.
+
+You now need to create a client app and secret for the extract-deploy app to use for accessing the web modeller.
+1. Open Identity in your browser (`https://<your IP address>:8084`) and log in.
+2. Click `Add Application`, enter a name (this will be the Client ID), and select the `M2M` radio button, then click `Add`.
+3. Click on the new Application you created and make a note of the Client secret as you will need this for the extract script.
+4. Open the `Access to APIs` tab, click the `Assign Permissions` button and then select `Web Modeler API` from the dropdown. Select the read permissions checkbox and then click the `Add` button.
+
+# Using a local Zebee docker stack for development
+If you are running the extract/deploy app on the same host as the Zebee docker stack (i.e. on a developer's computer) you need to make some changes to the Docker compose file for the Zeebe stack in order for the authentication to work between the local containers.
+
+In the directory with the Camunda 8 docker-compose file you should edit the `.env` file and change the `HOST` variable from `localhost` to your hosts IP address.
+
+The Web modeller docker compose does not use these environment variables, so we need to update them individually. Open the `docker-compose-web-modeler.yaml` file in your text editor of choice and update the following environment variable lines, replacing `localhost` in the URLs with `${HOST}` while leaving the port number intact:
+
+- RESTAPI_OAUTH2_TOKEN_ISSUER
+- RESTAPI_SERVER_URL
+- SERVER_URL
+- OAUTH2_TOKEN_ISSUER
+
+Save the changes and then create the docker container as usual. You will need to use your IP address rather than localhost when accessing any of the exposed services (i.e. Operate, Web Modeler etc.) but otherwise they should function as normal.
+
+You now need to create a client app and secret for the extract-deploy app to use for accessing the web modeller.
+1. Open Identity in your browser (`https://<your IP address>:8084`) and log in.
+2. Click `Add Application`, enter a name (this will be the Client ID), and select the `M2M` radio button, then click `Add`.
+3. Click on the new Application you created and make a note of the Client secret as you will need this for the extract script.
+4. Open the `Access to APIs` tab, click the `Assign Permissions` button and then select `Web Modeler API` from the dropdown. Select the read permissions checkbox and then click the `Add` button.
