@@ -5,7 +5,8 @@ This page shows an example GitLab pipeline `gitlab-ci.yml` file that can be used
 2. Self-Managed: Web Modeler and Zeebe Cluster
 3. docker-compose: Web Modeler and Zeebe Cluster
 
-The example `gitlab-ci.yml` file in this page is for SaaS, but the exact same structure can be used for Self-Managed and Docker Compose installs, adjusting the environment variables to suit as detailed in [README.md](./README.md#supported-environment-variables).
+The example `gitlab-ci.yml` file in this page is for SaaS, but the exact same structure can be used for Self-Managed and Docker Compose installs, 
+adjusting the environment variables to suit as detailed in [README.md](./README.md#supported-environment-variables).
 
 ## Variables
 It is best practice is to have many of the environment variables that are required, pre-defined.
@@ -31,7 +32,9 @@ been defined at the group level and so are simply re-used as shown.
 ```
 
 ## `gitlab-ci.yml`
-Below is an example on how the Docker image could be used when defining the pipeline configuration. It shows two stages, 'extract' and 'deploy', that are executed based on the state of the `MODE` and `DEPLOY_TAG` environment variables.
+Below is an example on how the Docker image could be used when defining the pipeline configuration. It shows two custom pipelines, `extract` and `deploy`, that can be executed using the Bit Bucket pipeline runner.
+
+The `deploy` pipeline will prompt for the `DEPLOY_TAG` value, that will be used to check out the resources from to deploy to Zeebe.
 
 ```yaml
 pipelines:
