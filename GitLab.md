@@ -5,8 +5,8 @@ This page shows an example GitLab pipeline `gitlab-ci.yml` file that can be used
 2. Self-Managed: Web Modeler and Zeebe Cluster
 3. docker-compose: Web Modeler and Zeebe Cluster
 
-The example `gitlab-ci.yml` file in this page is for SaaS, but the exact same structure can be used for Self-Managed and Docker Compose installs, 
-adjusting the environment variables to suit as detailed in [README.md](./README.md#supported-environment-variables).
+The example `gitlab-ci.yml` file in this page is for SaaS, Self-Managed and Docker Compose, but follows the same structure, 
+with adjustments to the environment variables to suit as detailed in [README.md](./README.md#supported-environment-variables).
 
 ## Variables
 It is best practice is to have many of the environment variables that are required, pre-defined.
@@ -67,7 +67,8 @@ extract-artifacts-from-modeler:
   script:
     /scripts/extractDeploy.sh extract
 
-deploy-modeler-artifacts-to-zeebe:
+# Example of deploying to a SaaS cluster
+deploy-modeler-artifacts-to-saas-zeebe:
   stage: deploy
   rules:
     - if: $MODE == "deploy" && $DEPLOY_TAG != null && $DEPLOY_TAG != ""
@@ -77,6 +78,21 @@ deploy-modeler-artifacts-to-zeebe:
     ZEEBE_CLIENT_SECRET: $CAMUNDA_ZEEBE_CLIENT_SECRET
     CAMUNDA_CLUSTER_ID: $CAMUNDA_ZEEBE_CLUSTER_ID
     CAMUNDA_CLUSTER_REGION: $CAMUNDA_CLUSTER_REGION
+    PROJECT_TAG: $DEPLOY_TAG
+  script:
+    /scripts/extractDeploy.sh deploy
+
+# Example of deploying to a Self-Managed or Docker Compose cluster
+deploy-modeler-artifacts-to-sm-dc-zeebe:
+  stage: deploy
+  rules:
+    - if: $MODE == "deploy" && $DEPLOY_TAG != null && $DEPLOY_TAG != ""
+      when: always
+  variables:
+    ZEEBE_CLIENT_ID: $CAMUNDA_ZEEBE_CLIENT_ID
+    ZEEBE_CLIENT_SECRET: $CAMUNDA_ZEEBE_CLIENT_SECRET
+    CAMUNDA_CLUSTER_HOST: $CAMUNDA_CLUSTER_HOST # This differs from SaaS
+    CAMUNDA_CLUSTER_PORT: $CAMUNDA_CLUSTER_PORT # This differs from SaaS
     PROJECT_TAG: $DEPLOY_TAG
   script:
     /scripts/extractDeploy.sh deploy
