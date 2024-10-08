@@ -167,6 +167,7 @@ class Extraction:
                 needsConfigFile = True
             elif self.configFile == "wm-project-id":
                 needsConfigFile = True
+                self.configFile = "config.yml"
 
         # If we failed to find the configured project, or there was no config supplied then try looking it up by
         # the projectRef we were given
