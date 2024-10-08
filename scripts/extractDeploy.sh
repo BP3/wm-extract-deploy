@@ -19,6 +19,20 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
+# If the mode has not been passed in as a service parameter, then see if it has been set as an environment variable
+# If it is set as an environment variable, passing in as a service parameter will take precedence anyway
+if [ $mode_extract == 0 ] && [ $mode_deploy == 0 ]; then
+  if [ "$MODE" == "extract" ]; then
+    mode_extract=1
+  elif [ "$MODE" == "deploy" ]; then
+    mode_deploy=1
+  # If we get to here, then it has not been set by either method
+  else
+    echo "The MODE env var or service parameter has not been set to 'extract' or 'deploy'"
+    exit 1
+  fi
+fi
+
 if [ $mode_extract == 1 ]; then
   echo "mode = 'extract'"
 #  checkRequiredEnvVar CAMUNDA_WM_CLIENT_ID          "$CAMUNDA_WM_CLIENT_ID"
