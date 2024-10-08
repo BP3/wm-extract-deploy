@@ -32,49 +32,49 @@ been defined at the group level and so are simply re-used as shown.
 ```
 
 ## `gitlab-ci.yml`
-Below is an example on how the Docker image could be used when defining the pipeline configuration. It shows two custom pipelines, `extract` and `deploy`, that can be executed using the Bit Bucket pipeline runner.
-
-The `deploy` pipeline will prompt for the `DEPLOY_TAG` value, that will be used to check out the resources from to deploy to Zeebe.
+Below is an example on how the Docker image could be used when defining the pipeline configuration. It shows two stages, 'extract' and 'deploy', that are executed based on the state of the `MODE` and `DEPLOY_TAG` environment variables.
 
 ```yaml
-pipelines:
-  custom:
-    extract:
-      - step:
-          image: bp3global/wm-extract-deploy
-          name: Extract Artifacts from Web Modeler
-          services:
-            - docker
-          script:
-            - |
-              export CICD_PLATFORM="bitbucket"
-              export CICD_SERVER_HOST="bitbucket.org"
-              export CICD_ACCESS_TOKEN=$BUILD_ACCOUNT_ACCESS_TOKEN
-              export CICD_REPOSITORY_PATH=$BITBUCKET_REPO_FULL_NAME
-              export CICD_BRANCH=$BITBUCKET_BRANCH
-              export CAMUNDA_WM_CLIENT_ID=$CAMUNDA_WM_CLIENT_ID
-              export CAMUNDA_WM_CLIENT_SECRET=$CAMUNDA_WM_CLIENT_SECRET
-              export CAMUNDA_WM_PROJECT=$CAMUNDA_WM_PROJECT
-              export CAMUNDA_CLUSTER_ID=$CAMUNDA_CLUSTER_ID
-              export CAMUNDA_CLUSTER_REGION=$CAMUNDA_CLUSTER_REGION
-              export GIT_USERNAME=$BUILD_ACCOUNT_USER
-              export GIT_USER_EMAIL=$BUILD_ACCOUNT_EMAIL
-              export SKIP_CI="true"
-              /scripts/extractDeploy.sh extract
-    deploy:
-      - variables:
-          - name: DEPLOY_TAG
-      - step:
-          image: bp3global/wm-extract-deploy
-          name: Deploy Web Modeler Artifacts to Zeebe
-          services:
-            - docker
-          script:
-            - |
-              export ZEEBE_CLIENT_ID=$CAMUNDA_ZEEBE_CLIENT_ID
-              export ZEEBE_CLIENT_SECRET=$CAMUNDA_ZEEBE_CLIENT_SECRET
-              export CAMUNDA_CLUSTER_ID=$CAMUNDA_CLUSTER_ID
-              export CAMUNDA_CLUSTER_REGION=$CAMUNDA_CLUSTER_REGION
-              export PROJECT_TAG=$DEPLOY_TAG
-              /scripts/extractDeploy.sh deploy
+image: bp3global/wm-extract-deploy
+
+variables:
+  CICD_PLATFORM: gitlab
+  CICD_SERVER_HOST: $CI_SERVER_HOST
+  CICD_ACCESS_TOKEN: $BUILD_ACCOUNT_ACCESS_TOKEN
+  CICD_REPOSITORY_PATH: $CI_PROJECT_PATH
+
+stages:
+  - extract
+  - deploy
+
+extract-artifacts-from-modeler:
+  stage: extract
+  rules:
+    - if: $MODE == "extract"
+      when: always
+  variables:
+    CAMUNDA_WM_CLIENT_ID: $CAMUNDA_WM_CLIENT_ID
+    CAMUNDA_WM_CLIENT_SECRET: $CAMUNDA_WM_CLIENT_SECRET
+    CAMUNDA_WM_PROJECT: $CAMUNDA_WM_PROJECT
+    CAMUNDA_CLUSTER_ID: $CAMUNDA_CLUSTER_ID
+    CAMUNDA_CLUSTER_REGION: $CAMUNDA_CLUSTER_REGION
+    GIT_USERNAME: $BUILD_ACCOUNT_USER
+    GIT_USER_EMAIL: $BUILD_ACCOUNT_EMAIL
+    SKIP_CI: true
+  script:
+    /scripts/extractDeploy.sh extract
+
+deploy-modeler-artifacts-to-zeebe:
+  stage: deploy
+  rules:
+    - if: $MODE == "deploy" && $DEPLOY_TAG != null && $DEPLOY_TAG != ""
+      when: always
+  variables:
+    ZEEBE_CLIENT_ID: $CAMUNDA_ZEEBE_CLIENT_ID
+    ZEEBE_CLIENT_SECRET: $CAMUNDA_ZEEBE_CLIENT_SECRET
+    CAMUNDA_CLUSTER_ID: $CAMUNDA_ZEEBE_CLUSTER_ID
+    CAMUNDA_CLUSTER_REGION: $CAMUNDA_CLUSTER_REGION
+    PROJECT_TAG: $DEPLOY_TAG
+  script:
+    /scripts/extractDeploy.sh deploy
 ```
