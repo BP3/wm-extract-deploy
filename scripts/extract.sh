@@ -28,14 +28,18 @@ if [ "$CICD_BRANCH" = "" ]; then
   CICD_BRANCH=main
 fi
 echo "Checkout branch: $CICD_BRANCH"
-git checkout $CICD_BRANCH
+git checkout -B $CICD_BRANCH
+# Delete BPM artifacts to propagate deletions from Web Modeller
+git rm --ignore-unmatch $MODEL_PATH/*.bpmn
+git rm --ignore-unmatch $MODEL_PATH/*.dmn
+git rm --ignore-unmatch $MODEL_PATH/*.form
 
 python $SCRIPT_DIR/extract.py
 
 git add *.bpmn
 git add *.dmn
 git add *.form
-git add wm-project-id     # could change in the future
+git add config.*
 git status
 
 # [skip ci] works across all the supported platforms
@@ -48,7 +52,4 @@ fi
 
 git commit -m "${COMMIT_MSG}"
 
-# If this is a new branch then this might not work in this form
-# c.f. git push origin <new-branch>
-# Probably needs some testing with branches
-git push "$(getUrl "$CICD_PLATFORM" "$CICD_SERVER_HOST" "$CICD_ACCESS_TOKEN" "$CICD_REPOSITORY_PATH")"
+git push "$(getUrl "$CICD_PLATFORM" "$CICD_SERVER_HOST" "$CICD_ACCESS_TOKEN" "$CICD_REPOSITORY_PATH")" $CICD_BRANCH
