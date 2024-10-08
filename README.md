@@ -187,7 +187,7 @@ You now need to create a client app and secret for the extract-deploy app to use
 # Using a local Zebee docker stack for development
 If you are running the extract/deploy app on the same host as the Zebee docker stack (i.e. on a developer's computer) you need to make some changes to the Docker compose file for the Zeebe stack in order for the authentication to work between the local containers.
 
-In the directory with the Camunda 8 docker-compose file you should edit the `.env` file and change the `HOST` variable from `localhost` to your hosts IP address.
+Assuming that you are using the docker compose files from [this repo](https://github.com/camunda/camunda-platform); In the directory with the Camunda 8 docker-compose file you should edit the `.env` file and change the `HOST` variable from `localhost` to your hosts IP address.
 
 The Web modeller docker compose does not use these environment variables, so we need to update them individually. Open the `docker-compose-web-modeler.yaml` file in your text editor of choice and update the following environment variable lines, replacing `localhost` in the URLs with `${HOST}` while leaving the port number intact:
 
