@@ -100,3 +100,88 @@ pipelines:
               export PROJECT_TAG=$DEPLOY_TAG
               /scripts/extractDeploy.sh deploy
 ```
+
+## Sharing Pipelines
+Or even better define these pipelines for the entire workspace
+
+* Create a repo called `camunda-pipelines`
+  * Add file `bitbucket-pipelines.yml` as below
+* Import these as required - see further below (see [Share pipelines configurations](https://support.atlassian.com/bitbucket-cloud/docs/share-pipelines-configurations/]))
+
+```yaml
+export: true
+
+definitions:
+  pipelines:
+    extract:
+      - step:
+          image: bp3global/wm-extract-deploy
+          name: Extract Artifacts from Web Modeler
+          services:
+            - docker
+          script:
+            - |
+              export CICD_PLATFORM="bitbucket"
+              export CICD_SERVER_HOST="bitbucket.org"
+              export CICD_ACCESS_TOKEN=$BUILD_ACCOUNT_ACCESS_TOKEN
+              export CICD_REPOSITORY_PATH=$BITBUCKET_REPO_FULL_NAME
+              export CICD_BRANCH=$BITBUCKET_BRANCH
+              export CAMUNDA_WM_CLIENT_ID=$CAMUNDA_WM_CLIENT_ID
+              export CAMUNDA_WM_CLIENT_SECRET=$CAMUNDA_WM_CLIENT_SECRET
+              export CAMUNDA_WM_PROJECT=$CAMUNDA_WM_PROJECT
+              export CAMUNDA_CLUSTER_ID=$CAMUNDA_CLUSTER_ID
+              export CAMUNDA_CLUSTER_REGION=$CAMUNDA_CLUSTER_REGION
+              export GIT_USERNAME=$BUILD_ACCOUNT_USER
+              export GIT_USER_EMAIL=$BUILD_ACCOUNT_EMAIL
+              export SKIP_CI="true"
+              /scripts/extractDeploy.sh extract
+    deploy-saas:
+      - variables:
+          - name: DEPLOY_TAG
+      - step:
+          image: bp3global/wm-extract-deploy
+          name: Deploy Web Modeler Artifacts to Zeebe
+          services:
+            - docker
+          script:
+            - |
+              export ZEEBE_CLIENT_ID=$CAMUNDA_ZEEBE_CLIENT_ID
+              export ZEEBE_CLIENT_SECRET=$CAMUNDA_ZEEBE_CLIENT_SECRET
+              export CAMUNDA_CLUSTER_ID=$CAMUNDA_CLUSTER_ID
+              export CAMUNDA_CLUSTER_REGION=$CAMUNDA_CLUSTER_REGION
+              export PROJECT_TAG=$DEPLOY_TAG
+              /scripts/extractDeploy.sh deploy
+              
+    deploy-sm-dc:
+      - variables:
+          - name: DEPLOY_TAG
+      - step:
+          image: bp3global/wm-extract-deploy
+          name: Deploy Web Modeler Artifacts to Zeebe
+          services:
+            - docker
+          script:
+            - |
+              export ZEEBE_CLIENT_ID=$CAMUNDA_ZEEBE_CLIENT_ID
+              export ZEEBE_CLIENT_SECRET=$CAMUNDA_ZEEBE_CLIENT_SECRET
+              export CAMUNDA_CLUSTER_HOST=$CAMUNDA_CLUSTER_HOST
+              export CAMUNDA_CLUSTER_PORT=$CAMUNDA_CLUSTER_PORT
+              export PROJECT_TAG=$DEPLOY_TAG
+              /scripts/extractDeploy.sh deploy
+```
+
+The following `bitbucket-pipelines.yml` file then becomes part of the "template" that is applied
+to every new Bitbucket repo that is created to track a Web Modeler project. In this way any changes
+that need to be made to the pipeline(s) can be made in one place and instantly they are rolled out
+to all of the projects.
+
+```yaml
+pipelines:
+  custom:
+    extract:
+      import: camunda-pipelines:master:extract
+
+    deploy-saas:
+      import: camunda-pipelines:master:deploy-saas
+
+```
