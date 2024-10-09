@@ -1,34 +1,26 @@
 # Extract and Deploy process models from Web Modeler
-This is a project to explore some ideas around using a pipeline to:
+## Background
+Web Modeler does not currently have support for the extraction and deployment of resources (i.e. BPMN and DMN models and Forms) to different CI / CD platforms such as GitLab, Github and Bitbucket -
+this must be managed by the user through the [WM API](https://docs.camunda.io/docs/apis-tools/web-modeler-api/overview/).
+The Web Modeler currently only has
+* An option to deploy models directly to a Zeebe cluster (subject to the user having the right roles assigned)
+* A native GitHub integration to allow users to synch the models to a repository (again, subject to the user having the right roles assigned)
+
+## Solution
+This project provides solutions to:
 * Extract models from Web Modeler using the Web Modeler API, and
 * Update a git repo with the extracted model
 * Deploy a tagged version of the model to a target Zeebe cluster (environment)
 
-To facilitate those operations we will create a Docker image that is capable of 
-those operations and that is suited for use in a pipeline. 
-The operations are capable of working with the following CI/CD platforms:
-* GitLab
-* GitHub
-* Bit Bucket
+To facilitate those operations a Docker image is provided that is capable of 
+those operations and that is suited for use in a DevOps pipeline. 
+The operations are capable of working with any CI/CD platform and have so far been tested with:
+* [GitLab](./GitLab.md)
+* Github
+* [Bitbucket](./BitBucket.md)
 
-## Background
-Web Modeler does not currently have support for the extraction and deployment of resources (i.e. BPMN and DMN models and forms) to different CI / CD platforms such as GitLab, GitHub and Bit Bucket. 
-This Docker image provides these capabilities that can be performed from a CI / CD pipeline, until such time that Camunda build these capabilities out.
-
-The Web Modeler currently only has the ability to:
-* Deploy models directly to a Zeebe cluster (subject to the user having the right roles assigned)
-* A native GitHub integration to allow users to synch the models to a repository (again, subject to the user having the right roles assigned)
-
-# Building the Docker image
-The docker image is based on python which we are using as the underlying scripting language -
-simply because it is widely used and well-supported with libraries. Specifically the
-Camunda `pyzeebe` library which we use to deploy the extracted models to a Zeebe cluster.
-
-To build the Docker image, run the following command:
-
-```shell
-docker build -t bp3global/wm-extract-deploy:<version> .
-```
+Follow the links above to better understand how to integrate extract & deploy operations into your
+DevOps pipelines.
 
 # Running the Docker container
 The container can be run in the following modes, as described below:
@@ -62,7 +54,7 @@ docker run -it --rm \
       -e ZEEBE_CLIENT_SECRET="<Zeebe client secret>" \
       -e CAMUNDA_CLUSTER_ID="<Zeebe cluster Id>" \
       -e CAMUNDA_CLUSTER_REGION="<Zeebe region>" \
-      -e PROJECT_TAG="<The tag of the resources to deploy>"
+      -e PROJECT_TAG="<The tag of the resources to deploy>" \
           bp3global/wm-extract-deploy deploy
 ```
 
@@ -74,7 +66,7 @@ docker run -it --rm \
       -e ZEEBE_CLIENT_SECRET="<Zeebe client secret>" \
       -e CAMUNDA_CLUSTER_HOST="<Zeebe gateway hostname>" \
       -e CAMUNDA_CLUSTER_PORT="<Zeebe gateway port>" \
-      -e PROJECT_TAG="<The tag of the resources to deploy>"
+      -e PROJECT_TAG="<The tag of the resources to deploy>" \
           bp3global/wm-extract-deploy deploy
 ```
 
