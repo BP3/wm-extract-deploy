@@ -3,6 +3,12 @@
 # python 3.11 for now.
 FROM python:3.11
 
+# Upgrade the underlying OS
+RUN set -eux; \
+    apt-get update; \
+    apt-get upgrade -y; \
+    rm -rf /var/lib/apt/lists/*
+
 ENV SCRIPT_DIR=/scripts \
     MODEL_PATH=model
 
