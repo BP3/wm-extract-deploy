@@ -95,8 +95,8 @@ pipelines:
             - |
               export ZEEBE_CLIENT_ID=$CAMUNDA_ZEEBE_CLIENT_ID
               export ZEEBE_CLIENT_SECRET=$CAMUNDA_ZEEBE_CLIENT_SECRET
-              export CAMUNDA_CLUSTER_HOST=CAMUNDA_CLUSTER_HOST
-              export CAMUNDA_CLUSTER_PORT=CAMUNDA_CLUSTER_PORT
+              export CAMUNDA_CLUSTER_HOST=$CAMUNDA_CLUSTER_HOST
+              export CAMUNDA_CLUSTER_PORT=$CAMUNDA_CLUSTER_PORT
               export PROJECT_TAG=$DEPLOY_TAG
               /scripts/extractDeploy.sh deploy
 ```
