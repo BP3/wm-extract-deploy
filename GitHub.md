@@ -5,11 +5,11 @@ This page shows an example GitHub pipelines files (`extract-pipelines.yml` and `
 2. Self-Managed: Web Modeler and Zeebe Cluster
 3. docker-compose: Web Modeler and Zeebe Cluster
 
-The example files in this page is for SaaS, Self-Managed and Docker Compose, but follows the same structure,
+The example files in this page are for SaaS, Self-Managed and Docker Compose, but follows the same structure,
 with adjustments to the environment variables to suit as detailed in [README.md](./README.md#supported-environment-variables).
 
 ## Variables
-It is best practice is to have many of the environment variables that are required, pre-defined.
+It is best practice to have many of the environment variables that are required, pre-defined.
 Commonly these will be added as CI / CD variables defined at group level, so that they can be re-used across a
 wide range of projects. In the example below the following variables and secrets are assumed to have
 been defined at the group level and so are simply re-used as shown.
@@ -39,7 +39,7 @@ The following items are needed to run the extraction:
 ## `extract-pipelines.yml` and `deploy-pipelines.yml`
 Below is an example on how the Docker image could be used when defining the pipeline configuration. It shows two pipelines files defined, each with `extract` and `deploy` jobs, that are executed when the custom pipeline is selected from the Pipeline Runner. The reason for splitting into two files is due to the `on:workflow_dispatch` requiring only user pipeline inputs for the `deploy` job.
 
-If the `deploy` pipeline is selected, then you will be promoted to enter the `DEPLOY_TAG` value which will cause the resources committed for the tag to be deployed to Zeebe, as shown in the example below:
+If the `deploy` pipeline is selected, then you will be prompted to enter the `DEPLOY_TAG` value which will cause the resources committed for the tag to be deployed to Zeebe, as shown in the example below:
 
 ![GitHub deploy pipeline runner](images/gh-pipeline-runner-deploy.png)
 
