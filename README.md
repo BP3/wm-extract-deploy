@@ -16,7 +16,7 @@ To facilitate those operations a Docker image is provided that is capable of
 those operations and that is suited for use in a DevOps pipeline. 
 The operations are capable of working with any CI/CD platform and have so far been tested with:
 * [GitLab](./GitLab.md)
-* [GitHub](./GitHub.md)
+* [Github](./Github.md)
 * [Bitbucket](./BitBucket.md)
 
 Follow the links above to better understand how to integrate extract & deploy operations into your
