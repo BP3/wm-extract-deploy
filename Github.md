@@ -69,8 +69,6 @@ jobs:
           CAMUNDA_WM_CLIENT_ID: ${{ vars.CAMUNDA_WM_CLIENT_ID }}
           CAMUNDA_WM_CLIENT_SECRET: ${{ secrets.CAMUNDA_WM_CLIENT_SECRET }}
           CAMUNDA_WM_PROJECT: ${{ vars.CAMUNDA_WM_PROJECT }}
-          CAMUNDA_CLUSTER_ID: ${{ vars.CAMUNDA_CLUSTER_ID }}
-          CAMUNDA_CLUSTER_REGION: ${{ vars.CAMUNDA_CLUSTER_REGION }}
           GIT_USERNAME: ${{ vars.BUILD_ACCOUNT_USER }}
           GIT_USER_EMAIL: ${{ vars.BUILD_ACCOUNT_EMAIL }}
           SKIP_CI: "true"
