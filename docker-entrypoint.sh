@@ -1,5 +1,17 @@
 #!/bin/bash
 
+############################################################################
+#
+# Licensed Materials - Property of BP3
+#
+# Web Modeler Extract Deploy (WMED)
+#
+# Copyright © BP3 Global Inc. 2024. All Rights Reserved.
+# This software is subject to copyright protection under
+# the laws of the United States and other countries.
+#
+############################################################################
+
 # This script has to handle being called locally or from a GitLab CI / CD pipeline.
 # The requirements are stipulated here (although provides no real examples):
 #   https://docs.gitlab.com/runner/executors/docker.html#configure-a-docker-entrypoint
