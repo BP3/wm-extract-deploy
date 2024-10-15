@@ -94,7 +94,7 @@ class webModeller:
         self.project = response.json()
         return self.project
 
-    def searchFiles(self, id):
+    def searchFiles(self, id, name=None):
         body = {
             "filter": {
                 "projectId": id
@@ -104,6 +104,9 @@ class webModeller:
                 "direction": "ASC"
             }]
         }
+
+        if name is not None:
+            body["filter"]["name"] = name
 
         response = requests.post(
             self.getWMAPIURL() + '/files/search',
@@ -269,3 +272,42 @@ class webModeller:
             self.createReferenceFile(self.configFile, data)
 
         return project
+
+    def postFile(self, projectId, name, filetype, content):
+
+        body = {
+            "name": name,
+            "projectId": projectId,
+            "content": content,
+            "fileType": filetype
+        }
+
+        response = requests.post(
+            url=self.getWMAPIURL() + "/files",
+            json=body,
+            headers=self.getHeaders()
+        )
+
+        print("PostFile response", response.status_code)
+        if response.status_code != 200:
+            print("Error Details", response.json())
+
+    def updateFile(self, projectId, fileId, name, filetype, content, revision):
+
+        body = {
+            "name": name,
+            "projectId": projectId,
+            "content": content,
+            "fileType": filetype,
+            "revision": revision
+        }
+
+        response = requests.patch(
+            url=self.getWMAPIURL() + "/files/" + fileId,
+            json=body,
+            headers=self.getHeaders()
+        )
+
+        print("UpdateFile response", response.status_code)
+        if response.status_code != 200:
+            print("Error Details", response.json())
