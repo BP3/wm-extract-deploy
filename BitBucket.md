@@ -60,8 +60,6 @@ pipelines:
               export CAMUNDA_WM_CLIENT_ID=$CAMUNDA_WM_CLIENT_ID
               export CAMUNDA_WM_CLIENT_SECRET=$CAMUNDA_WM_CLIENT_SECRET
               export CAMUNDA_WM_PROJECT=$CAMUNDA_WM_PROJECT
-              export CAMUNDA_CLUSTER_ID=$CAMUNDA_CLUSTER_ID
-              export CAMUNDA_CLUSTER_REGION=$CAMUNDA_CLUSTER_REGION
               export GIT_USERNAME=$BUILD_ACCOUNT_USER
               export GIT_USER_EMAIL=$BUILD_ACCOUNT_EMAIL
               export SKIP_CI="true"
