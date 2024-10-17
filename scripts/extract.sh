@@ -48,10 +48,10 @@ git rm --ignore-unmatch $MODEL_PATH/*.form
 
 python $SCRIPT_DIR/extract.py
 
-git add *.bpmn
-git add *.dmn
-git add *.form
-git add config.*
+git add *.bpmn  2>/dev/null
+git add *.dmn  2>/dev/null
+git add *.form  2>/dev/null
+git add config.*  2>/dev/null
 git status
 
 # [skip ci] works across all the supported platforms
