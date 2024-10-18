@@ -1,3 +1,15 @@
+############################################################################
+#
+# Licensed Materials - Property of BP3
+#
+# Web Modeler Extract Deploy (WMED)
+#
+# Copyright © BP3 Global Inc. 2024. All Rights Reserved.
+# This software is subject to copyright protection under
+# the laws of the United States and other countries.
+#
+############################################################################
+
 import webModeller
 import env
 import os
@@ -44,7 +56,7 @@ if __name__ == "__main__":
 
     for template in templates:
         with open(template, 'r') as file:
-            print("Uploading template", template)
+            print("Processing template", template)
 
             filetype = file.name.split(".")[-1]
             if filetype not in ["bpmn", "dmn", "form", "json"]:
@@ -67,15 +79,17 @@ if __name__ == "__main__":
                 existingContent = json.loads(deployTemplates.wm.getFileById(fileId)["content"])
                 content["id"] = existingContent["id"]
                 content["$schema"] = existingContent["$schema"]
+                content["version"] = existingContent["version"]
 
-                deployTemplates.wm.updateFile(
-                    projectId=projectId,
-                    fileId=fileId,
-                    name=name,
-                    filetype=filetype,
-                    content=json.dumps(content),
-                    revision=fileSearch["items"][0]["revision"]
-                )
+                if content != existingContent:
+                    deployTemplates.wm.updateFile(
+                        projectId=projectId,
+                        fileId=fileId,
+                        name=name,
+                        filetype=filetype,
+                        content=json.dumps(content),
+                        revision=fileSearch["items"][0]["revision"]
+                    )
             else:
                 deployTemplates.wm.postFile(
                     projectId=projectId,
