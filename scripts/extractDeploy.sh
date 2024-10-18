@@ -14,6 +14,7 @@
 
 mode_extract=0
 mode_deploy=0
+mode_templates=0
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -21,7 +22,11 @@ while [[ $# -gt 0 ]]; do
           mode_extract=1
             ;;
         deploy)
-          mode_deploy=1
+          if [ $# -gt 1 ] && [ "$2" == "templates" ]; then
+            mode_templates=1
+          else
+            mode_deploy=1
+          fi
             ;;
         *)
           echo "Unknown mode: '$1'"
@@ -53,4 +58,12 @@ if [ $mode_deploy == 1 ]; then
 #  checkRequiredEnvVar PROJECT_TAG                   "$PROJECT_TAG"
 
   $SCRIPT_DIR/deploy.sh
+fi
+
+if [ $mode_templates == 1 ]; then
+  echo "mode = 'deploy templates'"
+#  checkRequiredEnvVar CAMUNDA_WM_CLIENT_ID          "$CAMUNDA_WM_CLIENT_ID"
+#  checkRequiredEnvVar CAMUNDA_WM_CLIENT_SECRET      "$CAMUNDA_WM_CLIENT_SECRET"
+
+  $SCRIPT_DIR/deploy_templates.sh
 fi
