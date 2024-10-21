@@ -51,24 +51,19 @@ if __name__ == "__main__":
     deployTemplates.wm.authenticate()
     projectId = deployTemplates.wm.getProject(projectRef)['items'][0]['id']
 
-    templates = glob.glob("./**/*.json", recursive=True)
+    templates = glob.glob("./**/element-templates/*.json", recursive=True)
     print("Found templates:", templates)
 
     for template in templates:
         with open(template, 'r') as file:
             print("Processing template", template)
 
-            filetype = file.name.split(".")[-1]
-            if filetype not in ["bpmn", "dmn", "form", "json"]:
-                raise ValueError("Unsupported filetype in", file.name)
-
             content = json.load(file)
-
-            if filetype == "json":
-                name = content["name"]
-                filetype = "connector_template"
-            else:
-                name = file.name.split(".")[-2].split("/")[-1]
+            sourceVersion = content["version"]
+            name = content["name"]
+            filetype = "connector_template"
+            fileId = None
+            response = None
 
             # Check if file already exists in the project
             fileSearch = deployTemplates.wm.searchFiles(projectId, name)
@@ -82,7 +77,7 @@ if __name__ == "__main__":
                 content["version"] = existingContent["version"]
 
                 if content != existingContent:
-                    deployTemplates.wm.updateFile(
+                    response = deployTemplates.wm.updateFile(
                         projectId=projectId,
                         fileId=fileId,
                         name=name,
@@ -91,10 +86,21 @@ if __name__ == "__main__":
                         revision=fileSearch["items"][0]["revision"]
                     )
             else:
-                deployTemplates.wm.postFile(
+                response = deployTemplates.wm.postFile(
                     projectId=projectId,
                     name=name,
                     filetype=filetype,
                     content=json.dumps(content)
                 )
+                if response is not None:
+                    fileId = response["id"]
+
+            if response is not None:
+                milestoneResponse = deployTemplates.wm.createMilestone(
+                    fileId=fileId,
+                    name=sourceVersion
+                )
+                if milestoneResponse is not None:
+                    print("Created milestone", milestoneResponse["name"])
+
             file.close()

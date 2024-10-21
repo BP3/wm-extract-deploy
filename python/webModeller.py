@@ -102,8 +102,9 @@ class webModeller:
             headers=self.getHeaders()
         )
 
-        # print("Find project response", response.status_code)
+        print("Find project response", response.status_code)
         self.project = response.json()
+        #TODO: Add error handling
         return self.project
 
     def searchFiles(self, id, name=None):
@@ -300,9 +301,12 @@ class webModeller:
             headers=self.getHeaders()
         )
 
+        #TODO: Improve exception handling
         print("PostFile response", response.status_code)
         if response.status_code != 200:
             print("Error Details", response.json())
+        else:
+            return response.json()
 
     def updateFile(self, projectId, fileId, name, filetype, content, revision):
 
@@ -320,6 +324,28 @@ class webModeller:
             headers=self.getHeaders()
         )
 
+        #TODO: Improve exception handling
         print("UpdateFile response", response.status_code)
         if response.status_code != 200:
             print("Error Details", response.json())
+        else:
+            return response.json()
+
+    def createMilestone(self, fileId, name):
+        body = {
+            "name": name,
+            "fileId": fileId
+        }
+
+        response = requests.post(
+            url=self.getWMAPIURL() + "/milestones",
+            json=body,
+            headers=self.getHeaders()
+        )
+
+        #TODO: Improve exception handling
+        print("CreateMilestone response", response.status_code)
+        if response.status_code != 200:
+            print("Error Details", response.json())
+        else:
+            return response.json()
