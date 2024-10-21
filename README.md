@@ -91,6 +91,31 @@ docker run -it --rm \
           bp3global/wm-extract-deploy deploy
 ```
 
+# Deploy Templates
+This will deploy connector templates from the current directory and its subdirectories into the Web Modeler instance.
+
+For SaaS environments:
+```shell
+docker run -it --rm \
+    --mount type=bind,src=${PWD},dst=/local --workdir /local \
+      -e CAMUNDA_WM_CLIENT_ID="<Client Id>" \
+      -e CAMUNDA_WM_CLIENT_SECRET="<Client secret>" \
+      -e CAMUNDA_WM_PROJECT="<The WM project to deploy the templates to>" \
+          bp3global/wm-extract-deploy deploy templates
+```
+
+For Self managed environments:
+```shell
+docker run -it --rm \
+    --mount type=bind,src=${PWD},dst=/local --workdir /local \
+      -e CAMUNDA_WM_CLIENT_ID="<Client Id>" \
+      -e CAMUNDA_WM_CLIENT_SECRET="<Client secret>" \
+      -e CAMUNDA_WM_PROJECT="<The WM project to deploy the templates to>" \
+      -e CAMUNDA_WM_HOST="<Web Modeller hostname>" \
+      -e CAMUNDA_WM_AUTH="<Keycloak hostname, if different to the WM_HOST>" \
+          bp3global/wm-extract-deploy deploy templates
+```
+
 # Supported Environment Variables
 
 | EnvVar                   | Description                                                                                                    | Optional?                                                                                                                       |
@@ -172,4 +197,4 @@ You now need to create a client app and secret for the extract-deploy app to use
 1. Open Identity in your browser (`https://<your IP address>:8084`) and log in.
 2. Click `Add Application`, enter a name (this will be the Client ID), and select the `M2M` radio button, then click `Add`.
 3. Click on the new Application you created and make a note of the Client secret as you will need this for the extract script.
-4. Open the `Access to APIs` tab, click the `Assign Permissions` button and then select `Web Modeler API` from the dropdown. Select the read permissions checkbox and then click the `Add` button.
+4. Open the `Access to APIs` tab, click the `Assign Permissions` button and then select `Web Modeler API` from the dropdown. Select the read, write, and create permission checkboxes and then click the `Add` button.
