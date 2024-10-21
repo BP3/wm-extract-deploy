@@ -12,7 +12,7 @@
 
 import os
 import env
-import webModeller
+import webModeler
 
 class Extraction:
 
@@ -25,7 +25,7 @@ class Extraction:
 
     def __init__(self):
         self.env = env.Environment()
-        self.wm = webModeller.webModeller()
+        self.wm = webModeler.webModeler()
         self.wm.setWMHost(self.wmHost)
         self.checkEnv()
 

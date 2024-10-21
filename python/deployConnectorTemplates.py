@@ -10,7 +10,7 @@
 #
 ############################################################################
 
-import webModeller
+import webModeler
 import env
 import os
 import glob
@@ -23,7 +23,7 @@ class deployTemplates:
 
     def __init__(self):
         self.env = env.Environment()
-        self.wm = webModeller.webModeller()
+        self.wm = webModeler.webModeler()
         self.wm.setWMHost(self.wmHost)
         self.checkEnv()
 

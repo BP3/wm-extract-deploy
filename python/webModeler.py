@@ -15,7 +15,7 @@ import os
 import json
 import yaml
 
-class webModeller:
+class webModeler:
     # In the future we may need to override for Self Managed if the authentication mechanism is different
     SAAS_HOST = 'cloud.camunda.io'
     wmHost = 'cloud.camunda.io'
