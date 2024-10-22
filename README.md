@@ -92,7 +92,7 @@ docker run -it --rm \
 ```
 
 # Deploy Templates
-This will deploy connector templates from the current directory and its subdirectories into the Web Modeler instance.
+This will deploy connector templates from the current repo/directory and its subdirectories into the Web Modeler instance, and then commit the configuration file to the repository.
 
 For SaaS environments:
 ```shell
@@ -101,6 +101,12 @@ docker run -it --rm \
       -e CAMUNDA_WM_CLIENT_ID="<Client Id>" \
       -e CAMUNDA_WM_CLIENT_SECRET="<Client secret>" \
       -e CAMUNDA_WM_PROJECT="<The WM project to deploy the templates to>" \
+      -e GIT_USERNAME="<Git Username>" \
+      -e GIT_USER_EMAIL="<Git Email address>" \
+      -e SKIP_CI="<Indicate (\"true\" | \"false\") if you want to run any pipelines or not on the commit>" \
+      -e CICD_PLATFORM="Indicate which SCM platform is being used, such as \"gitlab\", \"github\" or \"bitbucket\"" \
+      -e CICD_SERVER_HOST="<The host of the GIT server. Only needed if using GitLab>" \
+      -e CICD_ACCESS_TOKEN="<CI platform access token>" \
           bp3global/wm-extract-deploy deploy templates
 ```
 
@@ -113,6 +119,12 @@ docker run -it --rm \
       -e CAMUNDA_WM_PROJECT="<The WM project to deploy the templates to>" \
       -e CAMUNDA_WM_HOST="<Web Modeller hostname>" \
       -e CAMUNDA_WM_AUTH="<Keycloak hostname, if different to the WM_HOST>" \
+      -e GIT_USERNAME="<Git Username>" \
+      -e GIT_USER_EMAIL="<Git Email address>" \
+      -e SKIP_CI="<Indicate (\"true\" | \"false\") if you want to run any pipelines or not on the commit>" \
+      -e CICD_PLATFORM="Indicate which SCM platform is being used, such as \"gitlab\", \"github\" or \"bitbucket\"" \
+      -e CICD_SERVER_HOST="<The host of the GIT server. Only needed if using GitLab>" \
+      -e CICD_ACCESS_TOKEN="<CI platform access token>" \
           bp3global/wm-extract-deploy deploy templates
 ```
 

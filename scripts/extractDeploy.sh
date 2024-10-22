@@ -16,25 +16,22 @@ mode_extract=0
 mode_deploy=0
 mode_templates=0
 
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        extract)
-          mode_extract=1
-            ;;
-        deploy)
-          if [ $# -gt 1 ] && [ "$2" == "templates" ]; then
-            mode_templates=1
-          else
-            mode_deploy=1
-          fi
-            ;;
-        *)
-          echo "Unknown mode: '$1'"
-          exit 1
-            ;;
-    esac
-    shift
-done
+case "$1" in
+    extract)
+      mode_extract=1
+        ;;
+    deploy)
+      if [ $# -gt 1 ] && [ "$2" == "templates" ]; then
+        mode_templates=1
+      else
+        mode_deploy=1
+      fi
+        ;;
+    *)
+      echo "Unknown mode: '$1'"
+      exit 1
+        ;;
+esac
 
 if [ $mode_extract == 1 ]; then
   echo "mode = 'extract'"
@@ -65,5 +62,5 @@ if [ $mode_templates == 1 ]; then
 #  checkRequiredEnvVar CAMUNDA_WM_CLIENT_ID          "$CAMUNDA_WM_CLIENT_ID"
 #  checkRequiredEnvVar CAMUNDA_WM_CLIENT_SECRET      "$CAMUNDA_WM_CLIENT_SECRET"
 
-  $SCRIPT_DIR/deploy_templates.sh
+  $SCRIPT_DIR/deployTemplates.sh
 fi
