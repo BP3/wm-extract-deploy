@@ -102,9 +102,9 @@ class webModeler:
             headers=self.getHeaders()
         )
 
-        print("Find project response", response.status_code)
+        #print("Find project response", response.status_code)
         self.project = response.json()
-        #TODO: Add error handling
+
         return self.project
 
     def searchFiles(self, id, name=None):
@@ -267,10 +267,9 @@ class webModeler:
             headers=self.getHeaders()
         )
 
-        #TODO: Improve exception handling
         print("PostFile response", response.status_code)
         if response.status_code != 200:
-            print("Error Details", response.json())
+            raise RuntimeError("Attempt to create file failed.", response.json())
         else:
             return response.json()
 
@@ -290,10 +289,9 @@ class webModeler:
             headers=self.getHeaders()
         )
 
-        #TODO: Improve exception handling
         print("UpdateFile response", response.status_code)
         if response.status_code != 200:
-            print("Error Details", response.json())
+            raise RuntimeError("Attempt to update file failed.", response.json())
         else:
             return response.json()
 
@@ -309,9 +307,8 @@ class webModeler:
             headers=self.getHeaders()
         )
 
-        #TODO: Improve exception handling
         print("CreateMilestone response", response.status_code)
         if response.status_code != 200:
-            print("Error Details", response.json())
+            raise RuntimeError("Attempt to create milestone failed.", response.json())
         else:
             return response.json()
