@@ -191,36 +191,8 @@ class webModeler:
         return jsonConfig
 
     def loadProjectConfig(self):
-        # We may want to make the following changes in the future:
-        # - Pass in the file name using an env var, e.g. WM_PROJECT_METADATA_FILE
-        # Specify if the file should be JSON or YAML, so it can contain other metadata items
 
-        # This will look for (in order)
-        #
-        #   1. config.yml/yaml
-        #   2. config.json
-        #   3. wm-project-id - I can see this being dropped in the future
-        #
-        #   config.yml
-        #   ----------
-        #   project:
-        #     id: <UUID>
-        #     name:                       # Optional extension
-        #
-        #   config.json
-        #   -----------
-        #   {
-        #     "project": {
-        #       "id": "<UUID>",
-        #       "name": "<project name>"    # Optional extension
-        #      }
-        #   }
-        #
-        #   wm-project-id
-        #   -------------
-        #   <UUID>
-
-        projectConfigFiles=[self.configFile, "config.yaml", "config.json", "wm-project-id"]
+        projectConfigFiles=[self.configFile, "config.yaml", "config.json"]
 
         for configFile in projectConfigFiles:
             # Check to see if one of the config file options exists
@@ -232,9 +204,6 @@ class webModeler:
                         self.configFile = configFile
                     elif configFile.endswith("json"):
                         self.configDict = self.parseJsonConfig(file)
-                        self.configFile = configFile
-                    else:
-                        self.configDict = {"project": {"id": file.read().strip()}}
                         self.configFile = configFile
 
     def getProject(self, projectRef):
@@ -251,9 +220,6 @@ class webModeler:
                 print("Project not found using project ID {} from {}".format(projectId, self.configFile))
                 project = None
                 needsConfigFile = True
-            elif self.configFile == "wm-project-id":
-                needsConfigFile = True
-                self.configFile = "config.yml"
 
         # If we failed to find the configured project, or there was no config supplied then try looking it up by
         # the projectRef we were given
