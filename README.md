@@ -1,6 +1,6 @@
 # Extract and Deploy process models from Web Modeler
 ## Background
-Web Modeler does not currently have support for the extraction and deployment of resources (i.e. BPMN and DMN models and Forms) to different CI / CD platforms such as GitLab, Github and Bitbucket -
+Web Modeler does not currently have support for the extraction and deployment of resources (i.e. BPMN and DMN models and Forms) to different CI / CD platforms such as GitLab, GitHub and Bitbucket -
 this must be managed by the user through the [WM API](https://docs.camunda.io/docs/apis-tools/web-modeler-api/overview/).
 The Web Modeler currently only has
 * An option to deploy models directly to a Zeebe cluster (subject to the user having the right roles assigned)
@@ -91,6 +91,58 @@ docker run -it --rm \
           bp3global/wm-extract-deploy deploy
 ```
 
+# Deploy Templates
+This will deploy connector templates from the current repo/directory and its subdirectories into the Web Modeler instance, and then commit the configuration file to the repository.
+
+For SaaS environments:
+```shell
+docker run -it --rm \
+    --mount type=bind,src=${PWD},dst=/local --workdir /local \
+      -e CAMUNDA_WM_CLIENT_ID="<Client Id>" \
+      -e CAMUNDA_WM_CLIENT_SECRET="<Client secret>" \
+      -e CAMUNDA_WM_PROJECT="<The WM project to deploy the templates to>" \
+      -e GIT_USERNAME="<Git Username>" \
+      -e GIT_USER_EMAIL="<Git Email address>" \
+      -e SKIP_CI="<Indicate (\"true\" | \"false\") if you want to run any pipelines or not on the commit>" \
+      -e CICD_PLATFORM="Indicate which SCM platform is being used, such as \"gitlab\", \"github\" or \"bitbucket\"" \
+      -e CICD_SERVER_HOST="<The host of the GIT server. Only needed if using GitLab>" \
+      -e CICD_ACCESS_TOKEN="<CI platform access token>" \
+          bp3global/wm-extract-deploy deploy templates
+```
+
+For Self managed environments:
+```shell
+docker run -it --rm \
+    --mount type=bind,src=${PWD},dst=/local --workdir /local \
+      -e CAMUNDA_WM_CLIENT_ID="<Client Id>" \
+      -e CAMUNDA_WM_CLIENT_SECRET="<Client secret>" \
+      -e CAMUNDA_WM_PROJECT="<The WM project to deploy the templates to>" \
+      -e CAMUNDA_WM_HOST="<Web Modeller hostname>" \
+      -e CAMUNDA_WM_AUTH="<Keycloak hostname, if different to the WM_HOST>" \
+      -e GIT_USERNAME="<Git Username>" \
+      -e GIT_USER_EMAIL="<Git Email address>" \
+      -e SKIP_CI="<Indicate (\"true\" | \"false\") if you want to run any pipelines or not on the commit>" \
+      -e CICD_PLATFORM="Indicate which SCM platform is being used, such as \"gitlab\", \"github\" or \"bitbucket\"" \
+      -e CICD_SERVER_HOST="<The host of the GIT server. Only needed if using GitLab>" \
+      -e CICD_ACCESS_TOKEN="<CI platform access token>" \
+          bp3global/wm-extract-deploy deploy templates
+```
+
+# Web Modeler project configuration
+
+We support a couple of methods of specifying which Web Modeler project to interact with, either via the `CAMUNDA_WM_PROJECT` environment variable, or by providing a configuration file in the working directory/repository.
+
+The configuration file can be either YAML or JSON and by default we will look for a file named `config.[yml|yaml|json]` in the working directory. If you wish to use an alternate name then this can be specified in the `WM_PROJECT_METADATA_FILE` environment variable. If a config file is not detected then one will be created after the first successful execution. 
+
+The config file should contain a project element with a child id element where the value is the id of the project in Web Modeler (the guid in the URL when accessing the project), and optionally a name property.
+
+e.g. in YAML:
+```yaml
+project:
+  id: 571c8e5d-dcdf-41b5-bb42-e5f3ae593db9
+  name: Connector Templates
+```
+
 # Supported Environment Variables
 
 | EnvVar                   | Description                                                                                                    | Optional?                                                                                                                       |
@@ -115,7 +167,7 @@ docker run -it --rm \
 | CICD_SERVER_HOST         | The GitLab server host                                                                                         | Optional for "extract" operation. For on-premise GitLab, otherwise defaults to "gitlab.com"                                     |
 | PROJECT_TAG              | The label given to the tags created and also the tag that is checked out and deploy                            | Required for "deploy" operation                                                                                                 |
 | SKIP_CI                  | Indicates if upon commit, we do or do not want any pipelines to be executed. The options are "true" or "false" | Required for "extract" operation                                                                                                |
-| WM_PROJECT_METADATA_FILE | The name of the web modeller project configuration file                                                        | Optional for "extract" operation (default = `config.yml` for saving, `config.yml/yaml/json` for reading)                        |
+| WM_PROJECT_METADATA_FILE | The name of the web modeller project configuration file                                                        | Optional for operations involving web modeler (default = `config.yml` if none present, will look for`config.yml/yaml/json`)     |
 | ZEEBE_CLIENT_ID          | The client Id of the Zeebe client credentials                                                                  | Required for "deploy" operation                                                                                                 |
 | ZEEBE_CLIENT_SECRET      | The client secret of the Zeebe client credentials                                                              | Required for "deploy" operation                                                                                                 |
 
@@ -154,8 +206,8 @@ task: <Task pending name='Task-2' coro=<UnaryUnaryCall._invoke() running at /usr
 sys:1: RuntimeWarning: coroutine 'UnaryUnaryCall._invoke' was never awaited
 ```
 
-# Using a local Zebee docker stack for development
-If you are running the extract/deploy app on the same host as the Zebee docker stack (i.e. on a developer's computer) you need to make some changes to the Docker compose file for the Zeebe stack in order for the authentication to work between the local containers.
+# Using a local Zeebe docker stack for development
+If you are running the extract/deploy app on the same host as the Zeebe docker stack (i.e. on a developer's computer) you need to make some changes to the Docker compose file for the Zeebe stack in order for the authentication to work between the local containers.
 
 Assuming that you are using the docker compose files from [this repo](https://github.com/camunda/camunda-platform); In the directory with the Camunda 8 docker-compose file you should edit the `.env` file and change the `HOST` variable from `localhost` to your hosts IP address.
 
@@ -172,4 +224,4 @@ You now need to create a client app and secret for the extract-deploy app to use
 1. Open Identity in your browser (`https://<your IP address>:8084`) and log in.
 2. Click `Add Application`, enter a name (this will be the Client ID), and select the `M2M` radio button, then click `Add`.
 3. Click on the new Application you created and make a note of the Client secret as you will need this for the extract script.
-4. Open the `Access to APIs` tab, click the `Assign Permissions` button and then select `Web Modeler API` from the dropdown. Select the read permissions checkbox and then click the `Add` button.
+4. Open the `Access to APIs` tab, click the `Assign Permissions` button and then select `Web Modeler API` from the dropdown. Select the read, write, and create permission checkboxes and then click the `Add` button.
