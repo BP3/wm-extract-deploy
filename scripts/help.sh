@@ -1,5 +1,17 @@
 #!/bin/bash
 
+############################################################################
+#
+# Licensed Materials - Property of BP3
+#
+# Web Modeler Extract Deploy (WMED)
+#
+# Copyright © BP3 Global Inc. 2024. All Rights Reserved.
+# This software is subject to copyright protection under
+# the laws of the United States and other countries.
+#
+############################################################################
+
 echo Usage: extractDeploy.sh COMMAND
 echo
 echo A CI/CD automation wrapper for interacting with assets between a Camunda 8 Web Modeler project,
