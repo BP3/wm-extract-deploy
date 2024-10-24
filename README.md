@@ -107,6 +107,7 @@ docker run -it --rm \
       -e CICD_PLATFORM="Indicate which SCM platform is being used, such as \"gitlab\", \"github\" or \"bitbucket\"" \
       -e CICD_SERVER_HOST="<The host of the GIT server. Only needed if using GitLab>" \
       -e CICD_ACCESS_TOKEN="<CI platform access token>" \
+      -e CICD_REPOSITORY_PATH="<The path of the repository>" \
           bp3global/wm-extract-deploy deploy templates
 ```
 
@@ -125,6 +126,7 @@ docker run -it --rm \
       -e CICD_PLATFORM="Indicate which SCM platform is being used, such as \"gitlab\", \"github\" or \"bitbucket\"" \
       -e CICD_SERVER_HOST="<The host of the GIT server. Only needed if using GitLab>" \
       -e CICD_ACCESS_TOKEN="<CI platform access token>" \
+      -e CICD_REPOSITORY_PATH="<The path of the repository>" \
           bp3global/wm-extract-deploy deploy templates
 ```
 

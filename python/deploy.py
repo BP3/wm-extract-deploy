@@ -12,7 +12,7 @@
 
 import asyncio
 import glob
-import os, sys
+import os
 import env
 
 from pyzeebe import (

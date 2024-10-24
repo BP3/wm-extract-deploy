@@ -27,8 +27,12 @@ case "$1" in
         mode_deploy=1
       fi
         ;;
+    help)
+      $SCRIPT_DIR/help.sh
+      ;;
     *)
       echo "Unknown mode: '$1'"
+      $SCRIPT_DIR/help.sh
       exit 1
         ;;
 esac
