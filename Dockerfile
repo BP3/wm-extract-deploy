@@ -34,3 +34,4 @@ COPY python/*.py $SCRIPT_DIR/
 COPY --chmod=755 scripts/*.sh $SCRIPT_DIR/
 COPY --chmod=755 docker-entrypoint.sh /
 
+CMD ["help"]
