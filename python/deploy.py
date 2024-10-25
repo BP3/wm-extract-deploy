@@ -34,6 +34,7 @@ class Deployment:
         self.cluster_id = None
         self.client_secret = None
         self.client_id = None
+        self.tenant_ids = None
         self.check_env()
 
     @staticmethod
@@ -71,6 +72,9 @@ class Deployment:
     def set_model_path(self, model_path: str):
         self.model_path = model_path
 
+    def set_tenant_ids(self, tenant_ids: list[str]):
+        self.tenant_ids = tenant_ids
+
     def create_zeebe_client(self) -> ZeebeClient:
 
         if self.cluster_id is not None and self.cluster_id != "":
@@ -88,13 +92,13 @@ class Deployment:
         self.zeebe_client = ZeebeClient(grpc_channel)
         return self.zeebe_client
 
-    def deploy(self, models: list[str]):
+    def deploy(self, models: list[str], tenant_id: str = None):
         print("Deploying resources: {}".format(models))
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.deploy_resources(models))
+        loop.run_until_complete(self.deploy_resources(models, tenant_id))
 
-    async def deploy_resources(self, resource_paths):
-        return await self.zeebe_client.deploy_resource(*resource_paths)
+    async def deploy_resources(self, resource_paths: list, tenant_id: str):
+        return await self.zeebe_client.deploy_resource(*resource_paths, tenant_id=tenant_id)
 
 
 if __name__ == "__main__":
@@ -118,6 +122,12 @@ if __name__ == "__main__":
         pass
 
     try:
+        if os.environ["CAMUNDA_TENANT_ID"] is not None and os.environ["CAMUNDA_TENANT_ID"] != "":
+            deploy.set_tenant_ids(os.environ["CAMUNDA_TENANT_ID"].split(','))
+    except KeyError:
+        pass
+
+    try:
         if os.environ["CAMUNDA_CLUSTER_PORT"] is not None and os.environ["CAMUNDA_CLUSTER_PORT"] != "":
             deploy.set_cluster_port(int(os.environ["CAMUNDA_CLUSTER_PORT"]))
     except KeyError:
@@ -130,7 +140,7 @@ if __name__ == "__main__":
     modelPath = deploy.get_model_path()
 
     if not os.path.exists(modelPath):
-        message="Model Path directory '{}' doesn't exist".format(modelPath)
+        message = "Model Path directory '{}' doesn't exist".format(modelPath)
         raise FileNotFoundError(message)
 
     # Types we need to support according to:
@@ -141,4 +151,8 @@ if __name__ == "__main__":
         models_list.extend(glob.glob("{}/**/{}".format(modelPath, model_type), recursive=True))
     # print("Found resources: ", models)
 
-    deploy.deploy(models_list)
+    if deploy.tenant_ids:
+        for tenant in deploy.tenant_ids:
+            deploy.deploy(models_list, tenant_id=tenant)
+    else:
+        deploy.deploy(models_list)
