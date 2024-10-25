@@ -24,14 +24,17 @@ RUN set -eux; \
 ENV SCRIPT_DIR=/scripts \
     MODEL_PATH=model
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
-
 # Use this if we are using 'docker build' as opposed to 'kaniko'
 RUN --mount=type=bind,source=requirements.txt,target=/tmp/requirements.txt \
-        pip install --requirement /tmp/requirements.txt
+        pip install --requirement /tmp/requirements.txt && \
+    addgroup --gid 1000 bp3 && \
+    adduser --uid 1000 --ingroup bp3 --home /home/bp3user --shell /bin/bash --disabled-password bp3user
 
-COPY python/*.py $SCRIPT_DIR/
-COPY --chmod=755 scripts/*.sh $SCRIPT_DIR/
+COPY --chown=bp3user:bp3 python/*.py $SCRIPT_DIR/
+COPY --chown=bp3user:bp3 --chmod=755 scripts/*.sh $SCRIPT_DIR/
 COPY --chmod=755 docker-entrypoint.sh /
 
+USER bp3user
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["help"]
