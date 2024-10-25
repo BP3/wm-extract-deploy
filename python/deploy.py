@@ -24,6 +24,7 @@ from pyzeebe import (
 class Deployment:
 
     def __init__(self):
+        self.tenant_ids = None
         self.env = env.Environment()
         self.checkEnv()
 
@@ -61,6 +62,9 @@ class Deployment:
     def setModelPath(self, modelPath):
         self.env.setModelPath(modelPath)
 
+    def set_tenant_ids(self, tenant_ids: list[str]):
+        self.tenant_ids = tenant_ids
+
     def createZeebeClient(self):
 
         if hasattr(self, 'clusterId') and self.clusterId is not None and self.clusterId != "":
@@ -72,21 +76,19 @@ class Deployment:
             )
         else:
             grpc_channel = create_insecure_channel(
-                hostname=self.clusterHost,
-                port=self.clusterPort
+                grpc_address=self.clusterHost + ':' + self.clusterPort
             )
 
         self.zeebeClient = ZeebeClient(grpc_channel)
         return self.zeebeClient
 
-
-    def deploy(self, models):
-        print("Deploying resources: {}".format(models))
+    def deploy(self, model_list: list, tenant_id: str = None):
+        print("Deploying resources: {}".format(model_list))
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.deploy_resources(models))
+        loop.run_until_complete(self.deploy_resources(model_list, tenant_id))
 
-    async def deploy_resources(self, resource_paths):
-        return await self.zeebeClient.deploy_process(*resource_paths)
+    async def deploy_resources(self, resource_paths: list, tenant_id: str):
+        return await self.zeebeClient.deploy_resource(*resource_paths, tenant_id=tenant_id)
 
 
 if __name__ == "__main__":
@@ -110,6 +112,12 @@ if __name__ == "__main__":
     except KeyError:
         pass
 
+    try:
+        if os.environ["CAMUNDA_TENANT_ID"] is not None and os.environ["CAMUNDA_TENANT_ID"] != "":
+            deploy.set_tenant_ids(os.environ["CAMUNDA_TENANT_ID"].split(','))
+    except KeyError:
+        pass
+
     deploy.createZeebeClient()
 
     modelPath = os.environ["MODEL_PATH"]
@@ -117,14 +125,19 @@ if __name__ == "__main__":
     modelPath = deploy.getModelPath()
 
     if not os.path.exists(modelPath):
-        message="Model Path directory '{}' doesn't exist".format(modelPath)
+        message = "Model Path directory '{}' doesn't exist".format(modelPath)
         raise FileNotFoundError(message)
 
-    # Types we need to support according to: https://docs.camunda.io/docs/next/apis-tools/zeebe-api/gateway-service/#input-deployresourcerequest
+    # Types we need to support according to:
+    # https://docs.camunda.io/docs/next/apis-tools/zeebe-api/gateway-service/#input-deployresourcerequest
     model_types = ("*.bpmn", "*.dmn", "*.form")
     models = []
     for model_type in model_types:
         models.extend(glob.glob("{}/**/{}".format(modelPath, model_type), recursive=True))
     # print("Found resources: ", models)
 
-    deploy.deploy(models)
+    if deploy.tenant_ids:
+        for tenant in deploy.tenant_ids:
+            deploy.deploy(models, tenant_id=tenant)
+    else:
+        deploy.deploy(models)

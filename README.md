@@ -75,6 +75,7 @@ docker run -it --rm \
       -e ZEEBE_CLIENT_SECRET="<Zeebe client secret>" \
       -e CAMUNDA_CLUSTER_ID="<Zeebe cluster Id>" \
       -e CAMUNDA_CLUSTER_REGION="<Zeebe region>" \
+      -e CAMUNDA_TENANT_ID="<Optional tenant ID for multi-tenant>"
       -e PROJECT_TAG="<The tag of the resources to deploy>" \
           bp3global/wm-extract-deploy deploy
 ```
@@ -87,6 +88,7 @@ docker run -it --rm \
       -e ZEEBE_CLIENT_SECRET="<Zeebe client secret>" \
       -e CAMUNDA_CLUSTER_HOST="<Zeebe gateway hostname>" \
       -e CAMUNDA_CLUSTER_PORT="<Zeebe gateway port>" \
+      -e CAMUNDA_TENANT_ID="<Optional tenant ID for multi-tenant>"
       -e PROJECT_TAG="<The tag of the resources to deploy>" \
           bp3global/wm-extract-deploy deploy
 ```
@@ -153,6 +155,7 @@ project:
 | CAMUNDA_CLUSTER_ID       | The Id of the Camunda SaaS cluster                                                                             | Required for "deploy" operation in SaaS environments                                                                            |
 | CAMUNDA_CLUSTER_PORT     | The port number of the Camunda cluster gateway                                                                 | Required for "deploy" operation in Self managed environments                                                                    |
 | CAMUNDA_CLUSTER_REGION   | The region code the cluster is running in                                                                      | Required for "deploy" operation in SaaS environments                                                                            |
+| CAMUNDA_TENANT_ID        | A comma seperated list of the tenant id(s) to deploy to for multi-tenant environments                          | Optional for "deploy" operations (default = `NULL`)                                                                             |
 | CAMUNDA_WM_AUTH          | The Authentication Host for Self-Managed (if not the same as CAMUNDA_WM_HOST)                                  | Optional (default = `CAMUNDA_WM_HOST`)                                                                                          |
 | CAMUNDA_WM_CLIENT_ID     | The client Id of the Web Modeler client credentials                                                            | Required for "extract" operation                                                                                                |
 | CAMUNDA_WM_CLIENT_SECRET | The client secret of the Web Modeler client credentials                                                        | Required for "extract" operation                                                                                                |
