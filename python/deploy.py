@@ -24,7 +24,7 @@ from pyzeebe import (
 class Deployment:
 
     def __init__(self):
-        self.tenant_id = None
+        self.tenant_ids = None
         self.env = env.Environment()
         self.checkEnv()
 
@@ -62,8 +62,8 @@ class Deployment:
     def setModelPath(self, modelPath):
         self.env.setModelPath(modelPath)
 
-    def setTenantId(self, tenant_id: str):
-        self.tenant_id = tenant_id
+    def set_tenant_ids(self, tenant_ids: list[str]):
+        self.tenant_ids = tenant_ids
 
     def createZeebeClient(self):
 
@@ -82,7 +82,7 @@ class Deployment:
         self.zeebeClient = ZeebeClient(grpc_channel)
         return self.zeebeClient
 
-    def deploy(self, model_list: list, tenant_id: str):
+    def deploy(self, model_list: list, tenant_id: str = None):
         print("Deploying resources: {}".format(model_list))
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.deploy_resources(model_list, tenant_id))
@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
     try:
         if os.environ["CAMUNDA_TENANT_ID"] is not None and os.environ["CAMUNDA_TENANT_ID"] != "":
-            deploy.setTenantId(os.environ["CAMUNDA_TENANT_ID"])
+            deploy.set_tenant_ids(os.environ["CAMUNDA_TENANT_ID"].split(','))
     except KeyError:
         pass
 
@@ -125,14 +125,19 @@ if __name__ == "__main__":
     modelPath = deploy.getModelPath()
 
     if not os.path.exists(modelPath):
-        message="Model Path directory '{}' doesn't exist".format(modelPath)
+        message = "Model Path directory '{}' doesn't exist".format(modelPath)
         raise FileNotFoundError(message)
 
-    # Types we need to support according to: https://docs.camunda.io/docs/next/apis-tools/zeebe-api/gateway-service/#input-deployresourcerequest
+    # Types we need to support according to:
+    # https://docs.camunda.io/docs/next/apis-tools/zeebe-api/gateway-service/#input-deployresourcerequest
     model_types = ("*.bpmn", "*.dmn", "*.form")
     models = []
     for model_type in model_types:
         models.extend(glob.glob("{}/**/{}".format(modelPath, model_type), recursive=True))
     # print("Found resources: ", models)
 
-    deploy.deploy(models, tenant_id=deploy.tenant_id)
+    if deploy.tenant_ids:
+        for tenant in deploy.tenant_ids:
+            deploy.deploy(models, tenant_id=tenant)
+    else:
+        deploy.deploy(models)
