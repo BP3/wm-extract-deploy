@@ -24,6 +24,7 @@ from pyzeebe import (
 class Deployment:
 
     def __init__(self):
+        self.tenant_id = None
         self.env = env.Environment()
         self.checkEnv()
 
@@ -61,6 +62,9 @@ class Deployment:
     def setModelPath(self, modelPath):
         self.env.setModelPath(modelPath)
 
+    def setTenantId(self, tenant_id: str):
+        self.tenant_id = tenant_id
+
     def createZeebeClient(self):
 
         if hasattr(self, 'clusterId') and self.clusterId is not None and self.clusterId != "":
@@ -72,21 +76,19 @@ class Deployment:
             )
         else:
             grpc_channel = create_insecure_channel(
-                hostname=self.clusterHost,
-                port=self.clusterPort
+                grpc_address=self.clusterHost + ':' + self.clusterPort
             )
 
         self.zeebeClient = ZeebeClient(grpc_channel)
         return self.zeebeClient
 
-
-    def deploy(self, models):
-        print("Deploying resources: {}".format(models))
+    def deploy(self, model_list: list, tenant_id: str):
+        print("Deploying resources: {}".format(model_list))
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.deploy_resources(models))
+        loop.run_until_complete(self.deploy_resources(model_list, tenant_id))
 
-    async def deploy_resources(self, resource_paths):
-        return await self.zeebeClient.deploy_process(*resource_paths)
+    async def deploy_resources(self, resource_paths: list, tenant_id: str):
+        return await self.zeebeClient.deploy_resource(*resource_paths, tenant_id=tenant_id)
 
 
 if __name__ == "__main__":
@@ -110,6 +112,12 @@ if __name__ == "__main__":
     except KeyError:
         pass
 
+    try:
+        if os.environ["CAMUNDA_TENANT_ID"] is not None and os.environ["CAMUNDA_TENANT_ID"] != "":
+            deploy.setTenantId(os.environ["CAMUNDA_TENANT_ID"])
+    except KeyError:
+        pass
+
     deploy.createZeebeClient()
 
     modelPath = os.environ["MODEL_PATH"]
@@ -127,4 +135,4 @@ if __name__ == "__main__":
         models.extend(glob.glob("{}/**/{}".format(modelPath, model_type), recursive=True))
     # print("Found resources: ", models)
 
-    deploy.deploy(models)
+    deploy.deploy(models, tenant_id=deploy.tenant_id)
