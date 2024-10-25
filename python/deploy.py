@@ -73,7 +73,7 @@ class Deployment:
 
     def create_zeebe_client(self) -> ZeebeClient:
 
-        if hasattr(self, 'clusterId') and self.cluster_id is not None and self.cluster_id != "":
+        if self.cluster_id is not None and self.cluster_id != "":
             grpc_channel = create_camunda_cloud_channel(
                 client_id=self.client_id,
                 client_secret=self.client_secret,
