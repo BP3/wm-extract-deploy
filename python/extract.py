@@ -12,50 +12,44 @@
 
 import os
 import env
-import webModeler
+import web_modeler
+
 
 class Extraction:
 
-    # In the future we may need to override for Self Managed if the authentication mechanism is different
-    SAAS_HOST = 'cloud.camunda.io'
-    wmHost = 'cloud.camunda.io'
-    grantType = 'client_credentials'
-    protocol = 'https'
-    configFile = 'config.yml'
-
     def __init__(self):
-        self.env = env.Environment()
-        self.wm = webModeler.webModeler()
-        self.wm.setWMHost(self.wmHost)
-        self.checkEnv()
+        self.model_path = env.DEFAULT_MODEL_PATH
+        self.wm = web_modeler.WebModeler()
+        self.check_env()
 
-    # Just for debug for now
-    def checkEnv(self):
-        self.env.checkEnvVar('CAMUNDA_WM_HOST', False)
-        self.env.checkEnvVar('CAMUNDA_WM_AUTH', False)
-        self.env.checkEnvVar('CAMUNDA_WM_SSL', False)
-        self.env.checkEnvVar('CAMUNDA_WM_CLIENT_ID', False)
-        self.env.checkEnvVar('CAMUNDA_WM_CLIENT_SECRET')
-        self.env.checkEnvVar('MODEL_PATH', False)
+    @staticmethod
+    def check_env():
+        # Just debug for now
+        env.check_env_var('CAMUNDA_WM_HOST', False)
+        env.check_env_var('CAMUNDA_WM_AUTH', False)
+        env.check_env_var('CAMUNDA_WM_SSL', False)
+        env.check_env_var('CAMUNDA_WM_CLIENT_ID', False)
+        env.check_env_var('CAMUNDA_WM_CLIENT_SECRET')
+        env.check_env_var('MODEL_PATH', False)
 
-    def getModelPath(self):
-        return self.env.getModelPath()
+    def get_model_path(self) -> str:
+        return self.model_path
 
-    def setModelPath(self, modelPath):
-        self.env.setModelPath(modelPath)
-        if not os.path.exists(self.env.getModelPath()):
-            os.makedirs(self.env.getModelPath())
+    def set_model_path(self, model_path: str):
+        self.model_path = model_path
+        if not os.path.exists(self.model_path):
+            os.makedirs(self.model_path)
 
-    def extract(self, path, items):
+    def extract(self, path: str, items: dict):
 
         for item in items["items"]:
             file_path = path + "/" + item["simplePath"]
             print("Extracting item to {}".format(file_path))
 
-            if(item["canonicalPath"] is not None and item["canonicalPath"]):
+            if item["canonicalPath"] is not None and item["canonicalPath"]:
                 os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
-            data = self.wm.getFileById(item["id"])["content"]
+            data = self.wm.get_file_by_id(item["id"])["content"]
             # print(item)
             with open(file_path, "w") as file:
                 file.write(data)
@@ -64,23 +58,22 @@ class Extraction:
 
 if __name__ == "__main__":
     extract = Extraction()
-    projectRef = None
+    project_ref = None
 
     modelPath = os.environ["MODEL_PATH"]
-    extract.setModelPath(modelPath)
-    modelPath = extract.getModelPath()
+    extract.set_model_path(modelPath)
+    modelPath = extract.get_model_path()
 
     # Optional EnvVars
     try:
         if os.environ["CAMUNDA_WM_PROJECT"] is not None and os.environ["CAMUNDA_WM_PROJECT"] != "":
-            projectRef = os.environ['CAMUNDA_WM_PROJECT']
+            project_ref = os.environ['CAMUNDA_WM_PROJECT']
     except KeyError:
         pass
 
-    extract.wm.configure()
     extract.wm.authenticate()
 
-    project = extract.wm.getProject(projectRef)
-    items = extract.wm.searchFiles(project["items"][0]["id"])
+    project = extract.wm.get_project(project_ref)
+    project_items = extract.wm.search_files(project["items"][0]["id"])
 
-    extract.extract(modelPath, items)
+    extract.extract(modelPath, project_items)
