@@ -170,8 +170,8 @@ definitions:
 
 The following `bitbucket-pipelines.yml` file then becomes part of the "template" that is applied
 to every new Bitbucket repo that is created to track a Web Modeler project. In this way any changes
-that need to be made to the pipeline(s) can be made in one place and instantly they are rolled out
-to all of the projects.
+that need to be made to the pipeline(s) can be made in one place, and immediately rolled out
+to all the projects.
 
 ```yaml
 pipelines:

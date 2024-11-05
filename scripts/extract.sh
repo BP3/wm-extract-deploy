@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ############################################################################
 #
@@ -11,57 +11,35 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
+SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
+. "${SCRIPT_DIR}"/functions.sh
 
-source $SCRIPT_DIR/functions.sh
+checkRequiredEnvVar MODEL_PATH
 
-checkRequiredEnvVar CICD_ACCESS_TOKEN               "$CICD_ACCESS_TOKEN"
-checkRequiredEnvVar CICD_REPOSITORY_PATH            "$CICD_REPOSITORY_PATH"
+GIT_REPO="$(getGitRepoUrl)"
 
-if [ "$CICD_PLATFORM" = "" ]; then
-  CICD_PLATFORM=gitlab
-  if [ -z "$CICD_SERVER_HOST" ]; then
-    CICD_SERVER_HOST="gitlab.com"
-  fi
-elif [ "$CICD_PLATFORM" = "github" ]; then
-  if [ -z "$CICD_SERVER_HOST" ]; then
-    CICD_SERVER_HOST="github.com"
-  fi
-elif [ "$CICD_PLATFORM" = "bitbucket" ]; then
-  if [ -z "$CICD_SERVER_HOST" ]; then
-    CICD_SERVER_HOST="bitbucket.org"
-  fi
-fi
-echo "The CI/CD platform is: $CICD_PLATFORM"
+git config set user.name "${GIT_USERNAME}"
+git config set user.email "${GIT_USER_EMAIL}"
 
-git config --global user.name "$GIT_USERNAME"
-git config --global user.email $GIT_USER_EMAIL
-
-if [ "$CICD_BRANCH" = "" ]; then
+if [ "${CICD_BRANCH}" = "" ]; then
   CICD_BRANCH=main
 fi
-echo "Checkout branch: $CICD_BRANCH"
-git checkout -B $CICD_BRANCH
+echo "Checkout branch: ${CICD_BRANCH}"
+git checkout -B "${CICD_BRANCH}"
+
 # Delete BPM artifacts to propagate deletions from Web Modeller
-git rm --ignore-unmatch $MODEL_PATH/*.bpmn
-git rm --ignore-unmatch $MODEL_PATH/*.dmn
-git rm --ignore-unmatch $MODEL_PATH/*.form
+git rm --ignore-unmatch "${MODEL_PATH}"/*.bpmn
+git rm --ignore-unmatch "${MODEL_PATH}"/*.dmn
+git rm --ignore-unmatch "${MODEL_PATH}"/*.form
 
-python $SCRIPT_DIR/extract.py
+python "${SCRIPT_DIR}"/extract.py
 
-git add *.bpmn  2>/dev/null
-git add *.dmn  2>/dev/null
-git add *.form  2>/dev/null
-git add config.*  2>/dev/null
+git add -- *.bpmn  2>/dev/null
+git add -- *.dmn  2>/dev/null
+git add -- *.form  2>/dev/null
+git add -- config.*  2>/dev/null
 git status
 
-# [skip ci] works across all the supported platforms
-if [ "$COMMIT_MSG" = "" ]; then
-  COMMIT_MSG="Updated by Camunda extract-deploy pipeline"
-fi
-if [ "$SKIP_CI" = "" -o "$SKIP_CI" = "true" ]; then
-  COMMIT_MSG="${COMMIT_MSG} [skip ci]"
-fi
+git commit -m "$(getCommitMessage)"
 
-git commit -m "${COMMIT_MSG}"
-
-git push "$(getUrl "$CICD_PLATFORM" "$CICD_SERVER_HOST" "$CICD_ACCESS_TOKEN" "$CICD_REPOSITORY_PATH")" $CICD_BRANCH
+git push "${GIT_REPO}" "${CICD_BRANCH}"
