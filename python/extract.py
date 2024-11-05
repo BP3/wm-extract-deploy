@@ -9,45 +9,28 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
-
 import os
-import env
-import web_modeler
+from action import ModelAction
+from web_modeler import WebModeler
 
-
-class Extraction:
+class Extraction(ModelAction):
 
     def __init__(self):
-        self.model_path = env.DEFAULT_MODEL_PATH
-        self.wm = web_modeler.WebModeler()
-        self.check_env()
+        super().__init__()
+        self.wm = WebModeler()
 
-    @staticmethod
-    def check_env():
-        # Just debug for now
-        env.check_env_var('CAMUNDA_WM_HOST', False)
-        env.check_env_var('CAMUNDA_WM_AUTH', False)
-        env.check_env_var('CAMUNDA_WM_SSL', False)
-        env.check_env_var('CAMUNDA_WM_CLIENT_ID', False)
-        env.check_env_var('CAMUNDA_WM_CLIENT_SECRET')
-        env.check_env_var('MODEL_PATH', False)
+    def extract(self, items: dict):
+        path = self.model_path
 
-    def get_model_path(self) -> str:
-        return self.model_path
-
-    def set_model_path(self, model_path: str):
-        self.model_path = model_path
-        if not os.path.exists(self.model_path):
-            os.makedirs(self.model_path)
-
-    def extract(self, path: str, items: dict):
+        if not os.path.exists(path):
+            os.makedirs(path)
 
         for item in items["items"]:
             file_path = path + "/" + item["simplePath"]
             print("Extracting item to {}".format(file_path))
 
             if item["canonicalPath"] is not None and item["canonicalPath"]:
-                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                os.makedirs(os.path.dirname(file_path), exist_ok = True)
 
             data = self.wm.get_file_by_id(item["id"])["content"]
             # print(item)
@@ -55,25 +38,15 @@ class Extraction:
                 file.write(data)
                 file.close()
 
+    def main(self):
+        self.wm.authenticate()
+
+        project = self.wm.get_project(self._getenv("CAMUNDA_WM_PROJECT"))
+        project_items = self.wm.list_files(project["items"][0]["id"])
+
+        self.extract(project_items)
+
 
 if __name__ == "__main__":
-    extract = Extraction()
-    project_ref = None
+    Extraction().main()
 
-    modelPath = os.environ["MODEL_PATH"]
-    extract.set_model_path(modelPath)
-    modelPath = extract.get_model_path()
-
-    # Optional EnvVars
-    try:
-        if os.environ["CAMUNDA_WM_PROJECT"] is not None and os.environ["CAMUNDA_WM_PROJECT"] != "":
-            project_ref = os.environ['CAMUNDA_WM_PROJECT']
-    except KeyError:
-        pass
-
-    extract.wm.authenticate()
-
-    project = extract.wm.get_project(project_ref)
-    project_items = extract.wm.search_files(project["items"][0]["id"])
-
-    extract.extract(modelPath, project_items)

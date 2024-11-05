@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ############################################################################
 #
@@ -11,60 +11,57 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
+SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 
-mode_extract=0
-mode_deploy=0
-mode_templates=0
+usage() {
+  if [ "$1" != "" ]; then
+    echo "$1"
+  fi
+
+cat << EOF
+Usage: extractDeploy.sh <MODE>
+
+A CI/CD automation wrapper for interacting with assets between a Camunda 8 Web Modeler project, Zeebe cluster, and source control repositories.
+
+Available Modes:
+  extract            Extracts the assets from a web modeler project, and commits them to the repository
+  deploy             Deploys the assets from the repository to the specified Zeebe cluster
+  deploy templates   Deploys the Connector templates from the repository into Web Modeler
+
+The configuration options for the commands are defined in environment variables as this is intended to run as part of a CI/CD pipeline.
+See https://github.com/BP3/wm-extract-deploy for more details.
+EOF
+
+  if [ "$1" != "" ]; then
+    exit 1
+  fi
+}
 
 case "$1" in
     extract)
-      mode_extract=1
-        ;;
-    deploy)
-      if [ $# -gt 1 ] && [ "$2" == "templates" ]; then
-        mode_templates=1
-      else
-        mode_deploy=1
+      if [ $# -gt 1 ]; then
+        usage "Unknown mode argument: '$2'"
       fi
-        ;;
+      echo "mode = 'extract'"
+      "${SCRIPT_DIR}"/extract.sh
+      ;;
+    deploy)
+      if [ $# -gt 1 ]; then
+        if [ "$2" = "templates" ]; then
+          echo "mode = 'deploy templates'"
+          "${SCRIPT_DIR}"/deployTemplates.sh
+        else
+          usage "Unknown mode argument: '$2'"
+        fi
+      else
+        echo "mode = 'deploy'"
+        "${SCRIPT_DIR}"/deploy.sh
+      fi
+      ;;
     help)
-      $SCRIPT_DIR/help.sh
+      usage
       ;;
     *)
-      echo "Unknown mode: '$1'"
-      $SCRIPT_DIR/help.sh
-      exit 1
-        ;;
+      usage "Unknown mode: '$1'"
+      ;;
 esac
-
-if [ $mode_extract == 1 ]; then
-  echo "mode = 'extract'"
-#  checkRequiredEnvVar CAMUNDA_WM_CLIENT_ID          "$CAMUNDA_WM_CLIENT_ID"
-#  checkRequiredEnvVar CAMUNDA_WM_CLIENT_SECRET      "$CAMUNDA_WM_CLIENT_SECRET"
-#  checkRequiredEnvVar CICD_PLATFORM                 "$CICD_PLATFORM"
-#  checkRequiredEnvVar CICD_ACCESS_TOKEN             "$CICD_ACCESS_TOKEN"
-#  checkRequiredEnvVar CICD_REPOSITORY_PATH          "$CICD_REPOSITORY_PATH"
-#  checkRequiredEnvVar GIT_USERNAME                  "$GIT_USERNAME"
-#  checkRequiredEnvVar GIT_USER_EMAIL                "$GIT_USER_EMAIL"
-
-  $SCRIPT_DIR/extract.sh
-fi
-
-if [ $mode_deploy == 1 ]; then
-  echo "mode = 'deploy'"
-#  checkRequiredEnvVar ZEEBE_CLIENT_ID               "$ZEEBE_CLIENT_ID"
-#  checkRequiredEnvVar ZEEBE_CLIENT_SECRET           "$ZEEBE_CLIENT_SECRET"
-#  checkRequiredEnvVar CAMUNDA_CLUSTER_ID            "$CAMUNDA_CLUSTER_ID"
-#  checkRequiredEnvVar CAMUNDA_CLUSTER_REGION        "$CAMUNDA_CLUSTER_REGION"
-#  checkRequiredEnvVar PROJECT_TAG                   "$PROJECT_TAG"
-
-  $SCRIPT_DIR/deploy.sh
-fi
-
-if [ $mode_templates == 1 ]; then
-  echo "mode = 'deploy templates'"
-#  checkRequiredEnvVar CAMUNDA_WM_CLIENT_ID          "$CAMUNDA_WM_CLIENT_ID"
-#  checkRequiredEnvVar CAMUNDA_WM_CLIENT_SECRET      "$CAMUNDA_WM_CLIENT_SECRET"
-
-  $SCRIPT_DIR/deployTemplates.sh
-fi
