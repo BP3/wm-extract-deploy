@@ -17,22 +17,6 @@ source $SCRIPT_DIR/functions.sh
 checkRequiredEnvVar CICD_ACCESS_TOKEN               "$CICD_ACCESS_TOKEN"
 checkRequiredEnvVar CICD_REPOSITORY_PATH            "$CICD_REPOSITORY_PATH"
 
-if [ "$CICD_PLATFORM" = "" ]; then
-  CICD_PLATFORM=gitlab
-  if [ -z "$CICD_SERVER_HOST" ]; then
-    CICD_SERVER_HOST="gitlab.com"
-  fi
-elif [ "$CICD_PLATFORM" = "github" ]; then
-  if [ -z "$CICD_SERVER_HOST" ]; then
-    CICD_SERVER_HOST="github.com"
-  fi
-elif [ "$CICD_PLATFORM" = "bitbucket" ]; then
-  if [ -z "$CICD_SERVER_HOST" ]; then
-    CICD_SERVER_HOST="bitbucket.org"
-  fi
-fi
-echo "The CI/CD platform is: $CICD_PLATFORM"
-
 git config --global user.name "$GIT_USERNAME"
 git config --global user.email $GIT_USER_EMAIL
 

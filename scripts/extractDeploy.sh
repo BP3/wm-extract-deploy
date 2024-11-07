@@ -37,6 +37,27 @@ case "$1" in
         ;;
 esac
 
+if [ "$CICD_PLATFORM" = "" ]; then
+  CICD_PLATFORM=gitlab
+  if [ -z "$CICD_SERVER_HOST" ]; then
+    CICD_SERVER_HOST="gitlab.com"
+  fi
+elif [ "$CICD_PLATFORM" = "github" ]; then
+  if [ -z "$CICD_SERVER_HOST" ]; then
+    CICD_SERVER_HOST="github.com"
+  fi
+elif [ "$CICD_PLATFORM" = "bitbucket" ]; then
+  if [ -z "$CICD_SERVER_HOST" ]; then
+    CICD_SERVER_HOST="bitbucket.org"
+
+    # See https://community.atlassian.com/t5/Bitbucket-questions/Bitbucket-Pipelines-dubious-ownership-error/qaq-p/2189169
+    #It is believed that we are seeing this because we changed the default user in the docker image from root to bp3user
+    # Not clear yet whether this issue may also impact other platforms
+    git config --global --add safe.directory /opt/atlassian/pipelines/agent/build
+  fi
+fi
+echo "The CI/CD platform is: $CICD_PLATFORM"
+
 if [ $mode_extract == 1 ]; then
   echo "mode = 'extract'"
 #  checkRequiredEnvVar CAMUNDA_WM_CLIENT_ID          "$CAMUNDA_WM_CLIENT_ID"
