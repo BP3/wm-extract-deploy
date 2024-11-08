@@ -49,13 +49,12 @@ elif [ "$CICD_PLATFORM" = "github" ]; then
 elif [ "$CICD_PLATFORM" = "bitbucket" ]; then
   if [ -z "$CICD_SERVER_HOST" ]; then
     CICD_SERVER_HOST="bitbucket.org"
-
+  fi
     # See https://community.atlassian.com/t5/Bitbucket-questions/Bitbucket-Pipelines-dubious-ownership-error/qaq-p/2189169
     # Allow for user mismatch between the repo owner (root) and our docker user (bp3user)
     # Not clear yet whether this issue may also impact other platforms
     # Updating global config ensures that the changes are only made in this environment and not to the repo itself
     git config --global --add safe.directory /opt/atlassian/pipelines/agent/build
-  fi
 fi
 echo "The CI/CD platform is: $CICD_PLATFORM"
 
