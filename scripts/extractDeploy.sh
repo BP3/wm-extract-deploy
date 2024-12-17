@@ -69,6 +69,9 @@ if [ $mode_extract == 1 ]; then
 #  checkRequiredEnvVar GIT_USER_EMAIL                "$GIT_USER_EMAIL"
 
   $SCRIPT_DIR/extract.sh
+  if [ $? -ne 0 ]; then
+    exit 1
+  fi
 fi
 
 if [ $mode_deploy == 1 ]; then
@@ -88,4 +91,7 @@ if [ $mode_templates == 1 ]; then
 #  checkRequiredEnvVar CAMUNDA_WM_CLIENT_SECRET      "$CAMUNDA_WM_CLIENT_SECRET"
 
   $SCRIPT_DIR/deployTemplates.sh
+  if [ $? -ne 0 ]; then
+    exit 1
+  fi
 fi
