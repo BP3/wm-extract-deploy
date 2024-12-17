@@ -9,37 +9,62 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
+import argparse
 import requests
 import os
 import json
 import yaml
 from typing import IO
-from action import Action
 
-class WebModeler(Action):
-    SAAS_HOST = 'cloud.camunda.io'
-    GRANT_TYPE = 'client_credentials'
+class AuthException(BaseException):
+    pass
+
+class WebModeler:
+    __SAAS_HOST = 'cloud.camunda.io'
     protocol = 'https'
     config_file = 'config.yml'
-    auth_host = SAAS_HOST
-    wm_host = SAAS_HOST
+    auth_host = __SAAS_HOST
+    wm_host = __SAAS_HOST
     client_secret = None
     client_id = None
     __config = None
     __access_token = None
 
-    def __init__(self):
+    parser = argparse.ArgumentParser(add_help = False)
+    parser.add_argument("--client-id", dest="client_id", required = True, help = "Web Modeler client ID")
+    parser.add_argument("--client-secret", dest="client_secret", required = True, help = "Web Modeler client secret")
+    parser.add_argument("--host", help = "Web Modeler host")
+    parser.add_argument("--authentication-host", dest="auth_host", help = "Web Modeler authentication host")
+    parser.add_argument("--ssl", nargs='?', const='true', default='false', help = "Web Modeler use SSL (HTTPS)") # or a boolean value
+    parser.add_argument("--config-file", dest="config_file", help = "Web Modeler project config file")
+
+    def __init__(self, args: argparse.Namespace):
         super().__init__()
-        self.__configure()
+        self.client_id = args.client_id
+        self.client_secret = args.client_secret
+        if args.ssl is not None and args.ssl.lower() == 'false':
+            self.protocol = 'http'
+        if args.host is not None:
+            self.wm_host = args.host
+        if args.auth_host is not None:
+            self.auth_host = args.auth_host
+        if args.config_file is not None:
+            self.config_file = args.config_file
+
+        for config_file in [self.config_file, "config.yaml", "config.json"]:
+            if os.path.exists(config_file):
+                self.config_file = config_file
+                print("Using config file:", config_file)
+                break
 
     def __get_auth_url(self) -> str:
-        if self.auth_host == self.SAAS_HOST:
+        if self.auth_host == self.__SAAS_HOST:
             return self.protocol + '://login.' + self.auth_host + '/oauth/token'
         else:
             return self.protocol + '://' + self.auth_host + '/auth/realms/camunda-platform/protocol/openid-connect/token'
 
     def __get_wm_api_url(self, version: int = 1) -> str:
-        if self.wm_host == self.SAAS_HOST:
+        if self.wm_host == self.__SAAS_HOST:
             return self.protocol + '://modeler.' + self.wm_host + '/api/v' + version
         else:
             return self.protocol + '://' + self.wm_host + '/api/v' + version
@@ -68,11 +93,12 @@ class WebModeler(Action):
             "client_id": self.client_id,
             "client_secret": self.client_secret,
             "audience": 'api.' + self.wm_host,
-            "grant_type": self.GRANT_TYPE
+            "grant_type": 'client_credentials'
         })
 
+        if response.status_code != 200:
+            raise AuthException("Attempt to authenticate failed.", response.status_code, response.text)
         print("Authentication response", response.status_code)
-
         self.__access_token = response.json()["access_token"]
 
     def find_project(self, key: str, value: str) -> dict:
@@ -118,36 +144,6 @@ class WebModeler(Action):
         # print("Retrieve file content response", response.status_code)
         return response.json()
 
-    def _check_env(self):
-        # Just for debug for now
-        super()._check_env()
-        self._check_env_var('CAMUNDA_WM_HOST', False)
-        self._check_env_var('CAMUNDA_WM_AUTH', False)
-        self._check_env_var('CAMUNDA_WM_SSL', False)
-        self._check_env_var('CAMUNDA_WM_CLIENT_ID', False)
-        self._check_env_var('CAMUNDA_WM_CLIENT_SECRET')
-        self._check_env_var('WM_PROJECT_METADATA_FILE', False)
-
-    def __configure(self):
-        self.client_id = os.environ["CAMUNDA_WM_CLIENT_ID"]
-        self.client_secret = os.environ['CAMUNDA_WM_CLIENT_SECRET']
-
-        if self._getenv("CAMUNDA_WM_SSL") is not None and self._getenv("CAMUNDA_WM_SSL").lower() == "false":
-            self.protocol = 'http'
-
-        if self._getenv("CAMUNDA_WM_HOST") is not None:
-            self.wm_host = self._getenv("CAMUNDA_WM_HOST")
-
-        if self._getenv("CAMUNDA_WM_AUTH") is not None:
-            self.auth_host = self._getenv("CAMUNDA_WM_AUTH")
-
-        if self._getenv("WM_PROJECT_METADATA_FILE") is not None:
-            self.config_file = self._getenv("WM_PROJECT_METADATA_FILE")
-        for config_file in [self.config_file, "config.yaml", "config.json"]:
-            if os.path.exists(config_file):
-                self.config_file = config_file
-
-
     def __create_reference_file(self, data: dict):
         if not os.path.exists(self.config_file):
             with open(self.config_file, "w") as file:
@@ -155,7 +151,6 @@ class WebModeler(Action):
                     file.write(yaml.dump(data))
                 elif self.config_file.endswith("json"):
                     file.write(json.dumps(data))
-                file.close()
 
     def __load_project_config(self):
         # Check to see if the config file options exists
@@ -168,44 +163,49 @@ class WebModeler(Action):
                     self.__config = self.__parse_json_file(file)
 
     def get_project(self, project_ref: str) -> dict:
-        project = None
+        projects = None
         create_config_file = False
         self.__load_project_config()
 
         # If we loaded a config, search for the provided ID
         if self.__config is not None:
             project_id = self.__config["project"]["id"]
-            project = self.find_project("id", project_id)
-            if project is None:
+            projects = self.find_project("id", project_id)
+            if projects is None:
                 print("Project not found using project ID {} from {}".format(project_id, self.config_file))
-            elif not project['items']:
+            elif not projects['items']:
                 print("Project not found using project ID {} from {}".format(project_id, self.config_file))
-                project = None
+                projects = None
 
         # If we failed to find the specified project, or no config was supplied then try looking it up by projectRef
-        if project is None:
+        if projects is None:
             create_config_file = True
             # It could be we were given the Id
             print("project_ref = '{}'".format(project_ref))
             if project_ref is not None and project_ref != "":
-                project = self.find_project("id", project_ref)
+                projects = self.find_project("id", project_ref)
                 # If there are no 'items' then try looking up the project by name
-                if project is not None and not project['items']:
-                    project = self.find_project("name", project_ref)
-                    if not project["items"] and project_ref is not None:
+                if projects is not None and not projects['items']:
+                    projects = self.find_project("name", project_ref)
+                    if not projects["items"] and project_ref is not None:
                         print("Project '{}' not found".format(project_ref))
             else:
                 raise ValueError("Either a valid config file or 'CAMUNDA_WM_PROJECT' environment variable must be "
                                  "supplied.")
 
-        if not project["items"]:
+        if not projects["items"]:
             raise ValueError("Web Modeler project not found")
+
+        if not projects["items"].length > 1:
+            raise ValueError("Web Modeler multiple projects found")
+
+        project = projects['items'][0];
 
         if create_config_file:
             data = {
                 "project": {
-                    "id": project['items'][0]['id'],
-                    "name": project["items"][0]["name"]
+                    "id": project['id'],
+                    "name": project["name"]
                 }
             }
             self.__create_reference_file(data)

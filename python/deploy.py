@@ -9,6 +9,7 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
+import argparse
 import asyncio
 import glob
 import os
@@ -18,7 +19,7 @@ from pyzeebe import (
     create_camunda_cloud_channel,
     create_insecure_channel
 )
-from action import ModelAction
+from model_action import ModelAction
 
 class Deployment(ModelAction):
     cluster_port = 26500
@@ -30,19 +31,8 @@ class Deployment(ModelAction):
     client_id = None
     tenant_ids: List[str] = None
 
-    def __init__(self):
-        super().__init__()
-
-    def _check_env(self):
-        # Just for debug for now
-        super()._check_env()
-        self._check_env_var('ZEEBE_CLIENT_ID', False)
-        self._check_env_var('ZEEBE_CLIENT_SECRET')
-        self._check_env_var('CAMUNDA_CLUSTER_ID', False)
-        self._check_env_var('CAMUNDA_CLUSTER_REGION', False)
-        self._check_env_var('CAMUNDA_CLUSTER_HOST', False)
-        self._check_env_var('CAMUNDA_CLUSTER_PORT', False)
-
+    def __init__(self, args: argparse.Namespace):
+        super().__init__(args)
 
     def create_zeebe_client(self) -> None:
         if self.cluster_id is not None and self.cluster_id != "":
@@ -68,39 +58,60 @@ class Deployment(ModelAction):
     async def deploy_resources(self, resource_paths: list, tenant_id: str):
         return await self.zeebe_client.deploy_resource(*resource_paths, tenant_id = tenant_id)
 
-    def main(self):
-        self.client_id = os.environ["ZEEBE_CLIENT_ID"]
-        self.client_secret = os.environ['ZEEBE_CLIENT_SECRET']
+    def main(self, args):
+        self.client_id = args.client_id
+        self.client_secret = args.client_secret
 
-        if self._getenv("CAMUNDA_CLUSTER_ID") is not None:
-            self.cluster_id = self._getenv("CAMUNDA_CLUSTER_ID")
-            self.region = self._getenv("CAMUNDA_CLUSTER_REGION")
+        if args.cluster_id is not None:
+            self.cluster_id = args.cluster_id
+            self.region = args.cluster_region
+        else:
+            self.cluster_host = args.cluster_host
+            self.cluster_port = args.cluster_port
 
-        if self._getenv("CAMUNDA_CLUSTER_HOST") is not None:
-            self.cluster_host = self._getenv("CAMUNDA_CLUSTER_HOST")
+        if args.tenant_ids is not None:
+            self.tenant_ids = args.tenant_ids.split(',')
 
-        if self._getenv("CAMUNDA_CLUSTER_PORT") is not None:
-            self.cluster_port = int(self._getenv("CAMUNDA_CLUSTER_PORT"))
-
-        if self._getenv("CAMUNDA_TENANT_ID") is not None:
-            self.tenant_ids = self._getenv("CAMUNDA_TENANT_ID").split(',')
-
-        if not os.path.exists(self.model_path):
-            raise FileNotFoundError("Model Path directory '{}' doesn't exist".format(self.model_path))
-
-        models = []
+        files = []
         # Types we need to support according to:
         # https://docs.camunda.io/docs/next/apis-tools/zeebe-api/gateway-service/#input-deployresourcerequest
-        for model_type in ("*.bpmn", "*.dmn", "*.form"):
-            models.extend(glob.glob("{}/**/{}".format(self.model_path, model_type), recursive = True))
-        # print("Found resources: ", models)
+        file_types = ("*.bpmn", "*.dmn", "*.form")
+        for file_type in file_types:
+            files.extend(glob.glob("{}/**/{}".format(self.model_path, file_type), recursive = True))
+        if len(files) == 0:
+            print("Didn't find any files to deploy in '{}' matching {}.".format(self.model_path, file_types))
+            return
+
+        # print("Found files: ", files)
 
         if self.tenant_ids:
             for tenant in self.tenant_ids:
-                self.deploy(models, tenant_id = tenant)
+                self.deploy(files, tenant_id = tenant)
         else:
-            self.deploy(models)
+            self.deploy(files)
 
 
 if __name__ == "__main__":
-    Deployment().main()
+    parser = argparse.ArgumentParser(parents = [ModelAction.parser])
+    parser.add_argument("--client-id", required = True, dest = "client_id", help = "Zeebe client ID")
+    parser.add_argument("--client-secret", required = True, dest = "client_secret", help = "Zeebe client ID")
+    cluster_group = parser.add_mutually_exclusive_group(required=True)
+    cluster_group.add_argument("--cluster-id", dest ="cluster_id", help ="")
+    cluster_group.add_argument("--cluster-host", dest ="cluster_host", help ="")
+    cluster_secondary = parser.add_mutually_exclusive_group(required=True)
+    cluster_secondary.add_argument("--cluster-region", dest = "cluster_region", help = "")
+    cluster_secondary.add_argument("--cluster-port", type = int, dest = "cluster_port", help = "")
+    parser.add_argument("--tenant-ids", dest = "tenant_ids", help = "")
+    args = parser.parse_args()
+    if args.cluster_id is not None and args.cluster_region is None:
+        parser.print_usage()
+        print("error: argument --cluster-region is required with argument --cluster-id")
+        exit(2)
+    if args.cluster_host is not None and args.cluster_port is None:
+        parser.print_usage()
+        print("error: argument --cluster-port is required with argument --cluster-host")
+        exit(2)
+    if not os.path.exists(args.model_path):
+        print("error: argument --model-path: invalid path: '{}' does not exist".format(args.model_path))
+        exit(2)
+    Deployment(args).main(args)

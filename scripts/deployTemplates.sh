@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 ############################################################################
 #
@@ -14,19 +14,37 @@
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 . "${SCRIPT_DIR}"/functions.sh
 
-GIT_REPO="$(getGitRepoUrl)"
+checkRequiredEnvVar CICD_ACCESS_TOKEN
+checkRequiredEnvVar CICD_REPOSITORY_PATH
+checkRequiredEnvVar GIT_USERNAME
+checkRequiredEnvVar GIT_USER_EMAIL
+checkRequiredEnvVar CAMUNDA_WM_CLIENT_ID
+checkRequiredEnvVar CAMUNDA_WM_CLIENT_SECRET
 
-git config set user.name "${GIT_USERNAME}"
-git config set user.email "${GIT_USER_EMAIL}"
+# Use --global so changes are isolated to the container
+git config --global set user.name "${GIT_USERNAME}"
+git config --global set user.email "${GIT_USER_EMAIL}"
 
 git fetch
 
-git checkout main
+if [ "${CICD_BRANCH}" = "" ]; then
+  CICD_BRANCH=main
+fi
+echo "Checkout branch: ${CICD_BRANCH}"
+git checkout -B "${CICD_BRANCH}"
 
-python "${SCRIPT_DIR}"/deploy_connector_templates.py
+args=
+add_arg --model-path "${MODEL_PATH}"
+add_arg --client-id "${CAMUNDA_WM_CLIENT_ID}"
+add_arg --client-secret "${CAMUNDA_WM_CLIENT_SECRET}"
+add_arg --host "${CAMUNDA_WM_HOST}"
+add_arg --authentication-host "${CAMUNDA_WM_AUTH}"
+add_arg --ssl "${CAMUNDA_WM_SSL}"
+
+python "${SCRIPT_DIR}"/deploy_connector_templates.py "${args}"
 
 git add config.*
 
 git commit -m "$(getCommitMessage)"
 
-git push "${GIT_REPO}" "${CICD_BRANCH}"
+git push "$(getGitRepoUrl)" "${CICD_BRANCH}"

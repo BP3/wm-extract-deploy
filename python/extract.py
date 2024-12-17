@@ -9,44 +9,47 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
+import argparse
 import os
-from action import ModelAction
-from web_modeler import WebModeler
+from model_action import ModelAction
+from web_modeler import WebModeler, AuthException
 
 class Extraction(ModelAction):
 
-    def __init__(self):
-        super().__init__()
-        self.wm = WebModeler()
+    def __init__(self, args):
+        super().__init__(args)
+        self.wm = WebModeler(args)
 
     def extract(self, items: dict):
-        path = self.model_path
-
-        if not os.path.exists(path):
-            os.makedirs(path)
+        if not os.path.exists(self.model_path):
+            os.makedirs(self.model_path)
 
         for item in items["items"]:
-            file_path = path + "/" + item["simplePath"]
+            file_path = self.model_path + "/" + item["simplePath"]
             print("Extracting item to {}".format(file_path))
 
             if item["canonicalPath"] is not None and item["canonicalPath"]:
                 os.makedirs(os.path.dirname(file_path), exist_ok = True)
 
             data = self.wm.get_file_by_id(item["id"])["content"]
-            # print(item)
             with open(file_path, "w") as file:
                 file.write(data)
-                file.close()
 
-    def main(self):
+    def main(self, args):
         self.wm.authenticate()
 
-        project = self.wm.get_project(self._getenv("CAMUNDA_WM_PROJECT"))
-        project_items = self.wm.list_files(project["items"][0]["id"])
+        project_id = self.wm.get_project(args.project)["id"]
+        project_items = self.wm.list_files(project_id)
 
         self.extract(project_items)
 
 
 if __name__ == "__main__":
-    Extraction().main()
-
+    parser = argparse.ArgumentParser(parents = [ModelAction.parser, WebModeler.parser])
+    parser.add_argument("--project", help = "Modeler project id/name")
+    args = parser.parse_args()
+    try:
+        Extraction(args).main(args)
+    except AuthException as ex:
+        print(ex)
+        exit(3)

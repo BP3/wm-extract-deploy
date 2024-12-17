@@ -11,16 +11,40 @@
 ############################################################################
 
 checkRequiredEnvVar() {
-  if [ "$(eval \$$1)" = "" ]; then
+  if [ "$(eval echo "\$$1")" = "" ]; then
     echo "Environment variable '$1' is not set"
     exit 1
   fi
 }
 
-getGitRepoUrl() {
-  checkRequiredEnvVar CICD_ACCESS_TOKEN
-  checkRequiredEnvVar CICD_REPOSITORY_PATH
+checkRequiredEnvVarXor() {
+  if [ "$(eval echo "\$$1")" = "" ] && [ "$(eval echo "\$$2")" = "" ]; then
+    echo "Environment variable '$1' or '$2' must be set"
+    exit 1
+  elif [ "$(eval echo "\$$1")" != "" ] && [ "$(eval echo "\$$2")" != "" ]; then
+    echo "Environment variable '$1' and '$2' cannot both be set"
+    exit 1
+  fi
+}
 
+checkRequiredEnvVarAnd() {
+  if [ "$(eval echo "\$$1")" != "" ] && [ "$(eval echo "\$$2")" = "" ]; then
+    echo "Environment variable '$2' must be set if '$1' is set"
+    exit 1
+  fi
+}
+
+add_arg() {
+  if [ "$2" != "" ]; then
+    if [ "${args}" = "" ]; then
+      args="$1 $2"
+    else
+      args="${args} $1 $2"
+    fi
+  fi
+}
+
+getGitRepoUrl() {
   if [ "${CICD_PLATFORM}" = "" ]; then
     CICD_PLATFORM=gitlab
   else
@@ -37,7 +61,6 @@ getGitRepoUrl() {
     if [ -z "${CICD_SERVER_HOST}" ]; then
       CICD_SERVER_HOST="github.com"
     fi
-    URL+=""
   elif [ "${CICD_PLATFORM}" = "bitbucket" ]; then
     if [ -z "${CICD_SERVER_HOST}" ]; then
       CICD_SERVER_HOST="bitbucket.org"
@@ -56,7 +79,7 @@ getCommitMessage() {
   fi
   if [ "${SKIP_CI}" = "" ] || [ "${SKIP_CI}" = "true" ]; then
     # [skip ci] works across all the supported platforms
-    COMMIT_MSG="${COMMIT_MSG} [skip ci]"
+    COMMIT_MSG+=" [skip ci]"
   fi
   echo "${COMMIT_MSG}"
 }

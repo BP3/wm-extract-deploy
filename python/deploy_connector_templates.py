@@ -9,15 +9,15 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
+import argparse
 import glob
 import json
-from action import Action
-from web_modeler import WebModeler
+from web_modeler import WebModeler, AuthException
 
-class DeployTemplates(Action):
-    def __init__(self):
+class DeployTemplates:
+    def __init__(self, args: argparse.Namespace):
         super().__init__()
-        self.wm = WebModeler()
+        self.wm = WebModeler(args)
 
     def deploy_template(self, template_path: str, project_id: str):
         print("Processing template", template_path)
@@ -65,15 +65,26 @@ class DeployTemplates(Action):
                 if milestone_response is not None:
                     print("Created milestone", milestone_response["name"])
 
-    def main(self):
+    def main(self, args: argparse.Namespace):
         templates = glob.glob("./**/element-templates/*.json", recursive = True)
+        if len(templates) == 0:
+            print("No templates to deploy.")
+            return
+
         print("Found templates:", templates)
 
         self.wm.authenticate()
-        project_id = self.wm.get_project(self._getenv("CAMUNDA_WM_PROJECT"))['items'][0]['id']
+        project_id = self.wm.get_project(args.project)['id']
         for template in templates:
             self.deploy_template(template, project_id)
 
 
 if __name__ == "__main__":
-    DeployTemplates().main()
+    parser = argparse.ArgumentParser(parents = [WebModeler.parser])
+    parser.add_argument("--project", help = "Modeler project id")
+    args = parser.parse_args()
+    try:
+        DeployTemplates(args).main(args)
+    except AuthException as ex:
+        print(ex)
+        exit(3)
