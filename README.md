@@ -1,10 +1,10 @@
 # Extract and Deploy process models from Web Modeler
 ## Background
-Web Modeler does not currently have support for the extraction and deployment of resources (i.e. BPMN and DMN models and Forms) to different CI / CD platforms such as GitLab, GitHub and Bitbucket -
+Web Modeler does not currently have support for the extraction and deployment of resources (i.e. BPMN and DMN models and Forms) to different CI / CD platforms such as GitLab, Github and Bitbucket -
 this must be managed by the user through the [WM API](https://docs.camunda.io/docs/apis-tools/web-modeler-api/overview/).
 The Web Modeler currently only has
 * An option to deploy models directly to a Zeebe cluster (subject to the user having the right roles assigned)
-* A native GitHub integration to allow users to synch the models to a repository (again, subject to the user having the right roles assigned)
+* A native Github integration to allow users to synch the models to a repository (again, subject to the user having the right roles assigned)
 
 ## Solution
 This project provides solutions to:
