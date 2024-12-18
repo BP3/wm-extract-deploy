@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 ############################################################################
 #
@@ -31,9 +31,6 @@ git rm --ignore-unmatch $MODEL_PATH/*.dmn
 git rm --ignore-unmatch $MODEL_PATH/*.form
 
 python $SCRIPT_DIR/extract.py
-if [ $? -ne 0 ]; then
-  exit 1
-fi
 
 git add *.bpmn  2>/dev/null
 git add *.dmn  2>/dev/null

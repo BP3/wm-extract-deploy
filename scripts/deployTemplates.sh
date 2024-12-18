@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 ############################################################################
 #
@@ -41,9 +41,6 @@ git fetch
 git checkout main
 
 python $SCRIPT_DIR/deployConnectorTemplates.py
-if [ $? -ne 0 ]; then
-  exit 1
-fi
 
 git add config.*
 
