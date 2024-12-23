@@ -13,7 +13,7 @@
 # There are later versions of python available (e.g. 3.12) but when we have
 # tested with those then the code (pyzeebe) fails, so we are sticking with
 # python 3.11 for now.
-FROM python:3.11.10-alpine3.21
+FROM python:3.11.11-alpine3.21
 
 
 RUN addgroup --gid 1000 bp3 && \
