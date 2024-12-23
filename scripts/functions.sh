@@ -11,44 +11,75 @@
 ############################################################################
 
 checkRequiredEnvVar() {
-  if [ "$2" == "" ]; then
-    echo "EnvVar '$1' is not set"
+  if [ "$(eval echo "\$$1")" = "" ]; then
+    echo "Environment variable '$1' is not set"
     exit 1
   fi
 }
 
-getGitLabUrl() {
-  echo "https://gitlab-ci-token:$1@$2/$3.git"
+checkRequiredEnvVarXor() {
+  if [ "$(eval echo "\$$1")" = "" ] && [ "$(eval echo "\$$2")" = "" ]; then
+    echo "Environment variable '$1' or '$2' must be set"
+    exit 1
+  elif [ "$(eval echo "\$$1")" != "" ] && [ "$(eval echo "\$$2")" != "" ]; then
+    echo "Environment variable '$1' and '$2' cannot both be set"
+    exit 1
+  fi
 }
 
-getGitHubUrl(){
-  echo "https://$1@$2/$3.git"
+checkRequiredEnvVarAnd() {
+  if [ "$(eval echo "\$$1")" != "" ] && [ "$(eval echo "\$$2")" = "" ]; then
+    echo "Environment variable '$2' must be set if '$1' is set"
+    exit 1
+  fi
 }
 
-getBitBucketUrl() {
-  echo "https://x-token-auth:$1@$2/$3.git"
+add_arg() {
+  if [ "$2" != "" ]; then
+    if [ "${args}" = "" ]; then
+      args="$1 $2"
+    else
+      args="${args} $1 $2"
+    fi
+  fi
 }
 
-getUrl() {
-  CICD_PLATFORM=$(echo "$1" | tr "[:upper:]" "[:lower:]")
-  CICD_SERVER_HOST=$2
-  CICD_ACCESS_TOKEN=$3
-  CICD_REPOSITORY_PATH=$4
-
-  URL=""
-  if [ $CICD_PLATFORM = "gitlab" ]; then
-
-    URL="$(getGitLabUrl "$CICD_ACCESS_TOKEN" "$CICD_SERVER_HOST" "$CICD_REPOSITORY_PATH")"
-
-  elif [ "$CICD_PLATFORM" = "github" ]; then
-
-    URL="$(getGitHubUrl "$CICD_ACCESS_TOKEN" "$CICD_SERVER_HOST" "$CICD_REPOSITORY_PATH")"
-
-  elif [ "$CICD_PLATFORM" = "bitbucket" ]; then
-
-    URL="$(getBitBucketUrl "$CICD_ACCESS_TOKEN" "$CICD_SERVER_HOST" "$CICD_REPOSITORY_PATH")"
-
+getGitRepoUrl() {
+  if [ "${CICD_PLATFORM}" = "" ]; then
+    CICD_PLATFORM=gitlab
+  else
+    CICD_PLATFORM=$(echo "${CICD_PLATFORM}" | tr "[:upper:]" "[:lower:]")
   fi
 
-  echo "$URL"
+  URL="https://"
+  if [ "${CICD_PLATFORM}" = "gitlab" ]; then
+    if [ -z "${CICD_SERVER_HOST}" ]; then
+      CICD_SERVER_HOST="gitlab.com"
+    fi
+    URL+="gitlab-ci-token:"
+  elif [ "${CICD_PLATFORM}" = "github" ]; then
+    if [ -z "${CICD_SERVER_HOST}" ]; then
+      CICD_SERVER_HOST="github.com"
+    fi
+  elif [ "${CICD_PLATFORM}" = "bitbucket" ]; then
+    if [ -z "${CICD_SERVER_HOST}" ]; then
+      CICD_SERVER_HOST="bitbucket.org"
+    fi
+    URL+="x-token-auth:"
+  fi
+
+  URL+="${CICD_ACCESS_TOKEN}@${CICD_SERVER_HOST}/${CICD_REPOSITORY_PATH}.git"
+
+  echo "${URL}"
+}
+
+getCommitMessage() {
+  if [ "${COMMIT_MSG}" = "" ]; then
+    COMMIT_MSG="Updated by Camunda extract-deploy pipeline"
+  fi
+  if [ "${SKIP_CI}" = "" ] || [ "${SKIP_CI}" = "true" ]; then
+    # [skip ci] works across all the supported platforms
+    COMMIT_MSG+=" [skip ci]"
+  fi
+  echo "${COMMIT_MSG}"
 }
