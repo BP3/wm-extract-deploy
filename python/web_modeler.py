@@ -49,6 +49,9 @@ class WebModeler:
     def set_auth_host(self, auth_host: str):
         self.auth_url = self.protocol + '://' + auth_host \
                         + '/auth/realms/camunda-platform/protocol/openid-connect/token'
+        
+    def set_oauth_host(self, auth_host: str):
+        self.auth_url = auth_host
 
     def set_client_id(self, client_id: str):
         self.client_id = client_id
@@ -190,6 +193,12 @@ class WebModeler:
         try:
             if os.environ["WM_PROJECT_METADATA_FILE"] is not None and os.environ["WM_PROJECT_METADATA_FILE"] != "":
                 self.set_config_file(os.environ["WM_PROJECT_METADATA_FILE"])
+        except KeyError:
+            pass
+
+        try:
+            if os.environ["OAUTH2_TOKEN_URL"] is not None and os.environ["OAUTH2_TOKEN_URL"] != "":
+                self.set_oauth_host(os.environ["OAUTH2_TOKEN_URL"])
         except KeyError:
             pass
 

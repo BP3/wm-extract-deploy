@@ -45,6 +45,7 @@ variables:
   CICD_SERVER_HOST: $CI_SERVER_HOST
   CICD_ACCESS_TOKEN: $BUILD_ACCOUNT_ACCESS_TOKEN
   CICD_REPOSITORY_PATH: $CI_PROJECT_PATH
+  OAUTH2_TOKEN_URL: $OAUTH2_TOKEN_URL
 
 stages:
   - extract
@@ -61,6 +62,7 @@ extract-artifacts-from-modeler:
     CAMUNDA_WM_PROJECT: $CAMUNDA_WM_PROJECT
     GIT_USERNAME: $BUILD_ACCOUNT_USER
     GIT_USER_EMAIL: $BUILD_ACCOUNT_EMAIL
+    OAUTH2_TOKEN_URL: $OAUTH2_TOKEN_URL
     SKIP_CI: true
   script:
     /scripts/extractDeploy.sh extract
@@ -92,6 +94,7 @@ deploy-modeler-artifacts-to-sm-dc-zeebe:
     CAMUNDA_CLUSTER_HOST: $CAMUNDA_CLUSTER_HOST # This differs from SaaS
     CAMUNDA_CLUSTER_PORT: $CAMUNDA_CLUSTER_PORT # This differs from SaaS
     PROJECT_TAG: $DEPLOY_TAG
+    OAUTH2_TOKEN_URL: $OAUTH2_TOKEN_URL
   script:
     /scripts/extractDeploy.sh deploy
 ```

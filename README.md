@@ -61,6 +61,7 @@ docker run -it --rm \
       -e CICD_SERVER_HOST="<The host of the GIT server. Only needed if using GitLab>" \
       -e CICD_ACCESS_TOKEN="<CI platform access token>" \
       -e CICD_REPOSITORY_PATH="<The path of the repository>" \
+      -e OAUTH2_TOKEN_URL="<The oauth2 Token URL>" \
           bp3global/wm-extract-deploy extract
 ```
 
@@ -90,6 +91,7 @@ docker run -it --rm \
       -e CAMUNDA_CLUSTER_PORT="<Zeebe gateway port>" \
       -e CAMUNDA_TENANT_ID="<Optional tenant ID for multi-tenant>"
       -e PROJECT_TAG="<The tag of the resources to deploy>" \
+      -e OAUTH2_TOKEN_URL="<The oauth2 Token URL>" \
           bp3global/wm-extract-deploy deploy
 ```
 
@@ -129,6 +131,7 @@ docker run -it --rm \
       -e CICD_SERVER_HOST="<The host of the GIT server. Only needed if using GitLab>" \
       -e CICD_ACCESS_TOKEN="<CI platform access token>" \
       -e CICD_REPOSITORY_PATH="<The path of the repository>" \
+      -e OAUTH2_TOKEN_URL="<The oauth2 Token URL>" \
           bp3global/wm-extract-deploy deploy templates
 ```
 
@@ -175,6 +178,7 @@ project:
 | WM_PROJECT_METADATA_FILE | The name of the web modeller project configuration file                                                        | Optional for operations involving web modeler (default = `config.yml` if none present, will look for`config.yml/yaml/json`)     |
 | ZEEBE_CLIENT_ID          | The client Id of the Zeebe client credentials                                                                  | Required for "deploy" operation                                                                                                 |
 | ZEEBE_CLIENT_SECRET      | The client secret of the Zeebe client credentials                                                              | Required for "deploy" operation                                                                                                 |
+| OAUTH2_TOKEN_URL         | The OAUTH2 Token URL                                                                                           | Required for Microsoft Entra Usage                                                                                              |
 
 # Python runtime version issue
 Currently, Python 3.11 is used as the base image - even though there are later versions of python available (at time of writing 3.12 is available).

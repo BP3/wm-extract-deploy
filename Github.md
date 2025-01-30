@@ -71,6 +71,7 @@ jobs:
           CAMUNDA_WM_PROJECT: ${{ vars.CAMUNDA_WM_PROJECT }}
           GIT_USERNAME: ${{ vars.BUILD_ACCOUNT_USER }}
           GIT_USER_EMAIL: ${{ vars.BUILD_ACCOUNT_EMAIL }}
+          OAUTH2_TOKEN_URL: ${{ vars.OAUTH2_TOKEN_URL }}
           SKIP_CI: "true"
         run:
           /scripts/extractDeploy.sh extract
@@ -106,6 +107,7 @@ jobs:
           CAMUNDA_CLUSTER_ID: ${{ vars.CAMUNDA_CLUSTER_ID }}
           CAMUNDA_CLUSTER_REGION: ${{ vars.CAMUNDA_CLUSTER_REGION }}
           PROJECT_TAG: ${{ inputs.deploy_tag }}
+          OAUTH2_TOKEN_URL: ${{ vars.OAUTH2_TOKEN_URL }}
         run:
           /scripts/extractDeploy.sh deploy
 ```
