@@ -50,8 +50,8 @@ class WebModeler:
         self.auth_url = self.protocol + '://' + auth_host \
                         + '/auth/realms/camunda-platform/protocol/openid-connect/token'
         
-    def set_oauth_host(self, auth_host: str):
-        self.auth_url = auth_host
+    def set_oauth_token_url(self, oauth_token_url: str):
+        self.auth_url = oauth_token_url
 
     def set_client_id(self, client_id: str):
         self.client_id = client_id
@@ -198,7 +198,7 @@ class WebModeler:
 
         try:
             if os.environ["OAUTH2_TOKEN_URL"] is not None and os.environ["OAUTH2_TOKEN_URL"] != "":
-                self.set_oauth_host(os.environ["OAUTH2_TOKEN_URL"])
+                self.set_oauth_token_url(os.environ["OAUTH2_TOKEN_URL"])
         except KeyError:
             pass
 
