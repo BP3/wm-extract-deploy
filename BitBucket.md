@@ -62,6 +62,7 @@ pipelines:
               export CAMUNDA_WM_PROJECT=$CAMUNDA_WM_PROJECT
               export GIT_USERNAME=$BUILD_ACCOUNT_USER
               export GIT_USER_EMAIL=$BUILD_ACCOUNT_EMAIL
+              export OAUTH2_TOKEN_URL=$OAUTH2_TOKEN_URL
               export SKIP_CI="true"
               /scripts/extractDeploy.sh extract
     deploy-saas:
@@ -96,6 +97,7 @@ pipelines:
               export CAMUNDA_CLUSTER_HOST=$CAMUNDA_CLUSTER_HOST
               export CAMUNDA_CLUSTER_PORT=$CAMUNDA_CLUSTER_PORT
               export PROJECT_TAG=$DEPLOY_TAG
+              export OAUTH2_TOKEN_URL=$OAUTH2_TOKEN_URL
               /scripts/extractDeploy.sh deploy
 ```
 
@@ -132,6 +134,7 @@ definitions:
               export GIT_USERNAME=$BUILD_ACCOUNT_USER
               export GIT_USER_EMAIL=$BUILD_ACCOUNT_EMAIL
               export SKIP_CI="true"
+              export OAUTH2_TOKEN_URL=$OAUTH2_TOKEN_URL
               /scripts/extractDeploy.sh extract
     deploy-saas:
       - variables:
@@ -165,6 +168,7 @@ definitions:
               export CAMUNDA_CLUSTER_HOST=$CAMUNDA_CLUSTER_HOST
               export CAMUNDA_CLUSTER_PORT=$CAMUNDA_CLUSTER_PORT
               export PROJECT_TAG=$DEPLOY_TAG
+              export OAUTH2_TOKEN_URL=$OAUTH2_TOKEN_URL
               /scripts/extractDeploy.sh deploy
 ```
 
