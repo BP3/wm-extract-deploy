@@ -53,7 +53,6 @@ docker run -it --rm \
       -e CAMUNDA_WM_CLIENT_SECRET="<Client secret>" \
       -e CAMUNDA_WM_PROJECT="<The WM project to extract from>" \
       -e CAMUNDA_WM_HOST="<Web Modeller hostname>" \
-      -e CAMUNDA_WM_AUTH="<Keycloak hostname, if different to the WM_HOST>" \
       -e GIT_USERNAME="<Git Username>" \
       -e GIT_USER_EMAIL="<Git Email address>" \
       -e SKIP_CI="<Indicate (\"true\" | \"false\") if you want to run any pipelines or not on the commit>" \
@@ -91,7 +90,6 @@ docker run -it --rm \
       -e CAMUNDA_CLUSTER_PORT="<Zeebe gateway port>" \
       -e CAMUNDA_TENANT_ID="<Optional tenant ID for multi-tenant>"
       -e PROJECT_TAG="<The tag of the resources to deploy>" \
-      -e OAUTH2_TOKEN_URL="<The oauth2 Token URL>" \
           bp3global/wm-extract-deploy deploy
 ```
 
@@ -123,7 +121,6 @@ docker run -it --rm \
       -e CAMUNDA_WM_CLIENT_SECRET="<Client secret>" \
       -e CAMUNDA_WM_PROJECT="<The WM project to deploy the templates to>" \
       -e CAMUNDA_WM_HOST="<Web Modeller hostname>" \
-      -e CAMUNDA_WM_AUTH="<Keycloak hostname, if different to the WM_HOST>" \
       -e GIT_USERNAME="<Git Username>" \
       -e GIT_USER_EMAIL="<Git Email address>" \
       -e SKIP_CI="<Indicate (\"true\" | \"false\") if you want to run any pipelines or not on the commit>" \
@@ -159,7 +156,6 @@ project:
 | CAMUNDA_CLUSTER_PORT     | The port number of the Camunda cluster gateway                                                                 | Optional for "deploy" operation in Self managed environments (default = `26500`)                                                |
 | CAMUNDA_CLUSTER_REGION   | The region code the cluster is running in                                                                      | Required for "deploy" operation in SaaS environments                                                                            |
 | CAMUNDA_TENANT_ID        | A comma seperated list of the tenant id(s) to deploy to for multi-tenant environments                          | Optional for "deploy" operations (default = `NULL`)                                                                             |
-| CAMUNDA_WM_AUTH          | The Authentication Host for Self-Managed (if not the same as CAMUNDA_WM_HOST)                                  | Optional (default = `CAMUNDA_WM_HOST`)                                                                                          |
 | CAMUNDA_WM_CLIENT_ID     | The client Id of the Web Modeler client credentials                                                            | Required for "extract" operation                                                                                                |
 | CAMUNDA_WM_CLIENT_SECRET | The client secret of the Web Modeler client credentials                                                        | Required for "extract" operation                                                                                                |
 | CAMUNDA_WM_HOST          | The hostname of the Web Modeler installation                                                                   | Optional (default = `cloud.camunda.io`)                                                                                         |
@@ -173,6 +169,7 @@ project:
 | CICD_PLATFORM            | Indicates which CI/CD platform is being used, with the supported options of "gitlab", "github" or "bitbucket"  | Required for "extract" operation                                                                                                |
 | CICD_REPOSITORY_PATH     | The project namespace with the project name included                                                           | Required for "extract" operation                                                                                                |
 | CICD_SERVER_HOST         | The GitLab server host                                                                                         | Optional for "extract" operation. For on-premise GitLab, otherwise defaults to "gitlab.com"                                     |
+| OAUTH2_TOKEN_URL         | The authentication endpoint URL for retrieving the OATH token                                                  | Required for Self managed web modeler operations                                                                                |
 | PROJECT_TAG              | The label given to the tags created and also the tag that is checked out and deploy                            | Required for "deploy" operation                                                                                                 |
 | SKIP_CI                  | Indicates if upon commit, we do or do not want any pipelines to be executed. The options are "true" or "false" | Required for "extract" operation                                                                                                |
 | WM_PROJECT_METADATA_FILE | The name of the web modeller project configuration file                                                        | Optional for operations involving web modeler (default = `config.yml` if none present, will look for`config.yml/yaml/json`)     |

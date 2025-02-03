@@ -23,7 +23,7 @@ class WebModeler:
     __SAAS_HOST = 'cloud.camunda.io'
     protocol = 'https'
     config_file = 'config.yml'
-    auth_host = __SAAS_HOST
+    oauth2_token_url = None
     wm_host = __SAAS_HOST
     client_secret = None
     client_id = None
@@ -34,7 +34,7 @@ class WebModeler:
     parser.add_argument("--client-id", dest="client_id", required = True, help = "Web Modeler client ID")
     parser.add_argument("--client-secret", dest="client_secret", required = True, help = "Web Modeler client secret")
     parser.add_argument("--host", help = "Web Modeler host")
-    parser.add_argument("--authentication-host", dest="auth_host", help = "Web Modeler authentication host")
+    parser.add_argument("--oauth2-token-url", dest="oauth2_token_url", help = "Web Modeler OAuth2 Token URL")
     parser.add_argument("--ssl", nargs='?', const='true', default='false', help = "Web Modeler use SSL (HTTPS)") # or a boolean value
     parser.add_argument("--config-file", dest="config_file", help = "Web Modeler project config file")
 
@@ -46,10 +46,8 @@ class WebModeler:
             self.protocol = 'http'
         if args.host is not None:
             self.wm_host = args.host
-        if args.auth_host is not None:
-            self.auth_host = args.auth_host
-        if args.oauth_token_url is not None:
-            self.oauth_token_url = args.oauth_token_url
+        if args.oauth2_token_url is not None:
+            self.oauth2_token_url = args.oauth_token_url
         if args.config_file is not None:
             self.config_file = args.config_file
 
@@ -60,13 +58,10 @@ class WebModeler:
                 break
 
     def __get_auth_url(self) -> str:
-        if self.oauth_token_url is not None:
-            return self.oauth_token_url
+        if self.oauth2_token_url is not None:
+            return self.oauth2_token_url
         else:
-            if self.auth_host == self.__SAAS_HOST:
-                return self.protocol + '://login.' + self.auth_host + '/oauth/token'
-            else:
-                return self.protocol + '://' + self.auth_host + '/auth/realms/camunda-platform/protocol/openid-connect/token'
+            return self.protocol + '://login.' + self.__SAAS_HOST + '/oauth/token'
 
     def __get_wm_api_url(self, version: int = 1) -> str:
         if self.wm_host == self.__SAAS_HOST:
