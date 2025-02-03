@@ -43,12 +43,7 @@ class WebModeler:
             self.auth_url = self.protocol + '://login.' + wm_host + '/oauth/token'
             self.wm_api_url = self.protocol + '://modeler.' + wm_host + '/api'
         else:
-            self.set_auth_host(wm_host)
             self.wm_api_url = self.protocol + '://' + wm_host + '/api'
-
-    def set_auth_host(self, auth_host: str):
-        self.auth_url = self.protocol + '://' + auth_host \
-                        + '/auth/realms/camunda-platform/protocol/openid-connect/token'
         
     def set_oauth_token_url(self, oauth_token_url: str):
         self.auth_url = oauth_token_url
@@ -181,12 +176,6 @@ class WebModeler:
         try:
             if os.environ["CAMUNDA_WM_HOST"] is not None and os.environ["CAMUNDA_WM_HOST"] != "":
                 self.set_wm_host(os.environ["CAMUNDA_WM_HOST"])
-        except KeyError:
-            pass
-
-        try:
-            if os.environ["CAMUNDA_WM_AUTH"] is not None and os.environ["CAMUNDA_WM_AUTH"] != "":
-                self.set_auth_host(os.environ["CAMUNDA_WM_AUTH"])
         except KeyError:
             pass
 
