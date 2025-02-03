@@ -48,6 +48,8 @@ class WebModeler:
             self.wm_host = args.host
         if args.auth_host is not None:
             self.auth_host = args.auth_host
+        if args.oauth_token_url is not None:
+            self.oauth_token_url = args.oauth_token_url
         if args.config_file is not None:
             self.config_file = args.config_file
 
@@ -58,10 +60,13 @@ class WebModeler:
                 break
 
     def __get_auth_url(self) -> str:
-        if self.auth_host == self.__SAAS_HOST:
-            return self.protocol + '://login.' + self.auth_host + '/oauth/token'
+        if self.oauth_token_url is not None:
+            return self.oauth_token_url
         else:
-            return self.protocol + '://' + self.auth_host + '/auth/realms/camunda-platform/protocol/openid-connect/token'
+            if self.auth_host == self.__SAAS_HOST:
+                return self.protocol + '://login.' + self.auth_host + '/oauth/token'
+            else:
+                return self.protocol + '://' + self.auth_host + '/auth/realms/camunda-platform/protocol/openid-connect/token'
 
     def __get_wm_api_url(self, version: int = 1) -> str:
         if self.wm_host == self.__SAAS_HOST:
