@@ -47,7 +47,7 @@ class WebModeler:
         if args.host is not None:
             self.wm_host = args.host
         if args.oauth2_token_url is not None:
-            self.oauth2_token_url = args.oauth_token_url
+            self.oauth2_token_url = args.oauth2_token_url
         if args.config_file is not None:
             self.config_file = args.config_file
 
@@ -65,9 +65,9 @@ class WebModeler:
 
     def __get_wm_api_url(self, version: int = 1) -> str:
         if self.wm_host == self.__SAAS_HOST:
-            return self.protocol + '://modeler.' + self.wm_host + '/api/v' + version
+            return self.protocol + '://modeler.' + self.wm_host + '/api/v' + str(version)
         else:
-            return self.protocol + '://' + self.wm_host + '/api/v' + version
+            return self.protocol + '://' + self.wm_host + '/api/v' + str(version)
 
     def __get_headers(self) -> dict:
         return {
@@ -196,10 +196,10 @@ class WebModeler:
         if not projects["items"]:
             raise ValueError("Web Modeler project not found")
 
-        if not projects["items"].length > 1:
+        if len(projects["items"]) > 1:
             raise ValueError("Web Modeler multiple projects found")
 
-        project = projects['items'][0];
+        project = projects['items'][0]
 
         if create_config_file:
             data = {
