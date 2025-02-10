@@ -83,10 +83,10 @@ class WebModeler:
             "Content-Type": "application/json"
         }
 
-    def set_oath_platform(self, platform: str):
+    def set_oauth_platform(self, platform: str):
         self.platform = platform.upper()
 
-    def get_oath_platform(self) -> str:
+    def get_oauth_platform(self) -> str:
         return self.platform
 
     @staticmethod
@@ -216,7 +216,7 @@ class WebModeler:
 
         try:
             if os.environ["OAUTH_PLATFORM"] is not None and os.environ["OAUTH_PLATFORM"] != "":
-                self.set_oath_platform(os.environ["OAUTH_PLATFORM"])
+                self.set_oauth_platform(os.environ["OAUTH_PLATFORM"])
         except KeyError:
             pass
 
