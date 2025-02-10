@@ -60,7 +60,7 @@ docker run -it --rm \
       -e CICD_SERVER_HOST="<The host of the GIT server. Only needed if using GitLab>" \
       -e CICD_ACCESS_TOKEN="<CI platform access token>" \
       -e CICD_REPOSITORY_PATH="<The path of the repository>" \
-      -e OAUTH2_TOKEN_URL="<The oauth2 Token URL>" \
+      -e OAUTH2_TOKEN_URL="<The OATH2 Token URL>" \
           bp3global/wm-extract-deploy extract
 ```
 
@@ -170,12 +170,12 @@ project:
 | CICD_REPOSITORY_PATH     | The project namespace with the project name included                                                           | Required for "extract" operation                                                                                                |
 | CICD_SERVER_HOST         | The GitLab server host                                                                                         | Optional for "extract" operation. For on-premise GitLab, otherwise defaults to "gitlab.com"                                     |
 | OAUTH2_TOKEN_URL         | The authentication endpoint URL for retrieving the OATH token                                                  | Required for Self managed web modeler operations                                                                                |
+| OAUTH_PLATFORM           | The OATH platform in use                                                                                       | Optional (default = KEYCLOAK, supported values: KEYCLOAK, ENTRA)                                                                |
 | PROJECT_TAG              | The label given to the tags created and also the tag that is checked out and deploy                            | Required for "deploy" operation                                                                                                 |
 | SKIP_CI                  | Indicates if upon commit, we do or do not want any pipelines to be executed. The options are "true" or "false" | Required for "extract" operation                                                                                                |
 | WM_PROJECT_METADATA_FILE | The name of the web modeller project configuration file                                                        | Optional for operations involving web modeler (default = `config.yml` if none present, will look for`config.yml/yaml/json`)     |
 | ZEEBE_CLIENT_ID          | The client Id of the Zeebe client credentials                                                                  | Required for "deploy" operation                                                                                                 |
 | ZEEBE_CLIENT_SECRET      | The client secret of the Zeebe client credentials                                                              | Required for "deploy" operation                                                                                                 |
-| OAUTH2_TOKEN_URL         | The OAUTH2 Token URL                                                                                           | Required for Microsoft Entra Usage                                                                                              |
 
 # Python runtime version issue
 Currently, Python 3.11 is used as the base image - even though there are later versions of python available (at time of writing 3.12 is available).
