@@ -33,10 +33,12 @@ class WebModeler:
         self.auth_url = None
         self.audience = None
         self.wm_host = None
+        self.scope = None
+        self.auth_headers = {}
         self.set_wm_host(self.SAAS_HOST)
         self.__configure()
 
-    def set_wm_host(self, wm_host: str):
+    def set_wm_host(self, wm_host: str): 
         self.wm_host = wm_host
         self.audience = 'api.' + wm_host
         if wm_host == self.SAAS_HOST:
@@ -47,6 +49,9 @@ class WebModeler:
         
     def set_oauth_token_url(self, oauth_token_url: str):
         self.auth_url = oauth_token_url
+        self.scope = self.client_id + '/.default'
+        self.audience = None
+        self.auth_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
 
     def set_client_id(self, client_id: str):
         self.client_id = client_id
@@ -93,13 +98,15 @@ class WebModeler:
     # Authenticate to Camunda Web Modeler and get an access-token
     def authenticate(self) -> str:
 
-        response = requests.post(self.get_auth_url(), data={
+        data = {
             "client_id": self.client_id,
             "client_secret": self.client_secret,
+            "scope": self.scope,
             "audience": self.audience,
             "grant_type": self.GRANT_TYPE
-        })
-
+        }
+        
+        response = requests.post(self.get_auth_url(), data=data, headers=self.auth_headers)
         print("Authentication response", response.status_code)
 
         self.access_token = response.json()["access_token"]
