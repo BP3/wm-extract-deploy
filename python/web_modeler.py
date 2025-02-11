@@ -24,6 +24,8 @@ class WebModeler:
     protocol = 'https'
     config_file = 'config.yml'
     oauth2_token_url = None
+    oauth_platform = 'KEYCLOAK'
+    auth_headers = {}
     wm_host = __SAAS_HOST
     client_secret = None
     client_id = None
@@ -34,8 +36,9 @@ class WebModeler:
     parser.add_argument("--client-id", dest="client_id", required = True, help = "Web Modeler client ID")
     parser.add_argument("--client-secret", dest="client_secret", required = True, help = "Web Modeler client secret")
     parser.add_argument("--host", help = "Web Modeler host")
-    parser.add_argument("--oauth2-token-url", dest="oauth2_token_url", help = "Web Modeler OAuth2 Token URL")
-    parser.add_argument("--ssl", nargs='?', const='true', default='false', help = "Web Modeler use SSL (HTTPS)") # or a boolean value
+    parser.add_argument("--oauth2-token-url", dest="oauth2_token_url", help = "OAuth2 Token URL")
+    parser.add_argument("--oauth2-platform", dest="oauth2_platform", help = "OAuth2 platform (KEYCLOCK | ENTRA)")
+    parser.add_argument("--ssl", nargs='?', const='true', default='false', help = "Web Modeler use SSL (HTTPS)")
     parser.add_argument("--config-file", dest="config_file", help = "Web Modeler project config file")
 
     def __init__(self, args: argparse.Namespace):
@@ -48,6 +51,7 @@ class WebModeler:
             self.wm_host = args.host
         if args.oauth2_token_url is not None:
             self.oauth2_token_url = args.oauth_token_url
+            self.auth_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         if args.config_file is not None:
             self.config_file = args.config_file
 
@@ -75,6 +79,12 @@ class WebModeler:
             "Content-Type": "application/json"
         }
 
+    def set_oauth_platform(self, platform: str):
+        self.platform = platform.upper()
+
+    def get_oauth_platform(self) -> str:
+        return self.platform
+
     @staticmethod
     def __parse_yaml_file(file: IO) -> dict:
         yaml_config = yaml.safe_load(file)
@@ -89,16 +99,23 @@ class WebModeler:
 
     # Authenticate to Camunda Web Modeler and get an access-token
     def authenticate(self) -> None:
-        response = requests.post(self.__get_auth_url(), data = {
+        data = {
             "client_id": self.client_id,
             "client_secret": self.client_secret,
-            "audience": 'api.' + self.wm_host,
             "grant_type": 'client_credentials'
-        })
+        }
+        match self.platform:
+            case 'ENTRA':
+                data.scope = self.client_id + "/.default"
+            case 'KEYCLOAK':
+                data.audience = "api." + self.wm_host
+            case _:
+                raise ValueError(self.platform + ' is not a supported authentication platform type.')
 
+        response = requests.post(self.__get_auth_url(), data = data, headers=self.auth_headers)
+        print("Authentication response", response.status_code)
         if response.status_code != 200:
             raise AuthException("Attempt to authenticate failed.", response.status_code, response.text)
-        print("Authentication response", response.status_code)
         self.__access_token = response.json()["access_token"]
 
     def find_project(self, key: str, value: str) -> dict:
