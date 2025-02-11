@@ -24,7 +24,7 @@ class WebModeler:
     protocol = 'https'
     config_file = 'config.yml'
     oauth2_token_url = None
-    oauth_platform = 'KEYCLOAK'
+    oauth2_platform = 'KEYCLOAK'
     auth_headers = {}
     wm_host = __SAAS_HOST
     client_secret = None
@@ -45,12 +45,13 @@ class WebModeler:
         super().__init__()
         self.client_id = args.client_id
         self.client_secret = args.client_secret
+        self.oauth2_platform = args.oauth2_platform.upper()
         if args.ssl is not None and args.ssl.lower() == 'false':
             self.protocol = 'http'
         if args.host is not None:
             self.wm_host = args.host
         if args.oauth2_token_url is not None:
-            self.oauth2_token_url = args.oauth_token_url
+            self.oauth2_token_url = args.oauth2_token_url
             self.auth_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         if args.config_file is not None:
             self.config_file = args.config_file
@@ -69,21 +70,15 @@ class WebModeler:
 
     def __get_wm_api_url(self, version: int = 1) -> str:
         if self.wm_host == self.__SAAS_HOST:
-            return self.protocol + '://modeler.' + self.wm_host + '/api/v' + version
+            return self.protocol + '://modeler.' + self.wm_host + '/api/v' + str(version)
         else:
-            return self.protocol + '://' + self.wm_host + '/api/v' + version
+            return self.protocol + '://' + self.wm_host + '/api/v' + str(version)
 
     def __get_headers(self) -> dict:
         return {
             "Authorization": "Bearer {}".format(self.__access_token),
             "Content-Type": "application/json"
         }
-
-    def set_oauth_platform(self, platform: str):
-        self.platform = platform.upper()
-
-    def get_oauth_platform(self) -> str:
-        return self.platform
 
     @staticmethod
     def __parse_yaml_file(file: IO) -> dict:
@@ -104,13 +99,13 @@ class WebModeler:
             "client_secret": self.client_secret,
             "grant_type": 'client_credentials'
         }
-        match self.platform:
+        match self.oauth2_platform:
             case 'ENTRA':
                 data.scope = self.client_id + "/.default"
             case 'KEYCLOAK':
                 data.audience = "api." + self.wm_host
             case _:
-                raise ValueError(self.platform + ' is not a supported authentication platform type.')
+                raise ValueError(self.oauth2_platform + ' is not a supported authentication platform type.')
 
         response = requests.post(self.__get_auth_url(), data = data, headers=self.auth_headers)
         print("Authentication response", response.status_code)
@@ -213,10 +208,10 @@ class WebModeler:
         if not projects["items"]:
             raise ValueError("Web Modeler project not found")
 
-        if not projects["items"].length > 1:
+        if len(projects["items"]) > 1:
             raise ValueError("Web Modeler multiple projects found")
 
-        project = projects['items'][0];
+        project = projects['items'][0]
 
         if create_config_file:
             data = {
