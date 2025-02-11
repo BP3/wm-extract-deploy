@@ -33,10 +33,13 @@ class WebModeler:
         self.auth_url = None
         self.audience = None
         self.wm_host = None
+        self.scope = None
+        self.auth_headers = {}
         self.set_wm_host(self.SAAS_HOST)
+        self.platform = 'KEYCLOAK'
         self.__configure()
 
-    def set_wm_host(self, wm_host: str):
+    def set_wm_host(self, wm_host: str): 
         self.wm_host = wm_host
         self.audience = 'api.' + wm_host
         if wm_host == self.SAAS_HOST:
@@ -47,9 +50,11 @@ class WebModeler:
         
     def set_oauth_token_url(self, oauth_token_url: str):
         self.auth_url = oauth_token_url
+        self.auth_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
 
     def set_client_id(self, client_id: str):
         self.client_id = client_id
+        self.scope = self.client_id + '/.default'
 
     def set_client_secret(self, secret: str):
         self.client_secret = secret
@@ -78,6 +83,12 @@ class WebModeler:
             "Content-Type": "application/json"
         }
 
+    def set_oauth_platform(self, platform: str):
+        self.platform = platform.upper()
+
+    def get_oauth_platform(self) -> str:
+        return self.platform
+
     @staticmethod
     def parse_yaml_file(file: IO) -> dict:
         yaml_config = yaml.safe_load(file)
@@ -93,13 +104,25 @@ class WebModeler:
     # Authenticate to Camunda Web Modeler and get an access-token
     def authenticate(self) -> str:
 
-        response = requests.post(self.get_auth_url(), data={
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-            "audience": self.audience,
-            "grant_type": self.GRANT_TYPE
-        })
-
+        match self.platform:
+            case 'ENTRA':
+                data = {
+                    "client_id": self.client_id,
+                    "client_secret": self.client_secret,
+                    "scope": self.scope,
+                    "grant_type": self.GRANT_TYPE
+                }
+            case 'KEYCLOAK':
+                data = {
+                    "client_id": self.client_id,
+                    "client_secret": self.client_secret,
+                    "audience": self.audience,
+                    "grant_type": self.GRANT_TYPE
+                }
+            case _:
+                raise ValueError(self.platform + ' is not a supported authentication platform type.')
+        
+        response = requests.post(self.get_auth_url(), data=data, headers=self.auth_headers)
         print("Authentication response", response.status_code)
 
         self.access_token = response.json()["access_token"]
@@ -188,6 +211,12 @@ class WebModeler:
         try:
             if os.environ["OAUTH2_TOKEN_URL"] is not None and os.environ["OAUTH2_TOKEN_URL"] != "":
                 self.set_oauth_token_url(os.environ["OAUTH2_TOKEN_URL"])
+        except KeyError:
+            pass
+
+        try:
+            if os.environ["OAUTH_PLATFORM"] is not None and os.environ["OAUTH_PLATFORM"] != "":
+                self.set_oauth_platform(os.environ["OAUTH_PLATFORM"])
         except KeyError:
             pass
 
