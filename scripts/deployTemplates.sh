@@ -26,7 +26,7 @@ fi
 echo "Checkout branch: $CICD_BRANCH"
 git checkout -B $CICD_BRANCH
 
-python $SCRIPT_DIR/deployConnectorTemplates.py
+python $SCRIPT_DIR/deploy_connector_templates.py
 echo "Script Complete, Committing Config."
 
 git add config.*
