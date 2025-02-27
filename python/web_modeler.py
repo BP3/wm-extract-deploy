@@ -125,6 +125,9 @@ class WebModeler:
         response = requests.post(self.get_auth_url(), data=data, headers=self.auth_headers)
         print("Authentication response", response.status_code)
 
+        if response.status_code != 200:
+            raise RuntimeError('Authentication failed: ', response.text)
+
         self.access_token = response.json()["access_token"]
         return self.access_token
 
