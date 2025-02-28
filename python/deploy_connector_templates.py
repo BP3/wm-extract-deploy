@@ -34,6 +34,8 @@ class DeployTemplates:
     def check_env():
         # Just for debug for now
         env.check_env_var('CAMUNDA_WM_HOST', False)
+        env.check_env_var('OAUTH2_TOKEN_URL', False)
+        env.check_env_var('OAUTH_PLATFORM', False)
         env.check_env_var('CAMUNDA_WM_AUTH', False)
         env.check_env_var('CAMUNDA_WM_SSL', False)
         env.check_env_var('CAMUNDA_WM_CLIENT_ID', False)
