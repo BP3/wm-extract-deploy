@@ -20,12 +20,18 @@ checkRequiredEnvVar GIT_USERNAME
 checkRequiredEnvVar GIT_USER_EMAIL
 checkRequiredEnvVar CAMUNDA_WM_CLIENT_ID
 checkRequiredEnvVar CAMUNDA_WM_CLIENT_SECRET
+checkRequiredEnvVar OAUTH2_TOKEN_URL
+checkRequiredEnvVar OAUTH_PLATFORM
 
 # Use --global so changes are isolated to the container
 git config --global set user.name "${GIT_USERNAME}"
 git config --global set user.email "${GIT_USER_EMAIL}"
 
-git fetch
+if [ "$CICD_BRANCH" = "" ]; then
+  CICD_BRANCH=main
+fi
+echo "Checkout branch: $CICD_BRANCH"
+git checkout -B $CICD_BRANCH
 
 if [ "${CICD_BRANCH}" = "" ]; then
   CICD_BRANCH=main
@@ -38,10 +44,12 @@ add_arg --model-path "${MODEL_PATH}"
 add_arg --client-id "${CAMUNDA_WM_CLIENT_ID}"
 add_arg --client-secret "${CAMUNDA_WM_CLIENT_SECRET}"
 add_arg --host "${CAMUNDA_WM_HOST}"
-add_arg --authentication-host "${CAMUNDA_WM_AUTH}"
+add_arg --oauth2-token-url "${OAUTH2_TOKEN_URL}"
+add_arg --oauth2-platform "${OAUTH_PLATFORM}"
 add_arg --ssl "${CAMUNDA_WM_SSL}"
 
 python "${SCRIPT_DIR}"/deploy_connector_templates.py "${args}"
+echo "Script Complete, Committing Config."
 
 git add config.*
 

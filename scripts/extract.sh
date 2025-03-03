@@ -20,6 +20,8 @@ checkRequiredEnvVar GIT_USERNAME
 checkRequiredEnvVar GIT_USER_EMAIL
 checkRequiredEnvVar CAMUNDA_WM_CLIENT_ID
 checkRequiredEnvVar CAMUNDA_WM_CLIENT_SECRET
+checkRequiredEnvVar OAUTH2_TOKEN_URL
+checkRequiredEnvVar OAUTH_PLATFORM
 
 # Use --global so changes are isolated to the container
 git config --global set user.name "${GIT_USERNAME}"
@@ -49,10 +51,10 @@ add_arg --project "${CAMUNDA_WM_PROJECT}"
 
 python "${SCRIPT_DIR}"/extract.py ${args}
 
-git add -- *.bpmn  2>/dev/null
-git add -- *.dmn  2>/dev/null
-git add -- *.form  2>/dev/null
-git add -- config.*  2>/dev/null
+git add -- *.bpmn  2>/dev/null || true
+git add -- *.dmn  2>/dev/null || true
+git add -- *.form  2>/dev/null || true
+git add -- config.*  2>/dev/null || true
 git status
 
 git commit -m "$(getCommitMessage)"
