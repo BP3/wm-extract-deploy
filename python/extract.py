@@ -9,73 +9,47 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
-
+import argparse
 import os
-import env
-import web_modeler
+from model_action import ModelAction
+from web_modeler import WebModeler, AuthException
 
+class Extraction(ModelAction):
 
-class Extraction:
+    def __init__(self, args):
+        super().__init__(args)
+        self.wm = WebModeler(args)
 
-    def __init__(self):
-        self.model_path = env.DEFAULT_MODEL_PATH
-        self.wm = web_modeler.WebModeler()
-        self.check_env()
-
-    @staticmethod
-    def check_env():
-        # Just debug for now
-        env.check_env_var('CAMUNDA_WM_HOST', False)
-        env.check_env_var('OAUTH2_TOKEN_URL', False)
-        env.check_env_var('OAUTH_PLATFORM', False)
-        env.check_env_var('CAMUNDA_WM_AUTH', False)
-        env.check_env_var('CAMUNDA_WM_SSL', False)
-        env.check_env_var('CAMUNDA_WM_CLIENT_ID', False)
-        env.check_env_var('CAMUNDA_WM_CLIENT_SECRET')
-        env.check_env_var('MODEL_PATH', False)
-
-    def get_model_path(self) -> str:
-        return self.model_path
-
-    def set_model_path(self, model_path: str):
-        self.model_path = model_path
+    def extract(self, items: dict):
         if not os.path.exists(self.model_path):
             os.makedirs(self.model_path)
 
-    def extract(self, path: str, items: dict):
-
         for item in items["items"]:
-            file_path = path + "/" + item["simplePath"]
+            file_path = self.model_path + "/" + item["simplePath"]
             print("Extracting item to {}".format(file_path))
 
             if item["canonicalPath"] is not None and item["canonicalPath"]:
-                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                os.makedirs(os.path.dirname(file_path), exist_ok = True)
 
             data = self.wm.get_file_by_id(item["id"])["content"]
-            # print(item)
             with open(file_path, "w") as file:
                 file.write(data)
-                file.close()
+
+    def main(self, args):
+        self.wm.authenticate()
+
+        project_id = self.wm.get_project(args.project)["id"]
+        project_items = self.wm.list_files(project_id)
+
+        self.extract(project_items)
 
 
 if __name__ == "__main__":
-    extract = Extraction()
-    project_ref = None
-
-    modelPath = os.environ["MODEL_PATH"]
-    extract.set_model_path(modelPath)
-    modelPath = extract.get_model_path()
-
-    # Optional EnvVars
+    parser = argparse.ArgumentParser(parents = [ModelAction.parser, WebModeler.parser])
+    parser.add_argument("--project", help = "Modeler project id/name")
+    args = parser.parse_args()
     try:
-        if os.environ["CAMUNDA_WM_PROJECT"] is not None and os.environ["CAMUNDA_WM_PROJECT"] != "":
-            project_ref = os.environ['CAMUNDA_WM_PROJECT']
-    except KeyError:
-        pass
-
-    extract.wm.authenticate()
-
-    project = extract.wm.get_project(project_ref)
-    project_items = extract.wm.search_files(project["items"][0]["id"])
-
-    extract.extract(modelPath, project_items)
+        Extraction(args).main(args)
+    except AuthException as ex:
+        print(ex)
+        exit(3)
