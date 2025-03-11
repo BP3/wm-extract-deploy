@@ -59,7 +59,7 @@ elif [ "$CICD_PLATFORM" = "bitbucket" ]; then
 fi
 echo "The CI/CD platform is: $CICD_PLATFORM"
 echo "Adding * to safe.directory config for git globally"
-git config --global --add safe.directory=*
+git config --global --add safe.directory *
 
 if [ $mode_extract == 1 ]; then
   echo "mode = 'extract'"
