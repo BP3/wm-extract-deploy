@@ -37,12 +37,13 @@ case "$1" in
         ;;
 esac
 
-if [ "$CICD_PLATFORM" = "" ]; then
+if [ "$CICD_PLATFORM" = "" -o "$CICD_PLATFORM" = "gitlab" ]; then
   CICD_PLATFORM=gitlab
   if [ -z "$CICD_SERVER_HOST" ]; then
     CICD_SERVER_HOST="gitlab.com"
   fi
-  git config --global --add safe.directory=*
+echo "Adding /builds/* to safe.directory config for git globally"
+git config --global --add safe.directory \*
 elif [ "$CICD_PLATFORM" = "github" ]; then
   if [ -z "$CICD_SERVER_HOST" ]; then
     CICD_SERVER_HOST="github.com"
@@ -58,8 +59,6 @@ elif [ "$CICD_PLATFORM" = "bitbucket" ]; then
     git config --global --add safe.directory /opt/atlassian/pipelines/agent/build
 fi
 echo "The CI/CD platform is: $CICD_PLATFORM"
-echo "Adding * to safe.directory config for git globally"
-git config --global --add safe.directory *
 
 if [ $mode_extract == 1 ]; then
   echo "mode = 'extract'"
