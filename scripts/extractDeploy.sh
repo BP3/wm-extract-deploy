@@ -42,6 +42,7 @@ if [ "$CICD_PLATFORM" = "" ]; then
   if [ -z "$CICD_SERVER_HOST" ]; then
     CICD_SERVER_HOST="gitlab.com"
   fi
+  git config --global --add safe.directory *
 elif [ "$CICD_PLATFORM" = "github" ]; then
   if [ -z "$CICD_SERVER_HOST" ]; then
     CICD_SERVER_HOST="github.com"
