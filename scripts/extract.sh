@@ -26,6 +26,8 @@ checkRequiredEnvVar OAUTH_PLATFORM
 # Use --global so changes are isolated to the container
 git config --global set user.name "${GIT_USERNAME}"
 git config --global set user.email "${GIT_USER_EMAIL}"
+# Add * to safe.directory to prevent ownership issues with mounted files
+git config --global --add safe.directory \*
 
 if [ "${CICD_BRANCH}" = "" ]; then
   CICD_BRANCH=main
