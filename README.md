@@ -90,7 +90,6 @@ docker run -it --rm \
       -e CAMUNDA_CLUSTER_HOST="<Zeebe gateway hostname>" \
       -e CAMUNDA_CLUSTER_PORT="<Zeebe gateway port>" \
       -e CAMUNDA_TENANT_ID="<Optional tenant ID for multi-tenant>"
-      -e PROJECT_TAG="<The tag of the resources to deploy>" \
       -e PROJECT_TAG="<Optional - Code Repository Tag to Checkout.>" \
       -e CICD_BRANCH="<Optional - Code Branch to Checkout.>" \
           bp3global/wm-extract-deploy deploy
