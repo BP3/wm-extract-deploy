@@ -12,8 +12,16 @@
 #
 ############################################################################
 
+git config --global user.name "$GIT_USERNAME"
+git config --global user.email $GIT_USER_EMAIL
+
 git fetch
 
-git -c advice.detachedHead=false checkout tags/"$PROJECT_TAG"
+if [ "$CICD_BRANCH" = "" ]; then
+    git -c advice.detachedHead=false checkout $CICD_BRANCH
+fi
+if [ "$PROJECT_TAG" = "" ]; then
+    git -c advice.detachedHead=false checkout tags/"$PROJECT_TAG"
+fi
 
 python $SCRIPT_DIR/deploy.py
