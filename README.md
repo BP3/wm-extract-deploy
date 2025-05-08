@@ -78,6 +78,8 @@ docker run -it --rm \
       -e CAMUNDA_TENANT_ID="<Optional tenant ID for multi-tenant>"
       -e PROJECT_TAG="<Optional - Code Repository Tag to Checkout.>" \
       -e CICD_BRANCH="<Optional - Code Branch to Checkout.>" \
+      -e GIT_USERNAME="<Git Username>" \
+      -e GIT_USER_EMAIL="<Git Email address>" \
           bp3global/wm-extract-deploy deploy
 ```
 
@@ -92,6 +94,8 @@ docker run -it --rm \
       -e CAMUNDA_TENANT_ID="<Optional tenant ID for multi-tenant>"
       -e PROJECT_TAG="<Optional - Code Repository Tag to Checkout.>" \
       -e CICD_BRANCH="<Optional - Code Branch to Checkout.>" \
+      -e GIT_USERNAME="<Git Username>" \
+      -e GIT_USER_EMAIL="<Git Email address>" \
           bp3global/wm-extract-deploy deploy
 ```
 
