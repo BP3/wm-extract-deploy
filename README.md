@@ -76,7 +76,10 @@ docker run -it --rm \
       -e CAMUNDA_CLUSTER_ID="<Zeebe cluster Id>" \
       -e CAMUNDA_CLUSTER_REGION="<Zeebe region>" \
       -e CAMUNDA_TENANT_ID="<Optional tenant ID for multi-tenant>"
-      -e PROJECT_TAG="<The tag of the resources to deploy>" \
+      -e PROJECT_TAG="<Optional - Code Repository Tag to Checkout.>" \
+      -e CICD_BRANCH="<Optional - Code Branch to Checkout.>" \
+      -e GIT_USERNAME="<Git Username>" \
+      -e GIT_USER_EMAIL="<Git Email address>" \
           bp3global/wm-extract-deploy deploy
 ```
 
@@ -89,7 +92,10 @@ docker run -it --rm \
       -e CAMUNDA_CLUSTER_HOST="<Zeebe gateway hostname>" \
       -e CAMUNDA_CLUSTER_PORT="<Zeebe gateway port>" \
       -e CAMUNDA_TENANT_ID="<Optional tenant ID for multi-tenant>"
-      -e PROJECT_TAG="<The tag of the resources to deploy>" \
+      -e PROJECT_TAG="<Optional - Code Repository Tag to Checkout.>" \
+      -e CICD_BRANCH="<Optional - Code Branch to Checkout.>" \
+      -e GIT_USERNAME="<Git Username>" \
+      -e GIT_USER_EMAIL="<Git Email address>" \
           bp3global/wm-extract-deploy deploy
 ```
 
