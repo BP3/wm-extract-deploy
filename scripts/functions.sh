@@ -52,3 +52,11 @@ getUrl() {
 
   echo "$URL"
 }
+
+setGitUser() {
+  checkRequiredEnvVar GIT_USERNAME "$GIT_USERNAME"
+  checkRequiredEnvVar GIT_USER_EMAIL "$GIT_USER_EMAIL"
+
+  git config --global user.name "$GIT_USERNAME"
+  git config --global user.email $GIT_USER_EMAIL
+}
