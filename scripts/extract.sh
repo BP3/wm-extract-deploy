@@ -17,8 +17,7 @@ source $SCRIPT_DIR/functions.sh
 checkRequiredEnvVar CICD_ACCESS_TOKEN               "$CICD_ACCESS_TOKEN"
 checkRequiredEnvVar CICD_REPOSITORY_PATH            "$CICD_REPOSITORY_PATH"
 
-git config --global user.name "$GIT_USERNAME"
-git config --global user.email $GIT_USER_EMAIL
+setGitUser
 
 if [ "$CICD_BRANCH" = "" ]; then
   CICD_BRANCH=main
