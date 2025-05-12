@@ -161,7 +161,9 @@ class WebModeler:
             "sort": [{
                 "field": "created",
                 "direction": "ASC"
-            }]
+            }],
+            "page": 0,
+            "size": 50
         }
 
         if name is not None:
