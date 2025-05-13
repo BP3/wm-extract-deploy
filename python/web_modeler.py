@@ -154,6 +154,8 @@ class WebModeler:
         return self.project
 
     def search_files(self, project_id: str, name: str = None) -> dict:
+        page = 0
+        size = 50
         body = {
             "filter": {
                 "projectId": project_id
@@ -162,21 +164,37 @@ class WebModeler:
                 "field": "created",
                 "direction": "ASC"
             }],
-            "page": 0,
-            "size": 50
+            "page": page,
+            "size": size
         }
 
         if name is not None:
             body["filter"]["name"] = name
 
-        response = requests.post(
-            self.get_wm_api_url() + '/files/search',
-            json=body,
-            headers=self.get_headers()
-        )
+        full_response = {
+            "items": [],
+            "size": 0
+        }
+
+        while True:
+            response = requests.post(
+                self.get_wm_api_url() + '/files/search',
+                json=body,
+                headers=self.get_headers()
+            )
+
+            if len(response.json()["items"]) > 0:
+                full_response["items"].extend(response.json()["items"])
+            else:
+                break
+
+            body["page"] += 1
+
+        full_response["size"] = len(full_response["items"])
 
         # print("Find project files response", response.status_code)
-        return response.json()
+
+        return full_response
 
     def get_file_by_id(self, file_id: str) -> dict:
 
