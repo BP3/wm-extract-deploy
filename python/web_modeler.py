@@ -185,6 +185,8 @@ class WebModeler:
 
             if len(response.json()["items"]) > 0:
                 full_response["items"].extend(response.json()["items"])
+                if len(response.json()["items"]) < size:
+                    break
             else:
                 break
 
