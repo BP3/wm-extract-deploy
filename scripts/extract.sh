@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/sh -e
 
 ############################################################################
 #
@@ -11,40 +11,51 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
+SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
+. "${SCRIPT_DIR}"/functions.sh
 
-source $SCRIPT_DIR/functions.sh
-
-checkRequiredEnvVar CICD_ACCESS_TOKEN               "$CICD_ACCESS_TOKEN"
-checkRequiredEnvVar CICD_REPOSITORY_PATH            "$CICD_REPOSITORY_PATH"
+checkRequiredEnvVar CICD_ACCESS_TOKEN
+checkRequiredEnvVar CICD_REPOSITORY_PATH
+checkRequiredEnvVar CAMUNDA_WM_CLIENT_ID
+checkRequiredEnvVar CAMUNDA_WM_CLIENT_SECRET
+checkRequiredEnvVar OAUTH2_TOKEN_URL
+checkRequiredEnvVar OAUTH_PLATFORM
 
 setGitUser
 
-if [ "$CICD_BRANCH" = "" ]; then
+# Add * to safe.directory to prevent ownership issues with mounted files
+git config --global --add safe.directory \*
+
+if [ "${CICD_BRANCH}" = "" ]; then
   CICD_BRANCH=main
 fi
-echo "Checkout branch: $CICD_BRANCH"
-git checkout -B $CICD_BRANCH
+echo "Checkout branch: ${CICD_BRANCH}"
+git checkout -B "${CICD_BRANCH}"
+
 # Delete BPM artifacts to propagate deletions from Web Modeller
-git rm --ignore-unmatch $MODEL_PATH/*.bpmn
-git rm --ignore-unmatch $MODEL_PATH/*.dmn
-git rm --ignore-unmatch $MODEL_PATH/*.form
+git rm --ignore-unmatch "${MODEL_PATH}"/*.bpmn
+git rm --ignore-unmatch "${MODEL_PATH}"/*.dmn
+git rm --ignore-unmatch "${MODEL_PATH}"/*.form
 
-python $SCRIPT_DIR/extract.py
+args=
+add_arg --model-path "${MODEL_PATH}"
+add_arg --client-id "${CAMUNDA_WM_CLIENT_ID}"
+add_arg --client-secret "${CAMUNDA_WM_CLIENT_SECRET}"
+add_arg --host "${CAMUNDA_WM_HOST}"
+add_arg --oauth2_token_url "${OAUTH2_TOKEN_URL}"
+add_arg --oauth2_platform "${OAUTH2_PLATFORM}"
+add_arg --ssl "${CAMUNDA_WM_SSL}"
+add_arg --config-file "${WM_PROJECT_METADATA_FILE}"
+add_arg --project "${CAMUNDA_WM_PROJECT}"
 
-git add *.bpmn  2>/dev/null || true
-git add *.dmn  2>/dev/null || true
-git add *.form  2>/dev/null || true
-git add config.*  2>/dev/null || true
+python "${SCRIPT_DIR}"/extract.py ${args}
+
+git add -- *.bpmn  2>/dev/null || true
+git add -- *.dmn  2>/dev/null || true
+git add -- *.form  2>/dev/null || true
+git add -- config.*  2>/dev/null || true
 git status
 
-# [skip ci] works across all the supported platforms
-if [ "$COMMIT_MSG" = "" ]; then
-  COMMIT_MSG="Updated by Camunda extract-deploy pipeline"
-fi
-if [ "$SKIP_CI" = "" -o "$SKIP_CI" = "true" ]; then
-  COMMIT_MSG="${COMMIT_MSG} [skip ci]"
-fi
+git commit -m "$(getCommitMessage)"
 
-git commit -m "${COMMIT_MSG}"
-
-git push "$(getUrl "$CICD_PLATFORM" "$CICD_SERVER_HOST" "$CICD_ACCESS_TOKEN" "$CICD_REPOSITORY_PATH")" $CICD_BRANCH
+git push "$(getGitRepoUrl)" "${CICD_BRANCH}"
