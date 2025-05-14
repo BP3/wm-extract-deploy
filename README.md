@@ -76,7 +76,10 @@ docker run -it --rm \
       -e CAMUNDA_CLUSTER_ID="<Zeebe cluster Id>" \
       -e CAMUNDA_CLUSTER_REGION="<Zeebe region>" \
       -e CAMUNDA_TENANT_ID="<Optional tenant ID for multi-tenant>"
-      -e PROJECT_TAG="<The tag of the resources to deploy>" \
+      -e PROJECT_TAG="<Optional - Code Repository Tag to Checkout.>" \
+      -e CICD_BRANCH="<Optional - Code Branch to Checkout.>" \
+      -e GIT_USERNAME="<Git Username>" \
+      -e GIT_USER_EMAIL="<Git Email address>" \
           bp3global/wm-extract-deploy deploy
 ```
 
@@ -89,7 +92,10 @@ docker run -it --rm \
       -e CAMUNDA_CLUSTER_HOST="<Zeebe gateway hostname>" \
       -e CAMUNDA_CLUSTER_PORT="<Zeebe gateway port>" \
       -e CAMUNDA_TENANT_ID="<Optional tenant ID for multi-tenant>"
-      -e PROJECT_TAG="<The tag of the resources to deploy>" \
+      -e PROJECT_TAG="<Optional - Code Repository Tag to Checkout.>" \
+      -e CICD_BRANCH="<Optional - Code Branch to Checkout.>" \
+      -e GIT_USERNAME="<Git Username>" \
+      -e GIT_USER_EMAIL="<Git Email address>" \
           bp3global/wm-extract-deploy deploy
 ```
 
@@ -176,6 +182,7 @@ project:
 | WM_PROJECT_METADATA_FILE | The name of the web modeller project configuration file                                                        | Optional for operations involving web modeler (default = `config.yml` if none present, will look for`config.yml/yaml/json`)     |
 | ZEEBE_CLIENT_ID          | The client Id of the Zeebe client credentials                                                                  | Required for "deploy" operation                                                                                                 |
 | ZEEBE_CLIENT_SECRET      | The client secret of the Zeebe client credentials                                                              | Required for "deploy" operation                                                                                                 |
+| NO_GIT_FETCH             | Specify as TRUE to skip git fetch when deploying                                                               | Required when running deploy.sh in AWS CodeDeploy                                                                               |
 
 # Python runtime version issue
 Currently, Python 3.11 is used as the base image - even though there are later versions of python available (at time of writing 3.12 is available).

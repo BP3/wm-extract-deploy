@@ -131,22 +131,40 @@ class WebModeler:
         return response.json()
 
     def list_files(self, project_id: str, name: str = None) -> dict:
-        response = requests.post(
-            self.__get_wm_api_url() + '/files/search',
-            json = {
-                "filter": {
-                    "projectId": project_id,
-                    "name": name
+        page = 0
+        size = 50
+
+        while True:
+            response = requests.post(
+                self.__get_wm_api_url() + '/files/search',
+                json = {
+                    "filter": {
+                        "projectId": project_id,
+                        "name": name
+                    },
+                    "sort": [{
+                        "field": "created",
+                        "direction": "ASC"
+                    }],
+                    "page": page,
+                    "size": size
                 },
-                "sort": [{
-                    "field": "created",
-                    "direction": "ASC"
-                }]
-            },
-            headers = self.__get_headers()
-        )
+                headers = self.__get_headers()
+            )
+            if len(response.json()["items"]) > 0:
+                full_response["items"].extend(response.json()["items"])
+                if len(response.json()["items"]) < size:
+                    break
+            else:
+                break
+
+            page += 1
+
+        full_response["size"] = len(full_response["items"])
+
         # print("Find project files response", response.status_code)
-        return response.json()
+
+        return full_response
 
     def get_file_by_id(self, file_id: str) -> dict:
         response = requests.get(

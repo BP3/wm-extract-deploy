@@ -16,16 +16,13 @@ SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 
 checkRequiredEnvVar CICD_ACCESS_TOKEN
 checkRequiredEnvVar CICD_REPOSITORY_PATH
-checkRequiredEnvVar GIT_USERNAME
-checkRequiredEnvVar GIT_USER_EMAIL
 checkRequiredEnvVar CAMUNDA_WM_CLIENT_ID
 checkRequiredEnvVar CAMUNDA_WM_CLIENT_SECRET
 checkRequiredEnvVar OAUTH2_TOKEN_URL
 checkRequiredEnvVar OAUTH_PLATFORM
 
-# Use --global so changes are isolated to the container
-git config --global set user.name "${GIT_USERNAME}"
-git config --global set user.email "${GIT_USER_EMAIL}"
+setGitUser
+
 # Add * to safe.directory to prevent ownership issues with mounted files
 git config --global --add safe.directory \*
 

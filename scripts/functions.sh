@@ -83,3 +83,12 @@ getCommitMessage() {
   fi
   echo "${COMMIT_MSG}"
 }
+
+setGitUser() {
+  checkRequiredEnvVar GIT_USERNAME
+  checkRequiredEnvVar GIT_USER_EMAIL
+
+  # Use --global so changes are isolated to the container
+  git config --global user.name "${GIT_USERNAME}"
+  git config --global user.email "${GIT_USER_EMAIL}"
+}

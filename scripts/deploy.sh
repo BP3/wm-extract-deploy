@@ -22,9 +22,19 @@ checkRequiredEnvVarXor CAMUNDA_CLUSTER_REGION CAMUNDA_CLUSTER_PORT
 checkRequiredEnvVarAnd CAMUNDA_CLUSTER_ID CAMUNDA_CLUSTER_REGION
 checkRequiredEnvVarAnd CAMUNDA_CLUSTER_HOST CAMUNDA_CLUSTER_PORT
 
-git fetch
+if [ -z "$NO_GIT_FETCH" ]; then
+  setGitUser
+  git fetch
 
-git -c advice.detachedHead=false checkout tags/"${PROJECT_TAG}"
+  if [ ! -z "$PROJECT_TAG" ]; then
+    git -c advice.detachedHead=false checkout tags/"${PROJECT_TAG}"
+  else
+    if [ "$CICD_BRANCH" = "" ]; then
+        CICD_BRANCH=main
+    fi
+    git -c advice.detachedHead=false checkout $CICD_BRANCH
+  fi
+fi
 
 args=
 add_arg --model-path "${MODEL_PATH}"
