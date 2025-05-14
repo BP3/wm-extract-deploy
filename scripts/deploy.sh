@@ -14,18 +14,21 @@
 
 source $SCRIPT_DIR/functions.sh
 
-setGitUser
 
-git fetch
+if [ -z "$NO_GIT_FETCH" ]; then
 
+  setGitUser
+  git fetch
 
-if [ ! -z "$PROJECT_TAG" ]; then
+  if [ ! -z "$PROJECT_TAG" ]; then
     git -c advice.detachedHead=false checkout tags/"$PROJECT_TAG"
-else
-  if [ "$CICD_BRANCH" = "" ]; then
-      CICD_BRANCH=main
+  else
+    if [ "$CICD_BRANCH" = "" ]; then
+        CICD_BRANCH=main
+    fi
+    git -c advice.detachedHead=false checkout $CICD_BRANCH
   fi
-  git -c advice.detachedHead=false checkout $CICD_BRANCH
+
 fi
 
 python $SCRIPT_DIR/deploy.py
