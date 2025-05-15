@@ -89,6 +89,9 @@ docker run -it --rm \
     --mount type=bind,src=${PWD},dst=/local --workdir /local \
       -e ZEEBE_CLIENT_ID="<Zeebe client Id>" \
       -e ZEEBE_CLIENT_SECRET="<Zeebe client secret>" \
+      -e OAUTH2_TOKEN_URL="OAuth2 Token Endpoint" \
+      -e OAUTH_TOKEN_SCOPE="OAuth2 Token Scope" \
+      -e OAUTH_TOKEN_AUDIENCE="OAuth2 Token Audience" \
       -e CAMUNDA_CLUSTER_HOST="<Zeebe gateway hostname>" \
       -e CAMUNDA_CLUSTER_PORT="<Zeebe gateway port>" \
       -e CAMUNDA_TENANT_ID="<Optional tenant ID for multi-tenant>"

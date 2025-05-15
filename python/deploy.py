@@ -18,6 +18,7 @@ import env
 from pyzeebe import (
     ZeebeClient,
     create_camunda_cloud_channel,
+    create_oauth2_client_credentials_channel,
     create_insecure_channel
 )
 
@@ -30,6 +31,9 @@ class Deployment:
         self.zeebe_client = None
         self.model_path = env.DEFAULT_MODEL_PATH
         self.cluster_host = None
+        self.oauth_token_url = None
+        self.oauth_scope = None
+        self.oauth_audience = None
         self.region = None
         self.cluster_id = None
         self.client_secret = None
@@ -46,8 +50,20 @@ class Deployment:
         env.check_env_var('CAMUNDA_CLUSTER_REGION', False)
         env.check_env_var('CAMUNDA_CLUSTER_HOST', False)
         env.check_env_var('CAMUNDA_CLUSTER_PORT', False)
+        env.check_env_var('OAUTH2_TOKEN_URL', False)
+        env.check_env_var('OAUTH_SCOPE', False)
+        env.check_env_var('OAUTH_AUDIENCE', False)
         env.check_env_var('MODEL_PATH', False)
 
+    def set_oauth_audience(self, audience: str):
+        self.oauth_audience = audience
+
+    def set_oauth_scope(self, scope: str):
+        self.oauth_scope = scope
+
+    def set_oauth_token_url(self, url: str):
+        self.oauth_token_url = url
+    
     def set_client_id(self, client_id: str):
         self.client_id = client_id
 
@@ -76,13 +92,21 @@ class Deployment:
         self.tenant_ids = tenant_ids
 
     def create_zeebe_client(self) -> ZeebeClient:
-
         if self.cluster_id is not None and self.cluster_id != "":
             grpc_channel = create_camunda_cloud_channel(
                 client_id=self.client_id,
                 client_secret=self.client_secret,
                 cluster_id=self.cluster_id,
                 region=self.region
+            )
+        elif self.oauth_token_url is not None and self.oauth_token_url != "":
+            grpc_channel = create_oauth2_client_credentials_channel(
+                grpc_address=self.cluster_host + ':' + str(self.cluster_port),
+                client_id=self.client_id,
+                client_secret=self.client_secret,
+                authorization_server=self.oauth_token_url,
+                scope=self.oauth_scope,
+                audience=self.oauth_audience,
             )
         else:
             grpc_channel = create_insecure_channel(
@@ -116,8 +140,20 @@ if __name__ == "__main__":
         pass
 
     try:
-        if os.environ["CAMUNDA_CLUSTER_HOST"] is not None and os.environ["CAMUNDA_CLUSTER_HOST"] != "":
-            deploy.set_cluster_host(os.environ["CAMUNDA_CLUSTER_HOST"])
+        if os.environ["OAUTH_TOKEN_URL"] is not None and os.environ["OAUTH_TOKEN_URL"] != "":
+            deploy.set_oauth_token_url(os.environ["OAUTH_TOKEN_URL"])
+    except KeyError:
+        pass
+
+    try:
+        if os.environ["OAUTH_SCOPE"] is not None and os.environ["OAUTH_SCOPE"] != "":
+            deploy.set_oauth_scope(os.environ["OAUTH_SCOPE"])
+    except KeyError:
+        pass
+
+    try:
+        if os.environ["OAUTH_AUDIENCE"] is not None and os.environ["OAUTH_AUDIENCE"] != "":
+            deploy.set_oauth_audience(os.environ["OAUTH_AUDIENCE"])
     except KeyError:
         pass
 
