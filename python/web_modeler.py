@@ -154,6 +154,7 @@ class WebModeler:
         return self.project
 
     def search_files(self, project_id: str, name: str = None) -> dict:
+
         page = 0
         size = 50
         body = {
@@ -363,17 +364,33 @@ class WebModeler:
     def create_milestone(self, file_id: str, name: str) -> dict:
         body = {
             "name": name,
-            "fileId": file_id
+            "fileId": file_id,
+            "organizationPublic": True
         }
 
         response = requests.post(
-            url=self.get_wm_api_url() + "/milestones",
+            url=self.get_wm_api_url() + "/versions",
             json=body,
             headers=self.get_headers()
         )
 
-        print("Create milestone response", response.status_code)
+        print("Create version response", response.status_code)
+
+        if response.status_code == 404:
+            # the 'versions' API is not available which means we are integrating with
+            # a version of Camunda less than 8.7 - therefore try the 'milestones' API
+            body = {
+                "name": name,
+                "fileId": file_id,
+            }
+            response = requests.post(
+                url=self.get_wm_api_url() + "/milestones",
+                json=body,
+                headers=self.get_headers()
+            )
+            print("Create milestone response", response.status_code)
+
         if response.status_code != 200:
-            raise RuntimeError("Attempt to create milestone failed.", response.json())
+            raise RuntimeError("Attempt to create template version failed.", response.json())
         else:
             return response.json()

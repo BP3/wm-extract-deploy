@@ -88,7 +88,7 @@ class DeployTemplates:
                     name=source_version
                 )
                 if milestone_response is not None:
-                    print("Created milestone", milestone_response["name"])
+                    print("Created template version", milestone_response["name"])
 
             file.close()
 
