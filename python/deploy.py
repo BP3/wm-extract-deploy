@@ -18,7 +18,8 @@ import env
 from pyzeebe import (
     ZeebeClient,
     create_camunda_cloud_channel,
-    create_insecure_channel
+    create_insecure_channel,
+    create_oauth2_client_credentials_channel
 )
 
 
@@ -35,6 +36,8 @@ class Deployment:
         self.client_secret = None
         self.client_id = None
         self.tenant_ids = None
+        self.authorization_server_url = None
+        self.deploy_authorization = None
         self.check_env()
 
     @staticmethod
@@ -47,6 +50,8 @@ class Deployment:
         env.check_env_var('CAMUNDA_CLUSTER_HOST', False)
         env.check_env_var('CAMUNDA_CLUSTER_PORT', False)
         env.check_env_var('MODEL_PATH', False)
+        env.check_env_var('ZEEBE_AUTHORIZATION_SERVER_URL', False)
+        env.check_env_var('DEPLOY_AUTHORIZATION', False)
 
     def set_client_id(self, client_id: str):
         self.client_id = client_id
@@ -75,6 +80,12 @@ class Deployment:
     def set_tenant_ids(self, tenant_ids: list[str]):
         self.tenant_ids = tenant_ids
 
+    def set_authorization_server_url(self, authorization_server_url: str):
+        self.authorization_server_url = authorization_server_url
+
+    def set_deploy_authorization(self, deploy_authorization: str):
+        self.deploy_authorization = deploy_authorization
+
     def create_zeebe_client(self) -> ZeebeClient:
 
         if self.cluster_id is not None and self.cluster_id != "":
@@ -85,9 +96,22 @@ class Deployment:
                 region=self.region
             )
         else:
-            grpc_channel = create_insecure_channel(
-                grpc_address=self.cluster_host + ':' + str(self.cluster_port)
-            )
+            if self.deploy_authorization is None:
+                grpc_channel = create_insecure_channel(
+                    grpc_address=self.cluster_host + ':' + str(self.cluster_port)
+                )
+            elif self.deploy_authorization == "oauth2":
+                grpc_channel = create_oauth2_client_credentials_channel(
+                    grpc_address=self.cluster_host + ':' + str(self.cluster_port),
+                    client_id=self.client_id,
+                    client_secret=self.client_secret,
+                    authorization_server=self.authorization_server_url,
+                    scope="profile email",
+                    audience="zeebe-api",
+                    channel_credentials=grpc.composite_channel_credentials(grpc.local_channel_credentials(), grpc.access_token_call_credentials(self.access_token))
+                )
+            else:
+                print("Unknown deployment authorization type: ", self.deploy_authorization)
 
         self.zeebe_client = ZeebeClient(grpc_channel)
         return self.zeebe_client
@@ -107,6 +131,8 @@ if __name__ == "__main__":
     deploy.set_client_id(os.environ["ZEEBE_CLIENT_ID"])
     deploy.set_client_secret(os.environ['ZEEBE_CLIENT_SECRET'])
     deploy.set_model_path(os.environ["MODEL_PATH"])
+    deploy.set_deploy_authorization(os.environ["DEPLOY_AUTHORIZATION"])
+    deploy.set_authorization_server_url(os.environ["ZEEBE_AUTHORIZATION_SERVER_URL"])
 
     try:
         if os.environ["CAMUNDA_CLUSTER_ID"] is not None and os.environ["CAMUNDA_CLUSTER_ID"] != "":
