@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh -ex
 
 ############################################################################
 #
@@ -14,19 +14,21 @@
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 . "${SCRIPT_DIR}"/functions.sh
 
-checkRequiredEnvVar CICD_ACCESS_TOKEN
-checkRequiredEnvVar CICD_REPOSITORY_PATH
-checkRequiredEnvVar CAMUNDA_WM_CLIENT_ID
-checkRequiredEnvVar CAMUNDA_WM_CLIENT_SECRET
-checkRequiredEnvVar OAUTH2_TOKEN_URL
-checkRequiredEnvVar OAUTH_PLATFORM
+args=
+addEnvArg --model-path MODEL_PATH
+addRequiredEnvArg --client-id CAMUNDA_WM_CLIENT_ID
+addRequiredEnvArg --client-secret CAMUNDA_WM_CLIENT_SECRET
+addEnvArg --host CAMUNDA_WM_HOST
+addRequiredEnvArg --oauth2-token-url OAUTH2_TOKEN_URL
+addRequiredEnvArg --oauth2-platform OAUTH_PLATFORM
+addEnvArg --ssl CAMUNDA_WM_SSL
+addEnvArg --config-file WM_PROJECT_METADATA_FILE
+addEnvArg --project CAMUNDA_WM_PROJECT
 
-setGitUser
+GIT_REPO_URL="$(getGitRepoUrl)"
+setupGit
 
-# Add * to safe.directory to prevent ownership issues with mounted files
-git config --global --add safe.directory \*
-
-if [ "${CICD_BRANCH}" = "" ]; then
+if [ -z "${CICD_BRANCH}" ]; then
   CICD_BRANCH=main
 fi
 echo "Checkout branch: ${CICD_BRANCH}"
@@ -36,17 +38,6 @@ git checkout -B "${CICD_BRANCH}"
 git rm --ignore-unmatch "${MODEL_PATH}"/*.bpmn
 git rm --ignore-unmatch "${MODEL_PATH}"/*.dmn
 git rm --ignore-unmatch "${MODEL_PATH}"/*.form
-
-args=
-add_arg --model-path "${MODEL_PATH}"
-add_arg --client-id "${CAMUNDA_WM_CLIENT_ID}"
-add_arg --client-secret "${CAMUNDA_WM_CLIENT_SECRET}"
-add_arg --host "${CAMUNDA_WM_HOST}"
-add_arg --oauth2_token_url "${OAUTH2_TOKEN_URL}"
-add_arg --oauth2_platform "${OAUTH2_PLATFORM}"
-add_arg --ssl "${CAMUNDA_WM_SSL}"
-add_arg --config-file "${WM_PROJECT_METADATA_FILE}"
-add_arg --project "${CAMUNDA_WM_PROJECT}"
 
 python "${SCRIPT_DIR}"/extract.py ${args}
 
@@ -58,4 +49,4 @@ git status
 
 git commit -m "$(getCommitMessage)"
 
-git push "$(getGitRepoUrl)" "${CICD_BRANCH}"
+git push "${GIT_REPO_URL}" "${CICD_BRANCH}"

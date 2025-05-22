@@ -9,18 +9,13 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
-
-# There are later versions of python available (e.g. 3.12) but when we have
-# tested with those then the code (pyzeebe) fails, so we are sticking with
-# python 3.11 for now.
-FROM python:3.11.11-alpine3.21
-
+FROM python:3.13.3-alpine3.21
 
 RUN addgroup --gid 1000 bp3 && \
     adduser --uid 1000 --ingroup bp3 --home /home/bp3user --shell /bin/bash --disabled-password bp3user
 
 RUN --mount=type=bind,source=requirements.txt,target=/tmp/requirements.txt \
-    apk add git && \
+    apk add --no-cache git=2.47.2-r0 openssh=9.9_p2-r0 && \
     pip install --requirement /tmp/requirements.txt
 
 WORKDIR /app

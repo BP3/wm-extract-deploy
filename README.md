@@ -12,7 +12,7 @@ This project provides solutions to:
 * Update a git repo with the extracted model
 * Deploy a tagged version of the model to a target Zeebe cluster (environment)
 
-To facilitate those operations a Docker image is provided that is capable of 
+To facilitate those operations, a Docker image is provided that is capable of 
 those operations and that is suited for use in a DevOps pipeline. 
 The operations are capable of working with any CI/CD platform and have so far been tested with:
 * [GitLab](./GitLab.md)
@@ -26,7 +26,7 @@ DevOps pipelines.
 The container can be run in the following modes, as described below:
 
 ## Extract
-To extract process models from Web Modeler project and commit to a local `git` repository:
+To extract process models from a Web Modeler project and commit to a local `git` repository:
 
 For SaaS environments:
 ```shell
@@ -91,7 +91,7 @@ docker run -it --rm \
       -e ZEEBE_CLIENT_SECRET="<Zeebe client secret>" \
       -e CAMUNDA_CLUSTER_HOST="<Zeebe gateway hostname>" \
       -e CAMUNDA_CLUSTER_PORT="<Zeebe gateway port>" \
-      -e CAMUNDA_TENANT_ID="<Optional tenant ID for multi-tenant>"
+      -e CAMUNDA_TENANT_ID="<Optional tenant ID for multi-tenant>" \
       -e PROJECT_TAG="<Optional - Code Repository Tag to Checkout.>" \
       -e CICD_BRANCH="<Optional - Code Branch to Checkout.>" \
       -e GIT_USERNAME="<Git Username>" \
@@ -220,11 +220,11 @@ sys:1: RuntimeWarning: coroutine 'UnaryUnaryCall._invoke' was never awaited
 ```
 
 # Using a local Zeebe docker stack for development
-If you are running the extract/deploy app on the same host as the Zeebe docker stack (i.e. on a developer's computer) you need to make some changes to the Docker compose file for the Zeebe stack in order for the authentication to work between the local containers.
+If you are running the extract/deploy app on the same host as the Zeebe docker stack (i.e. on a developer's computer), you need to make some changes to the Docker compose file for the Zeebe stack in order for the authentication to work between the local containers.
 
-Assuming that you are using the docker compose files from the [Camunda Platform repo](https://github.com/camunda/camunda-platform); In the directory with the Camunda 8 docker-compose file you should edit the `.env` file and change the `HOST` variable from `localhost` to your hosts IP address.
+Assuming that you are using the docker compose files from the [Camunda Platform repo](https://github.com/camunda/camunda-platform); In the directory with the Camunda 8 docker-compose file you should edit the `.env` file and change the `HOST` variable from `localhost` to your host's IP address.
 
-The Web modeller docker compose does not use these environment variables, so we need to update them individually. Open the `docker-compose-web-modeler.yaml` file in your text editor of choice and update the following environment variable lines, replacing `localhost` in the URLs with `${HOST}` while leaving the port number intact:
+The Web Modeler docker compose does not use these environment variables, so we need to update them individually. Open the `docker-compose-web-modeler.yaml` file in your text editor of choice and update the following environment variable lines, replacing `localhost` in the URLs with `${HOST}` while leaving the port number intact:
 
 - RESTAPI_OAUTH2_TOKEN_ISSUER
 - RESTAPI_SERVER_URL
@@ -233,8 +233,12 @@ The Web modeller docker compose does not use these environment variables, so we 
 
 Save the changes and then create the docker container as usual. You will need to use your IP address rather than localhost when accessing any of the exposed services (i.e. Operate, Web Modeler etc.) but otherwise they should function as normal.
 
-You now need to create a client app and secret for the extract-deploy app to use for accessing the web modeller.
+You now need to create a client app and secret for the extract-deploy app to use for accessing Web Modeler.
 1. Open Identity in your browser (`https://<your IP address>:8084`) and log in.
 2. Click `Add Application`, enter a name (this will be the Client ID), and select the `M2M` radio button, then click `Add`.
 3. Click on the new Application you created and make a note of the Client secret as you will need this for the extract script.
 4. Open the `Access to APIs` tab, click the `Assign Permissions` button and then select `Web Modeler API` from the dropdown. Select the read, write, and create permission checkboxes and then click the `Add` button.
+
+## Building locally
+
+`docker build -t bp3global/wm-extract-deploy .`

@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh -ex
 
 ############################################################################
 #
@@ -14,36 +14,33 @@
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 . "${SCRIPT_DIR}"/functions.sh
 
-checkRequiredEnvVar MODEL_PATH
-checkRequiredEnvVar ZEEBE_CLIENT_ID
-checkRequiredEnvVar ZEEBE_CLIENT_SECRET
+args=
+addEnvArg --model-path MODEL_PATH
+addRequiredEnvArg --client-id ZEEBE_CLIENT_ID
+addRequiredEnvArg --client-secret ZEEBE_CLIENT_SECRET
+checkRequiredEnvVarAnd CAMUNDA_CLUSTER_ID CAMUNDA_CLUSTER_REGION
 checkRequiredEnvVarXor CAMUNDA_CLUSTER_ID CAMUNDA_CLUSTER_HOST
 checkRequiredEnvVarXor CAMUNDA_CLUSTER_REGION CAMUNDA_CLUSTER_PORT
-checkRequiredEnvVarAnd CAMUNDA_CLUSTER_ID CAMUNDA_CLUSTER_REGION
+addEnvArg --cluster-id CAMUNDA_CLUSTER_ID
+addEnvArg --cluster-region CAMUNDA_CLUSTER_REGION
 checkRequiredEnvVarAnd CAMUNDA_CLUSTER_HOST CAMUNDA_CLUSTER_PORT
+addEnvArg --cluster-host CAMUNDA_CLUSTER_HOST
+addEnvArg --cluster-port CAMUNDA_CLUSTER_PORT
+addEnvArg --tenant CAMUNDA_TENANT_ID
 
 if [ -z "$NO_GIT_FETCH" ]; then
-  setGitUser
-  git fetch
+  setupGit
 
-  if [ ! -z "$PROJECT_TAG" ]; then
-    git -c advice.detachedHead=false checkout tags/"${PROJECT_TAG}"
+  if [ -n "$PROJECT_TAG" ]; then
+    GIT_REF=tags/"${PROJECT_TAG}"
   else
-    if [ "$CICD_BRANCH" = "" ]; then
+    if [ -z "$CICD_BRANCH" ]; then
         CICD_BRANCH=main
     fi
-    git -c advice.detachedHead=false checkout $CICD_BRANCH
+    GIT_REF="${CICD_BRANCH}"
   fi
+  git fetch origin "${GIT_REF}"
+  git -c advice.detachedHead=false checkout "${GIT_REF}"
 fi
-
-args=
-add_arg --model-path "${MODEL_PATH}"
-add_arg --client-id "${ZEEBE_CLIENT_ID}"
-add_arg --client-secret "${ZEEBE_CLIENT_SECRET}"
-add_arg --cluster-id "${CAMUNDA_CLUSTER_ID}"
-add_arg --cluster-region "${CAMUNDA_CLUSTER_REGION}"
-add_arg --cluster-host "${CAMUNDA_CLUSTER_HOST}"
-add_arg --cluster-port "${CAMUNDA_CLUSTER_PORT}"
-add_arg --tenant "${CAMUNDA_TENANT_ID}"
 
 python "${SCRIPT_DIR}"/deploy.py ${args}

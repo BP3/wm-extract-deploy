@@ -14,7 +14,7 @@
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 
 usage() {
-  if [ "$1" != "" ]; then
+  if [ -n "$1" ]; then
     echo "$1"
   fi
 
@@ -32,7 +32,7 @@ The configuration options for the commands are defined in environment variables 
 See https://github.com/BP3/wm-extract-deploy for more details.
 EOF
 
-  if [ "$1" != "" ]; then
+  if [ -n "$1" ]; then
     exit 1
   fi
 }
