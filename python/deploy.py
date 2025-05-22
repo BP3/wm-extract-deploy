@@ -14,6 +14,7 @@ import asyncio
 import glob
 import os
 import env
+import grpc
 
 from pyzeebe import (
     ZeebeClient,
@@ -106,9 +107,7 @@ class Deployment:
                     client_id=self.client_id,
                     client_secret=self.client_secret,
                     authorization_server=self.authorization_server_url,
-                    scope="profile email",
-                    audience="zeebe-api",
-                    channel_credentials=grpc.composite_channel_credentials(grpc.local_channel_credentials(), grpc.access_token_call_credentials(self.access_token))
+                    audience="zeebe-api"
                 )
             else:
                 print("Unknown deployment authorization type: ", self.deploy_authorization)
