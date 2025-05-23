@@ -39,6 +39,9 @@ class Deployment:
         self.tenant_ids = None
         self.authorization_server_url = None
         self.deploy_authorization = None
+        self.oauth_audience = None
+        self.oauth_scope = None
+        self.continue_on_error = "True"
         self.check_env()
 
     @staticmethod
@@ -53,6 +56,9 @@ class Deployment:
         env.check_env_var('MODEL_PATH', False)
         env.check_env_var('ZEEBE_AUTHORIZATION_SERVER_URL', False)
         env.check_env_var('DEPLOY_AUTHORIZATION', False)
+        env.check_env_var('OAUTH_AUDIENCE', False)
+        env.check_env_var('OAUTH_SCOPE', False)
+        env.check_env_var('CONTINUE_ON_ERROR', False)
 
     def set_client_id(self, client_id: str):
         self.client_id = client_id
@@ -87,6 +93,15 @@ class Deployment:
     def set_deploy_authorization(self, deploy_authorization: str):
         self.deploy_authorization = deploy_authorization
 
+    def set_oauth_audience(self, audience: str):
+        self.oauth_audience = audience
+
+    def set_oauth_scope(self, scope: str):
+        self.oauth_scope = scope
+
+    def set_continue_on_error(self, continue_on_error: bool):
+        self.continue_on_error = continue_on_error
+
     def create_zeebe_client(self) -> ZeebeClient:
 
         if self.cluster_id is not None and self.cluster_id != "":
@@ -107,7 +122,8 @@ class Deployment:
                     client_id=self.client_id,
                     client_secret=self.client_secret,
                     authorization_server=self.authorization_server_url,
-                    audience="zeebe-api"
+                    audience=self.oauth_audience,
+                    scope=self.oauth_scope
                 )
             else:
                 print("Unknown deployment authorization type: ", self.deploy_authorization)
@@ -121,17 +137,29 @@ class Deployment:
         loop.run_until_complete(self.deploy_resources(models, tenant_id))
 
     async def deploy_resources(self, resource_paths: list, tenant_id: str):
-        return await self.zeebe_client.deploy_resource(*resource_paths, tenant_id=tenant_id)
-
+        for f in resource_paths:
+            print("File: {}".format(f))
+            try:
+                await self.zeebe_client.deploy_resource(f, tenant_id=tenant_id)
+            except Exception as x:
+                print("")
+                print("*** FILE: {} COULD NOT BE DEPLOYED ***".format(f))
+                print(repr(x))
+                print("")
+                if self.continue_on_error != "True":
+                    traceback.print_exc()
 
 if __name__ == "__main__":
     deploy = Deployment()
 
-    deploy.set_client_id(os.environ["ZEEBE_CLIENT_ID"])
-    deploy.set_client_secret(os.environ['ZEEBE_CLIENT_SECRET'])
-    deploy.set_model_path(os.environ["MODEL_PATH"])
-    deploy.set_deploy_authorization(os.environ["DEPLOY_AUTHORIZATION"])
-    deploy.set_authorization_server_url(os.environ["ZEEBE_AUTHORIZATION_SERVER_URL"])
+    deploy.set_client_id(os.getenv("ZEEBE_CLIENT_ID"))
+    deploy.set_client_secret(os.getenv('ZEEBE_CLIENT_SECRET'))
+    deploy.set_model_path(os.getenv("MODEL_PATH"))
+    deploy.set_deploy_authorization(os.getenv("DEPLOY_AUTHORIZATION"))
+    deploy.set_authorization_server_url(os.getenv("ZEEBE_AUTHORIZATION_SERVER_URL"))
+    deploy.set_oauth_audience(os.getenv("OAUTH_AUDIENCE") if not None else "zeebe-api")
+    deploy.set_oauth_scope(os.getenv("OAUTH_SCOPE"))
+    deploy.set_continue_on_error(os.getenv("CONTINUE_ON_ERROR"))
 
     try:
         if os.environ["CAMUNDA_CLUSTER_ID"] is not None and os.environ["CAMUNDA_CLUSTER_ID"] != "":
