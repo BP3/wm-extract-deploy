@@ -9,134 +9,125 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
-import argparse
+import configargparse
 import requests
 import os
 import json
 import yaml
-from typing import IO
+from oauth import OAuth2
 
-class AuthException(BaseException):
-    pass
+class NotFoundError(Exception):
+    def __init__(self, resource_type: str, key: str = None, value: str = None):
+        super().__init__(f"{resource_type} with {key} = {value} not found.")
+        self.resource_type = resource_type
+        self.key = key
+        self.value = value
+
+class MultipleFoundError(Exception):
+    def __init__(self, resource_type: str, values: dict):
+        super().__init__(f"Found multiple {resource_type}s: {values}")
+        self.resource_type = resource_type
+        self.values = values
 
 class WebModeler:
-    __SAAS_HOST = 'cloud.camunda.io'
-    protocol = 'https'
-    config_file = 'config.yml'
-    oauth2_token_url = None
-    oauth2_platform = 'KEYCLOAK'
-    auth_headers = {}
-    wm_host = __SAAS_HOST
-    client_secret = None
-    client_id = None
-    __config = None
-    __access_token = None
+    __SAAS_HOST: str = 'cloud.camunda.io'
 
-    parser = argparse.ArgumentParser(add_help = False)
-    parser.add_argument("--client-id", dest="client_id", required = True, help = "Web Modeler client ID")
-    parser.add_argument("--client-secret", dest="client_secret", required = True, help = "Web Modeler client secret")
-    parser.add_argument("--host", help = "Web Modeler host")
-    parser.add_argument("--oauth2-token-url", dest="oauth2_token_url", help = "OAuth2 Token URL")
-    parser.add_argument("--oauth2-platform", dest="oauth2_platform", help = "OAuth2 platform (KEYCLOCK | ENTRA)")
-    parser.add_argument("--ssl", nargs='?', const='true', default='false', help = "Web Modeler use SSL (HTTPS)")
-    parser.add_argument("--config-file", dest="config_file", help = "Web Modeler project config file")
+    parser = configargparse.ArgumentParser(parents=[OAuth2.parser], add_help=False)
+    parser.add_argument("--host", help="Web Modeler host",
+                        env_var="CAMUNDA_WM_HOST", default='cloud.camunda.io')
+    parser.add_argument("--ssl", nargs='?', const='true', help="Web Modeler use SSL (HTTPS)",
+                        env_var="CAMUNDA_WM_SSL", default='false')
+    parser.add_argument("--config-file", dest="config_file", help="Web Modeler project config file",
+                        env_var="WM_PROJECT_METADATA_FILE", default="config.yml")
+    parser.add_argument("--oauth2-platform", dest="oauth2_platform", help="OAuth2 platform. Deprecated: Use scope and audience instead",
+                        env_var="OAUTH_PLATFORM", choices=['KEYCLOAK', 'ENTRA'], default='KEYCLOAK', deprecated = True )
 
-    def __init__(self, args: argparse.Namespace):
+
+    def __init__(self, args: configargparse.Namespace):
         super().__init__()
-        self.client_id = args.client_id
-        self.client_secret = args.client_secret
-        self.oauth2_platform = args.oauth2_platform.upper()
+        self.oauth = OAuth2(args)
+
+        # TODO replace this with web modeler url
+        # Current options require port to be specified with the host which is not intuitive
         if args.ssl is not None and args.ssl.lower() == 'false':
             self.protocol = 'http'
-        if args.host is not None:
-            self.wm_host = args.host
-        if args.oauth2_token_url is not None:
-            self.oauth2_token_url = args.oauth2_token_url
-            self.auth_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-        if args.config_file is not None:
-            self.config_file = args.config_file
+        else:
+            self.protocol = 'https'
 
-        for config_file in [self.config_file, "config.yaml", "config.json"]:
+        self.wm_host = args.host
+
+        if self.oauth.token_url is None:
+            if self.wm_host == self.__SAAS_HOST:
+                self.oauth.token_url = 'https://login.cloud.camunda.io/oauth/token'
+
+        match args.oauth2_platform:
+            case 'ENTRA':
+                self.oauth.scope = self.oauth.client_id + "/.default"
+            case 'KEYCLOAK':
+                self.oauth.audience = "api." + self.wm_host
+            case _:
+                raise ValueError(args.oauth2_platform + ' is not a supported authentication platform type.')
+
+        self.__config = None
+        for config_file in [args.config_file, "config.yaml", "config.json"]:
             if os.path.exists(config_file):
                 self.config_file = config_file
-                print("Using config file:", config_file)
                 break
 
-    def __get_auth_url(self) -> str:
-        if self.oauth2_token_url is not None:
-            return self.oauth2_token_url
-        else:
-            return self.protocol + '://login.' + self.__SAAS_HOST + '/oauth/token'
-
-    def __get_wm_api_url(self, version: int = 1) -> str:
+        version = 1
         if self.wm_host == self.__SAAS_HOST:
-            return self.protocol + '://modeler.' + self.wm_host + '/api/v' + str(version)
+            self.__wm_api_url = self.protocol + '://modeler.' + self.wm_host + '/api/v' + str(version)
         else:
-            return self.protocol + '://' + self.wm_host + '/api/v' + str(version)
+            self.__wm_api_url = self.protocol + '://' + self.wm_host + '/api/v' + str(version)
 
     def __get_headers(self) -> dict:
-        return {
-            "Authorization": "Bearer {}".format(self.__access_token),
+        return self.oauth.headers() | {
             "Content-Type": "application/json"
         }
 
-    @staticmethod
-    def __parse_yaml_file(file: IO) -> dict:
-        yaml_config = yaml.safe_load(file)
-        print("Loaded YAML data:", yaml_config)
-        return yaml_config
-
-    @staticmethod
-    def __parse_json_file(file: IO) -> dict:
-        json_config = json.load(file)
-        print("Loaded JSON data:", json_config)
-        return json_config
-
-    # Authenticate to Camunda Web Modeler and get an access-token
     def authenticate(self) -> None:
-        data = {
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-            "grant_type": 'client_credentials'
-        }
-        match self.oauth2_platform:
-            case 'ENTRA':
-                data.scope = self.client_id + "/.default"
-            case 'KEYCLOAK':
-                data.audience = "api." + self.wm_host
-            case _:
-                raise ValueError(self.oauth2_platform + ' is not a supported authentication platform type.')
-
-        response = requests.post(self.__get_auth_url(), data = data, headers=self.auth_headers)
-        print("Authentication response", response.status_code)
-        if response.status_code != 200:
-            raise AuthException("Attempt to authenticate failed.", response.status_code, response.text)
-        self.__access_token = response.json()["access_token"]
+        if self.oauth.token_url is None:
+            raise ValueError("OAuth token url must be specified for self managed hosts.")
+        self.oauth.authenticate()
 
     def find_project(self, key: str, value: str) -> dict:
-        response = requests.post(
-            self.__get_wm_api_url() + '/projects/search',
-            json = {
-                "filter": {
-                    key: value
+        headers = self.__get_headers()
+        url = self.__wm_api_url + '/projects/search'
+        try:
+            response = requests.post(
+                url,
+                json={
+                    "filter": {
+                        key: value
+                    },
+                    "sort": [{
+                        "field": "created",
+                        "direction": "ASC"
+                    }]
                 },
-                "sort": [{
-                    "field": "created",
-                    "direction": "ASC"
-                }]
-            },
-            headers = self.__get_headers()
-        )
-        # print("Find project response", response.status_code)
-        return response.json()
+                headers=headers
+            )
+            # print("Find project response", response.status_code)
+            if response.status_code == 401:
+                raise NotFoundError("Project", key, value)
+            if response.status_code != 200:
+                raise RuntimeError("Find project failed:", response.status_code, response.text)
+            return response.json()
+        except requests.exceptions.ConnectionError as ex:
+            print(f"Error while finding project: {ex}")
+            exit(3)
 
     def list_files(self, project_id: str, name: str = None) -> dict:
         page = 0
         size = 50
 
+        full_response = {
+            "items": [],
+            "size": 0
+        }
         while True:
             response = requests.post(
-                self.__get_wm_api_url() + '/files/search',
+                self.__wm_api_url + '/files/search',
                 json = {
                     "filter": {
                         "projectId": project_id,
@@ -151,6 +142,9 @@ class WebModeler:
                 },
                 headers = self.__get_headers()
             )
+            if response.status_code != 200:
+                raise RuntimeError(f"List files for project {project_id} failed:", response.status_code, response.text)
+
             if len(response.json()["items"]) > 0:
                 full_response["items"].extend(response.json()["items"])
                 if len(response.json()["items"]) < size:
@@ -162,19 +156,17 @@ class WebModeler:
 
         full_response["size"] = len(full_response["items"])
 
-        # print("Find project files response", response.status_code)
-
         return full_response
 
     def get_file_by_id(self, file_id: str) -> dict:
         response = requests.get(
-            self.__get_wm_api_url() + "/files/" + file_id,
+            self.__wm_api_url + "/files/" + file_id,
             headers = self.__get_headers()
         )
         # print("Retrieve file content response", response.status_code)
         return response.json()
 
-    def __create_reference_file(self, data: dict):
+    def __create_config_file(self, data: dict):
         if not os.path.exists(self.config_file):
             with open(self.config_file, "w") as file:
                 if self.config_file.endswith("yml") or self.config_file.endswith("yaml"):
@@ -182,63 +174,70 @@ class WebModeler:
                 elif self.config_file.endswith("json"):
                     file.write(json.dumps(data))
 
-    def __load_project_config(self):
-        # Check to see if the config file options exists
-        # If it does then read the configuration from it
+    def __delete_config_file(self) -> None:
+        if os.path.exists(self.config_file):
+            os.remove(self.config_file)
+
+    def __load_config_file(self):
+        # Check to see if the config file exists
+        # If it does, then read the configuration from it
         if self.__config is None and os.path.exists(self.config_file):
             with open(self.config_file, 'r') as file:
                 if self.config_file.endswith("yml") or self.config_file.endswith("yaml"):
-                    self.__config = self.__parse_yaml_file(file)
+                    self.__config = yaml.safe_load(file)
                 elif self.config_file.endswith("json"):
-                    self.__config = self.__parse_json_file(file)
+                    self.__config = json.load(file)
+                print(f"Loaded config {self.__config} from {self.config_file}")
 
     def get_project(self, project_ref: str) -> dict:
         projects = None
         create_config_file = False
-        self.__load_project_config()
+        self.__load_config_file()
 
         # If we loaded a config, search for the provided ID
         if self.__config is not None:
-            project_id = self.__config["project"]["id"]
-            projects = self.find_project("id", project_id)
-            if projects is None:
-                print("Project not found using project ID {} from {}".format(project_id, self.config_file))
-            elif not projects['items']:
-                print("Project not found using project ID {} from {}".format(project_id, self.config_file))
+            project_ = self.__config["project"]
+            if project_ref is not None and project_ref != project_["name"]:
+                print(f"The project '{project_ref}' does not match the project '{project_["name"]}' from {self.config_file}, ignoring contents and regenerating.")
+                self.__delete_config_file()
                 projects = None
+            else:
+                project_id = project_["id"]
+                projects = self.find_project("id", project_id)
+                if projects is None:
+                    print(f"Project not found using project ID {project_id} from {self.config_file}")
+                elif not projects['items']:
+                    print(f"Project not found using project ID {project_id} from {self.config_file}")
+                    projects = None
 
-        # If we failed to find the specified project, or no config was supplied then try looking it up by projectRef
+        # If we failed to find the specified project, or no config was supplied, then try looking it up by project_ref
         if projects is None:
             create_config_file = True
-            # It could be we were given the Id
-            print("project_ref = '{}'".format(project_ref))
+            # First, try by id
+            # print(f"project_ref = '{project_ref}'")
             if project_ref is not None and project_ref != "":
                 projects = self.find_project("id", project_ref)
-                # If there are no 'items' then try looking up the project by name
+                # Then try by name
                 if projects is not None and not projects['items']:
                     projects = self.find_project("name", project_ref)
-                    if not projects["items"] and project_ref is not None:
-                        print("Project '{}' not found".format(project_ref))
             else:
-                raise ValueError("Either a valid config file or 'CAMUNDA_WM_PROJECT' environment variable must be "
-                                 "supplied.")
+                raise ValueError("A project was not specified. Specify it via config file, argument, or environment variable.")
 
         if not projects["items"]:
-            raise ValueError("Web Modeler project not found")
+            raise NotFoundError("Project", "id", project_ref)
 
         if len(projects["items"]) > 1:
-            raise ValueError("Web Modeler multiple projects found")
+            raise MultipleFoundError("Project", projects["items"])
 
         project = projects['items'][0]
 
         if create_config_file:
-            data = {
+            self.__create_config_file({
                 "project": {
                     "id": project['id'],
                     "name": project["name"]
                 }
-            }
-            self.__create_reference_file(data)
+            })
 
         return project
 
@@ -251,12 +250,11 @@ class WebModeler:
         }
 
         response = requests.post(
-            url =self.__get_wm_api_url() + "/files",
+            url =self.__wm_api_url + "/files",
             json = body,
             headers = self.__get_headers()
         )
 
-        print("Create file response", response.status_code)
         if response.status_code != 200:
             raise RuntimeError("Attempt to create file failed.", response.json())
         return response.json()
@@ -264,7 +262,7 @@ class WebModeler:
     def update_file(self, project_id: str, file_id: str, name: str, file_type: str, content: str, revision: int) \
             -> dict:
         response = requests.patch(
-            url =self.__get_wm_api_url() + "/files/" + file_id,
+            url =self.__wm_api_url + "/files/" + file_id,
             json = {
                 "name": name,
                 "projectId": project_id,
@@ -282,7 +280,7 @@ class WebModeler:
 
     def create_milestone(self, file_id: str, name: str) -> dict:
         response = requests.post(
-            url =self.__get_wm_api_url() + "/milestones",
+            url = self.__wm_api_url + "/milestones",
             json = {
                 "name": name,
                 "fileId": file_id

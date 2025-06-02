@@ -17,42 +17,6 @@ checkRequiredEnvVar() {
   fi
 }
 
-checkRequiredEnvVarXor() {
-  if [ -z "$(eval echo $"$1")" ] && [ -z "$(eval echo $"$2")" ]; then
-    echo "Environment variable '$1' or '$2' must be set"
-    exit 1
-  elif [ -n "$(eval echo $"$1")" ] && [ -n "$(eval echo $"$2")" ]; then
-    echo "Environment variable '$1' and '$2' cannot both be set"
-    exit 1
-  fi
-}
-
-checkRequiredEnvVarAnd() {
-  if [ -n "$(eval echo $"$1")" ] && [ -z "$(eval echo $"$2")" ]; then
-    echo "Environment variable '$2' must be set if '$1' is set"
-    exit 1
-  fi
-}
-
-addArg() {
-  if [ -n "$2" ]; then
-    if [ -z "${args}" ]; then
-      args="$1 \"$2\""
-    else
-      args="${args} $1 \"$2\""
-    fi
-  fi
-}
-
-addEnvArg() {
-  addArg "$1" "$(eval echo $"$2")"
-}
-
-addRequiredEnvArg() {
-  checkRequiredEnvVar "$2"
-  addEnvArg "$1" "$2"
-}
-
 getGitRepoUrl() {
   checkRequiredEnvVar CICD_ACCESS_TOKEN
   checkRequiredEnvVar CICD_REPOSITORY_PATH

@@ -14,17 +14,6 @@
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 . "${SCRIPT_DIR}"/functions.sh
 
-args=
-addEnvArg --model-path MODEL_PATH
-addRequiredEnvArg --client-id CAMUNDA_WM_CLIENT_ID
-addRequiredEnvArg --client-secret CAMUNDA_WM_CLIENT_SECRET
-addEnvArg --host CAMUNDA_WM_HOST
-addRequiredEnvArg --oauth2-token-url OAUTH2_TOKEN_URL
-addRequiredEnvArg --oauth2-platform OAUTH_PLATFORM
-addEnvArg --ssl CAMUNDA_WM_SSL
-addEnvArg --config-file WM_PROJECT_METADATA_FILE
-addEnvArg --project CAMUNDA_WM_PROJECT
-
 GIT_REPO_URL="$(getGitRepoUrl)"
 setupGit
 
@@ -39,7 +28,7 @@ git rm --ignore-unmatch "${MODEL_PATH}"/*.bpmn
 git rm --ignore-unmatch "${MODEL_PATH}"/*.dmn
 git rm --ignore-unmatch "${MODEL_PATH}"/*.form
 
-python "${SCRIPT_DIR}"/extract.py ${args}
+python "${SCRIPT_DIR}"/extract.py
 
 git add -- *.bpmn  2>/dev/null || true
 git add -- *.dmn  2>/dev/null || true

@@ -9,13 +9,11 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
-import argparse
+import configargparse
 
 class ModelAction:
-    model_path = None
-
-    parser = argparse.ArgumentParser(add_help = False)
-    parser.add_argument("--model-path", dest="model_path", required = True, help = "Model file path")
+    parser = configargparse.ArgumentParser(add_help = False)
+    parser.add_argument("--model-path", dest="model_path", help = "Model file path", env_var = "MODEL_PATH", default=".")
 
     def __init__(self, args):
         super().__init__()
