@@ -34,12 +34,12 @@ class OAuth2:
     client_secret = None
 
     parser = configargparse.ArgumentParser(add_help = False)
-    client_id_group = parser.add_mutually_exclusive_group(required = True)
+    client_id_group = parser.add_mutually_exclusive_group(required = False)
     client_id_group.add_argument("--oauth2-client-id", dest="client_id", help = "OAuth2 client ID",
                         env_var = "OAUTH2_CLIENT_ID")
     client_id_group.add_argument("--camunda-wm-client-id", dest="client_id", help = "Deprecated: Use --oauth-client-id instead",
                         env_var = "CAMUNDA_WM_CLIENT_ID", deprecated = True)
-    client_secret_group = parser.add_mutually_exclusive_group(required = True)
+    client_secret_group = parser.add_mutually_exclusive_group(required = False)
     client_secret_group.add_argument("--oauth2-client-secret", dest="client_secret", help = "OAuth2 client secret",
                         env_var = "OAUTH2_CLIENT_SECRET")
     client_secret_group.add_argument("--camunda-wm-client-secret", dest="client_secret", help = "Deprecated: Use --oauth-client-secret instead",

@@ -14,21 +14,26 @@
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 . "${SCRIPT_DIR}"/functions.sh
 
-GIT_REPO_URL="$(getGitRepoUrl)"
+if [ -z "$NO_GIT" ]; then
+  GIT_REPO_URL="$(getGitRepoUrl)"
 
-setupGit
+  setupGit
 
-if [ -z "$CICD_BRANCH" ]; then
-  CICD_BRANCH=main
+  if [ -z "$CICD_BRANCH" ]; then
+    CICD_BRANCH=main
+  fi
+  echo "Checkout branch: $CICD_BRANCH"
+  git checkout -B $CICD_BRANCH
 fi
-echo "Checkout branch: $CICD_BRANCH"
-git checkout -B $CICD_BRANCH
 
-python "${SCRIPT_DIR}"/deploy_connector_templates.py
-echo "Script Complete, Committing Config."
+python "${SCRIPT_DIR}"/deploy_connector_templates.py "$@"
 
-git add config.*
+if [ -z "$NO_GIT" ]; then
+  echo "Script Complete, Committing Config."
 
-git commit -m "$(getCommitMessage)"
+  git add config.*
 
-git push "${GIT_REPO_URL}" "${CICD_BRANCH}"
+  git commit -m "$(getCommitMessage)"
+
+  git push "${GIT_REPO_URL}" "${CICD_BRANCH}"
+fi

@@ -37,31 +37,27 @@ EOF
   fi
 }
 
-case "$1" in
+mode="$1"
+shift
+case "${mode}" in
     extract)
-      if [ $# -gt 1 ]; then
-        usage "Unknown mode argument: '$2'"
-      fi
       echo "mode = 'extract'"
-      "${SCRIPT_DIR}"/extract.sh
+      "${SCRIPT_DIR}"/extract.sh "$@"
       ;;
     deploy)
-      if [ $# -gt 1 ]; then
-        if [ "$2" = "templates" ]; then
+      if [ $# -gt 0 ] && [ "$1" = "templates" ]; then
+          shift
           echo "mode = 'deploy templates'"
-          "${SCRIPT_DIR}"/deployTemplates.sh
-        else
-          usage "Unknown mode argument: '$2'"
-        fi
+          "${SCRIPT_DIR}"/deployTemplates.sh "$@"
       else
         echo "mode = 'deploy'"
-        "${SCRIPT_DIR}"/deploy.sh
+        "${SCRIPT_DIR}"/deploy.sh "$@"
       fi
       ;;
     help)
       usage
       ;;
     *)
-      usage "Unknown mode: '$1'"
+      usage "Unknown mode: '${mode}'"
       ;;
 esac

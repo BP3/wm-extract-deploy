@@ -1,4 +1,4 @@
-#!/bin/sh -ex
+#!/bin/sh -e
 
 ############################################################################
 #
@@ -14,7 +14,7 @@
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 . "${SCRIPT_DIR}"/functions.sh
 
-if [ -z "$NO_GIT_FETCH" ]; then
+if [ -z "$NO_GIT" ] && [ -z "$NO_GIT_FETCH" ]; then
   setupGit
 
   if [ -n "$PROJECT_TAG" ]; then
@@ -29,4 +29,4 @@ if [ -z "$NO_GIT_FETCH" ]; then
   git -c advice.detachedHead=false checkout "${GIT_REF}"
 fi
 
-python "${SCRIPT_DIR}"/deploy.py
+python "${SCRIPT_DIR}"/deploy.py "$@"

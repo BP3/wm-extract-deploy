@@ -18,7 +18,7 @@ from oauth import OAuth2
 
 class NotFoundError(Exception):
     def __init__(self, resource_type: str, key: str = None, value: str = None):
-        super().__init__(f"{resource_type} with {key} = {value} not found.")
+        super().__init__(f"{resource_type} with {key} = '{value}' not found.")
         self.resource_type = resource_type
         self.key = key
         self.value = value
@@ -30,11 +30,11 @@ class MultipleFoundError(Exception):
         self.values = values
 
 class WebModeler:
-    __SAAS_HOST: str = 'cloud.camunda.io'
+    __SAAS_HOST: str = 'modeler.cloud.camunda.io'
 
     parser = configargparse.ArgumentParser(parents=[OAuth2.parser], add_help=False)
     parser.add_argument("--host", help="Web Modeler host",
-                        env_var="CAMUNDA_WM_HOST", default='cloud.camunda.io')
+                        env_var="CAMUNDA_WM_HOST", default='modeler.cloud.camunda.io')
     parser.add_argument("--ssl", nargs='?', const='true', help="Web Modeler use SSL (HTTPS)",
                         env_var="CAMUNDA_WM_SSL", default='false')
     parser.add_argument("--config-file", dest="config_file", help="Web Modeler project config file",
@@ -57,8 +57,12 @@ class WebModeler:
         self.wm_host = args.host
 
         if self.oauth.token_url is None:
-            if self.wm_host == self.__SAAS_HOST:
+            if self.wm_host == WebModeler.__SAAS_HOST:
                 self.oauth.token_url = 'https://login.cloud.camunda.io/oauth/token'
+            else:
+                raise ValueError("OAuth token url must be specified for self managed hosts.")
+
+        self.__wm_api_url = f"{self.protocol}://{self.wm_host}/api/v1"
 
         match args.oauth2_platform:
             case 'ENTRA':
@@ -69,16 +73,7 @@ class WebModeler:
                 raise ValueError(args.oauth2_platform + ' is not a supported authentication platform type.')
 
         self.__config = None
-        for config_file in [args.config_file, "config.yaml", "config.json"]:
-            if os.path.exists(config_file):
-                self.config_file = config_file
-                break
-
-        version = 1
-        if self.wm_host == self.__SAAS_HOST:
-            self.__wm_api_url = self.protocol + '://modeler.' + self.wm_host + '/api/v' + str(version)
-        else:
-            self.__wm_api_url = self.protocol + '://' + self.wm_host + '/api/v' + str(version)
+        self.config_file = args.config_file
 
     def __get_headers(self) -> dict:
         return self.oauth.headers() | {
@@ -86,8 +81,6 @@ class WebModeler:
         }
 
     def authenticate(self) -> None:
-        if self.oauth.token_url is None:
-            raise ValueError("OAuth token url must be specified for self managed hosts.")
         self.oauth.authenticate()
 
     def find_project(self, key: str, value: str) -> dict:
@@ -108,9 +101,11 @@ class WebModeler:
                 headers=headers
             )
             # print("Find project response", response.status_code)
-            if response.status_code == 401:
+            if response.status_code == 404:
                 raise NotFoundError("Project", key, value)
-            if response.status_code != 200:
+            elif response.status_code == 401:
+                raise RuntimeError("Find project failed:", response.status_code, response.text, response.headers["www-authenticate"])
+            elif response.status_code != 200:
                 raise RuntimeError("Find project failed:", response.status_code, response.text)
             return response.json()
         except requests.exceptions.ConnectionError as ex:
