@@ -70,6 +70,8 @@ class Deployment(ModelAction):
                 grpc_channel = create_insecure_channel(
                     grpc_address = self.cluster_host + ':' + str(self.cluster_port)
                 )
+        else:
+            raise ValueError("Cluster id or host must be specified")
 
         self.zeebe_client = ZeebeClient(grpc_channel)
 
