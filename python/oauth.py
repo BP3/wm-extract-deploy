@@ -10,8 +10,6 @@
 #
 ############################################################################
 import os
-from warnings import deprecated
-
 import configargparse
 import requests
 from oauthlib.oauth2 import BackendApplicationClient, OAuth2Error
