@@ -50,9 +50,9 @@ class WebModeler:
         # TODO replace this with web modeler url
         # Current options require port to be specified with the host which is not intuitive
         if args.ssl:
-            self.protocol = 'http'
-        else:
             self.protocol = 'https'
+        else:
+            self.protocol = 'http'
 
         self.wm_host = args.host
 
