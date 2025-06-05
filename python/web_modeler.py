@@ -35,8 +35,8 @@ class WebModeler:
     parser = configargparse.ArgumentParser(parents=[OAuth2.parser], add_help=False)
     parser.add_argument("--host", help="Web Modeler host",
                         env_var="CAMUNDA_WM_HOST", default='modeler.cloud.camunda.io')
-    parser.add_argument("--ssl", nargs='?', const='true', help="Web Modeler use SSL (HTTPS)",
-                        env_var="CAMUNDA_WM_SSL", default='false')
+    parser.add_argument("--ssl", nargs="?", const=True, help="Web Modeler use SSL (HTTPS)",
+                        env_var="CAMUNDA_WM_SSL", default=False)
     parser.add_argument("--config-file", dest="config_file", help="Web Modeler project config file",
                         env_var="WM_PROJECT_METADATA_FILE", default="config.yml")
     parser.add_argument("--oauth2-platform", dest="oauth2_platform", help="OAuth2 platform. Deprecated: Use scope and audience instead",
@@ -49,7 +49,7 @@ class WebModeler:
 
         # TODO replace this with web modeler url
         # Current options require port to be specified with the host which is not intuitive
-        if args.ssl is not None and args.ssl.lower() == 'false':
+        if args.ssl:
             self.protocol = 'http'
         else:
             self.protocol = 'https'

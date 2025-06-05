@@ -46,6 +46,7 @@ class Deployment(ModelAction):
             self.tenant_ids = args.tenant_ids.split(',')
         else:
             self.tenant_ids = None
+        self.continue_on_error = args.continue_on_error
 
         self.zeebe_client = None
 
@@ -72,9 +73,17 @@ class Deployment(ModelAction):
 
         self.zeebe_client = ZeebeClient(grpc_channel)
 
-    async def deploy(self, resource_file_path: List[os.PathLike[str]], tenant_id: str = None):
-        print(f"Deploying resources: {resource_file_path}" + (f" to tenant {tenant_id}" if tenant_id is not None else "") + "...")
-        await self.zeebe_client.deploy_resource(*resource_file_path, tenant_id = tenant_id)
+    async def deploy(self, resource_file_paths: List[os.PathLike[str]], tenant_id: str = None) -> None:
+        print(f"Deploying resources: {resource_file_paths}" + (f" to tenant {tenant_id}" if tenant_id is not None else "") + "...")
+        if self.continue_on_error:
+            for resource_file_path in resource_file_paths:
+                try:
+                    await self.zeebe_client.deploy_resource(resource_file_path, tenant_id = tenant_id)
+                except Exception as x:
+                    print("*** FILE: {} COULD NOT BE DEPLOYED ***".format(resource_file_path))
+                    print(repr(x))
+        else:
+            await self.zeebe_client.deploy_resource(*resource_file_paths, tenant_id = tenant_id)
 
     async def main(self):
         # Types we need to support, according to:
@@ -119,6 +128,8 @@ if __name__ == "__main__":
     cluster_secondary.add_argument("--cluster-port", type=int, dest="cluster_port", help="For self managed",
                                    env_var="ZEEBE_CLUSTER_PORT", default=26500)
     parser.add_argument("--tenant-ids", dest="tenant_ids", help="Comma separated list of tenant IDs", env_var="ZEEBE_TENANT_IDS")
+    parser.add_argument("--continue-on-error", nargs="?", const=True, dest="continue_on_error",
+                        help="Continue deploying files even if one has errors", env_var="CONTINUE_ON_ERROR", default=False)
     args = parser.parse_args()
     if args.cluster_id is not None and args.cluster_region is None:
         parser.print_usage()
