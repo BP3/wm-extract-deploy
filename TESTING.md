@@ -15,6 +15,10 @@ docker run -it --rm -e NO_GIT=true bp3global/wm-extract-deploy extract --help
 python python/extract.py --model-path build --oauth2-client-id webmodeler --oauth2-client-secret SgwpyrJuv04NdLTcBzzl1cq28EbVEXDZ --host localhost:8070 --oauth2-token-url http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token --project Sample
 ```
 
+```
+python python/extract.py --model-path build --oauth2-client-id webmodeler --oauth2-client-secret SgwpyrJuv04NdLTcBzzl1cq28EbVEXDZ --host localhost:8070 --oauth2-token-url http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token --project Sample --exclude Sample$
+```
+
 ## Docker good
 ```
 docker run -it --rm --mount type=bind,src=${PWD}/build,dst=/local --workdir /local \
