@@ -9,32 +9,25 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
+FROM python:3.13.3-alpine3.21
 
-# There are later versions of python available (e.g. 3.12) but when we have
-# tested with those then the code (pyzeebe) fails, so we are sticking with
-# python 3.11 for now.
-FROM python:3.11
-
-# Upgrade the underlying OS
-RUN set -eux; \
-    apt-get update; \
-    apt-get upgrade -y; \
-    rm -rf /var/lib/apt/lists/*
-
-ENV SCRIPT_DIR=/scripts \
-    MODEL_PATH=model
-
-# Use this if we are using 'docker build' as opposed to 'kaniko'
-RUN --mount=type=bind,source=requirements.txt,target=/tmp/requirements.txt \
-        pip install --requirement /tmp/requirements.txt && \
-    addgroup --gid 1000 bp3 && \
+RUN addgroup --gid 1000 bp3 && \
     adduser --uid 1000 --ingroup bp3 --home /home/bp3user --shell /bin/bash --disabled-password bp3user
 
-COPY --chown=bp3user:bp3 python/*.py $SCRIPT_DIR/
-COPY --chown=bp3user:bp3 --chmod=755 scripts/*.sh $SCRIPT_DIR/
-COPY --chmod=755 docker-entrypoint.sh /
+RUN --mount=type=bind,source=requirements.txt,target=/tmp/requirements.txt \
+    apk add --no-cache git=2.47.2-r0 openssh=9.9_p2-r0 && \
+    pip install --requirement /tmp/requirements.txt
+
+WORKDIR /app
+COPY --chown=bp3user:bp3 LICENSE .
+COPY --chmod=755 docker-entrypoint.sh .
+COPY --chown=bp3user:bp3 python/*.py scripts/
+COPY --chown=bp3user:bp3 --chmod=755 scripts/*.sh scripts/
 
 USER bp3user
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+VOLUME /local
+WORKDIR /local
+
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["help"]

@@ -1,3 +1,6 @@
-env.sh
-model/*
-dev_scripts/*
+*
+!python
+!scripts
+!docker-entrypoint.sh
+!requirements.txt
+!LICENSE

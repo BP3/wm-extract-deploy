@@ -9,106 +9,99 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
-
-import web_modeler
-import env
-import os
+import configargparse
 import glob
 import json
 
+from model_action import ModelAction
+from web_modeler import WebModeler, NotFoundError, MultipleFoundError
+from oauth import AuthenticationError
 
-class DeployTemplates:
+class DeployTemplates(ModelAction):
+    def __init__(self, args: configargparse.Namespace):
+        super().__init__(args)
+        self.wm = WebModeler(args)
 
-    def __init__(self):
-        self.project_id = None
-        self.wm = web_modeler.WebModeler()
-        self.check_env()
-
-    def get_project_id(self) -> str:
-        return self.project_id
-
-    def set_project_id(self, project_id: str):
-        self.project_id = project_id
-
-    @staticmethod
-    def check_env():
-        # Just for debug for now
-        env.check_env_var('CAMUNDA_WM_HOST', False)
-        env.check_env_var('OAUTH2_TOKEN_URL', False)
-        env.check_env_var('OAUTH_PLATFORM', False)
-        env.check_env_var('CAMUNDA_WM_AUTH', False)
-        env.check_env_var('CAMUNDA_WM_SSL', False)
-        env.check_env_var('CAMUNDA_WM_CLIENT_ID', False)
-        env.check_env_var('CAMUNDA_WM_CLIENT_SECRET')
-        env.check_env_var('MODEL_PATH', False)
-
-    def deploy_template(self, template_path: str):
+    def deploy_template(self, template_path: str, project_id: str):
+        print("Processing template", template_path)
         with open(template_path, 'r') as file:
-            print("Processing template", template_path)
-
             content = json.load(file)
             source_version = content["version"]
             name = content["name"]
             file_id = None
             response = None
 
-            # Check if file already exists in the project
-            file_search = deployTemplates.wm.search_files(self.project_id, name)
-
-            if len(file_search["items"]) > 0:
-                file_id = file_search["items"][0]["id"]
-                # WM overwrites the schema, id and version when uploaded so lets see if we have any changes first
-                existing_content = json.loads(deployTemplates.wm.get_file_by_id(file_id)["content"])
+            # Check if the file already exists in the project
+            files = self.wm.list_files(project_id, name)
+            if len(files["items"]) > 0:
+                file_id = files["items"][0]["id"]
+                # WM overwrites the schema, id and version when uploaded, so update those
+                existing_content = json.loads(self.wm.get_file_by_id(file_id)["content"])
                 content["id"] = existing_content["id"]
                 content["$schema"] = existing_content["$schema"]
                 content["version"] = existing_content["version"]
 
                 if content != existing_content:
-                    response = deployTemplates.wm.update_file(
-                        project_id=self.project_id,
-                        file_id=file_id,
-                        name=name,
-                        file_type="connector_template",
-                        content=json.dumps(content),
-                        revision=file_search["items"][0]["revision"]
+                    response = self.wm.update_file(
+                        project_id = project_id,
+                        file_id = file_id,
+                        name = name,
+                        file_type = "connector_template",
+                        content = json.dumps(content),
+                        revision = files["items"][0]["revision"]
                     )
+                else:
+                    print("\tNo changes to the template, skipping it.")
             else:
-                response = deployTemplates.wm.post_file(
-                    project_id=self.project_id,
-                    name=name,
-                    file_type="connector_template",
-                    content=json.dumps(content)
-                )
-                if response is not None:
-                    file_id = response["id"]
+                try:
+                    response = self.wm.post_file(
+                        project_id = project_id,
+                        name = name,
+                        file_type = "connector_template",
+                        content = json.dumps(content)
+                    )
+                    if response is not None:
+                        file_id = response["id"]
+                except RuntimeError as error:
+                    print(f"\tError processing template {template_path}", error)
+                    return
 
             if response is not None:
-                milestone_response = deployTemplates.wm.create_milestone(
-                    file_id=file_id,
-                    name=source_version
+                milestone_response = self.wm.create_milestone(
+                    file_id = file_id,
+                    name = source_version
                 )
                 if milestone_response is not None:
                     print("Created milestone", milestone_response["name"])
 
-            file.close()
+    def main(self, args: configargparse.Namespace):
+        templates = glob.glob(f"{self.model_path}/**/element-templates/*.json", recursive = True)
+        if len(templates) == 0:
+            print("No templates to deploy.")
+            return
+
+        print("Found templates:", templates)
+
+        try:
+            self.wm.authenticate()
+
+            project_id = self.wm.get_project(args.project)["id"]
+        except ValueError as error:
+            print(error)
+            parser.print_usage()
+            exit(2)
+
+        for template in templates:
+            self.deploy_template(template, project_id)
 
 
 if __name__ == "__main__":
-    deployTemplates = DeployTemplates()
-    project_ref = None
-
-    # Optional EnvVars
+    parser = configargparse.ArgumentParser(parents = [ModelAction.parser, WebModeler.parser],
+                                           formatter_class=configargparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("--project", help = "Modeler project id", env_var = "CAMUNDA_WM_PROJECT" )
+    args = parser.parse_args()
     try:
-        if os.environ["CAMUNDA_WM_PROJECT"] is not None and os.environ["CAMUNDA_WM_PROJECT"] != "":
-            project_ref = os.environ['CAMUNDA_WM_PROJECT']
-    except KeyError:
-        pass
-
-    deployTemplates.wm.authenticate()
-    deployTemplates.set_project_id(deployTemplates.wm.get_project(project_ref)['items'][0]['id'])
-
-    templates = glob.glob("./**/element-templates/*.json", recursive=True)
-    print("Found templates:", templates)
-
-    for template in templates:
-        deployTemplates.deploy_template(template)
+        DeployTemplates(args).main(args)
+    except (AuthenticationError, NotFoundError, MultipleFoundError) as ex:
+        print(ex)
+        exit(3)

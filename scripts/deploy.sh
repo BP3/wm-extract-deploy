@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/sh -e
 
 ############################################################################
 #
@@ -11,24 +11,22 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
+SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
+. "${SCRIPT_DIR}"/functions.sh
 
-source $SCRIPT_DIR/functions.sh
+if [ -z "$NO_GIT" ] && [ -z "$NO_GIT_FETCH" ]; then
+  setupGit
 
-
-if [ -z "$NO_GIT_FETCH" ]; then
-
-  setGitUser
-  git fetch
-
-  if [ ! -z "$PROJECT_TAG" ]; then
-    git -c advice.detachedHead=false checkout tags/"$PROJECT_TAG"
+  if [ -n "$PROJECT_TAG" ]; then
+    GIT_REF=tags/"${PROJECT_TAG}"
   else
-    if [ "$CICD_BRANCH" = "" ]; then
+    if [ -z "$CICD_BRANCH" ]; then
         CICD_BRANCH=main
     fi
-    git -c advice.detachedHead=false checkout $CICD_BRANCH
+    GIT_REF="${CICD_BRANCH}"
   fi
-
+  git fetch origin "${GIT_REF}"
+  git -c advice.detachedHead=false checkout "${GIT_REF}"
 fi
 
-python $SCRIPT_DIR/deploy.py
+python "${SCRIPT_DIR}"/deploy.py "$@"

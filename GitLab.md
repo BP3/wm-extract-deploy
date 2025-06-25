@@ -9,7 +9,7 @@ The example `gitlab-ci.yml` file in this page is for SaaS, Self-Managed and Dock
 with adjustments to the environment variables to suit as detailed in [README.md](./README.md#supported-environment-variables).
 
 ## Variables
-It is best practice is to have many of the environment variables that are required, pre-defined.
+It is best practice to have many of the environment variables that are required, pre-defined.
 Commonly these will be added as CI / CD variables defined at group level, so that they can be re-used across a
 wide range of projects. In the example below the following variables are assumed to have
 been defined at the group level and so are simply re-used as shown.

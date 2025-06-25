@@ -9,203 +9,139 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
-
+import configargparse
 import asyncio
 import glob
 import os
-import env
-import grpc
-
+from typing import List, cast
+from grpc.aio import AioRpcError
 from pyzeebe import (
     ZeebeClient,
     create_camunda_cloud_channel,
     create_insecure_channel,
     create_oauth2_client_credentials_channel
 )
+from pyzeebe.errors import ZeebeGatewayUnavailableError, ProcessInvalidError
 
+from model_action import ModelAction
+from oauth import OAuth2
 
-class Deployment:
+class Deployment(ModelAction):
 
-    cluster_port = 26500
+    def __init__(self, args: configargparse.Namespace):
+        super().__init__(args)
+        self.oauth = OAuth2(args)
+        if args.cluster_id is not None:
+            self.cluster_id = args.cluster_id
+            self.region = args.cluster_region
+            self.cluster_host = None
+            self.cluster_port = None
+        else:
+            self.cluster_id = None
+            self.region = None
+            self.cluster_host = args.cluster_host
+            self.cluster_port = args.cluster_port
 
-    def __init__(self):
+        if args.tenant_ids is not None:
+            self.tenant_ids = args.tenant_ids.split(',')
+        else:
+            self.tenant_ids = None
+        self.continue_on_error = args.continue_on_error
+
         self.zeebe_client = None
-        self.model_path = env.DEFAULT_MODEL_PATH
-        self.cluster_host = None
-        self.region = None
-        self.cluster_id = None
-        self.client_secret = None
-        self.client_id = None
-        self.tenant_ids = None
-        self.authorization_server_url = None
-        self.deploy_authorization = None
-        self.oauth_audience = None
-        self.oauth_scope = None
-        self.continue_on_error = "True"
-        self.check_env()
 
-    @staticmethod
-    def check_env():
-        # Just for debug for now
-        env.check_env_var('ZEEBE_CLIENT_ID', False)
-        env.check_env_var('ZEEBE_CLIENT_SECRET')
-        env.check_env_var('CAMUNDA_CLUSTER_ID', False)
-        env.check_env_var('CAMUNDA_CLUSTER_REGION', False)
-        env.check_env_var('CAMUNDA_CLUSTER_HOST', False)
-        env.check_env_var('CAMUNDA_CLUSTER_PORT', False)
-        env.check_env_var('MODEL_PATH', False)
-        env.check_env_var('ZEEBE_AUTHORIZATION_SERVER_URL', False)
-        env.check_env_var('DEPLOY_AUTHORIZATION', False)
-        env.check_env_var('OAUTH_AUDIENCE', False)
-        env.check_env_var('OAUTH_SCOPE', False)
-        env.check_env_var('CONTINUE_ON_ERROR', False)
-
-    def set_client_id(self, client_id: str):
-        self.client_id = client_id
-
-    def set_client_secret(self, secret: str):
-        self.client_secret = secret
-
-    def set_cluster_id(self, cluster_id: str):
-        self.cluster_id = cluster_id
-
-    def set_region(self, region: str):
-        self.region = region
-
-    def set_cluster_host(self, host: str):
-        self.cluster_host = host
-
-    def set_cluster_port(self, port: int):
-        self.cluster_port = port
-
-    def get_model_path(self):
-        return self.model_path
-
-    def set_model_path(self, model_path: str):
-        self.model_path = model_path
-
-    def set_tenant_ids(self, tenant_ids: list[str]):
-        self.tenant_ids = tenant_ids
-
-    def set_authorization_server_url(self, authorization_server_url: str):
-        self.authorization_server_url = authorization_server_url
-
-    def set_deploy_authorization(self, deploy_authorization: str):
-        self.deploy_authorization = deploy_authorization
-
-    def set_oauth_audience(self, audience: str):
-        self.oauth_audience = audience
-
-    def set_oauth_scope(self, scope: str):
-        self.oauth_scope = scope
-
-    def set_continue_on_error(self, continue_on_error: bool):
-        self.continue_on_error = continue_on_error
-
-    def create_zeebe_client(self) -> ZeebeClient:
-
+    def create_zeebe_client(self) -> None:
         if self.cluster_id is not None and self.cluster_id != "":
             grpc_channel = create_camunda_cloud_channel(
-                client_id=self.client_id,
-                client_secret=self.client_secret,
-                cluster_id=self.cluster_id,
-                region=self.region
+                client_id = self.oauth.client_id,
+                client_secret = self.oauth.client_secret,
+                cluster_id = self.cluster_id,
+                region = self.region
             )
-        else:
-            if self.deploy_authorization is None:
-                grpc_channel = create_insecure_channel(
-                    grpc_address=self.cluster_host + ':' + str(self.cluster_port)
-                )
-            elif self.deploy_authorization == "oauth2":
+        elif self.cluster_host is not None and self.cluster_host != "":
+            if self.oauth.client_id:
                 grpc_channel = create_oauth2_client_credentials_channel(
-                    grpc_address=self.cluster_host + ':' + str(self.cluster_port),
-                    client_id=self.client_id,
-                    client_secret=self.client_secret,
-                    authorization_server=self.authorization_server_url,
-                    audience=self.oauth_audience,
-                    scope=self.oauth_scope
+                    client_id = self.oauth.client_id,
+                    client_secret = self.oauth.client_secret,
+                    authorization_server = self.oauth.token_url,
+                    audience = self.oauth.audience
                 )
             else:
-                print("Unknown deployment authorization type: ", self.deploy_authorization)
+                grpc_channel = create_insecure_channel(
+                    grpc_address = self.cluster_host + ':' + str(self.cluster_port)
+                )
+        else:
+            raise ValueError("Cluster id or host must be specified")
 
         self.zeebe_client = ZeebeClient(grpc_channel)
-        return self.zeebe_client
 
-    def deploy(self, models: list[str], tenant_id: str = None):
-        print("Deploying resources: {}".format(models))
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.deploy_resources(models, tenant_id))
+    async def deploy(self, resource_file_paths: List[os.PathLike[str]], tenant_id: str = None) -> None:
+        print(f"Deploying resources: {resource_file_paths}" + (f" to tenant {tenant_id}" if tenant_id is not None else "") + "...")
+        if self.continue_on_error:
+            for resource_file_path in resource_file_paths:
+                try:
+                    await self.zeebe_client.deploy_resource(resource_file_path, tenant_id = tenant_id)
+                except Exception as x:
+                    print("*** FILE: {} COULD NOT BE DEPLOYED ***".format(resource_file_path))
+                    print(repr(x))
+        else:
+            await self.zeebe_client.deploy_resource(*resource_file_paths, tenant_id = tenant_id)
 
-    async def deploy_resources(self, resource_paths: list, tenant_id: str):
-        for f in resource_paths:
-            print("File: {}".format(f))
-            try:
-                await self.zeebe_client.deploy_resource(f, tenant_id=tenant_id)
-            except Exception as x:
-                print("")
-                print("*** FILE: {} COULD NOT BE DEPLOYED ***".format(f))
-                print(repr(x))
-                print("")
-                if self.continue_on_error != "True":
-                    traceback.print_exc()
+    async def main(self):
+        # Types we need to support, according to:
+        # https://docs.camunda.io/docs/next/apis-tools/zeebe-api/gateway-service/#input-deployresourcerequest
+        file_types = ("*.bpmn", "*.dmn", "*.form")
+        files = []
+        for file_type in file_types:
+            files.extend(glob.glob(f"{self.model_path}/**/{file_type}", recursive=True))
+        if len(files) == 0:
+            print(f"Didn't find any files to deploy in '{self.model_path}' matching {file_types}.")
+            return
+
+        # print("Found files: ", files)
+
+        self.create_zeebe_client()
+        try:
+            await self.zeebe_client.healthcheck()
+
+            if self.tenant_ids:
+                await asyncio.gather(*[self.deploy(files, tenant_id=tenant) for tenant in self.tenant_ids])
+            else:
+                await self.deploy(files)
+        except ZeebeGatewayUnavailableError as ex:
+            print(ex.grpc_error)
+            exit(3)
+        except ProcessInvalidError as ex:
+            print(cast(AioRpcError, ex.__cause__)._details)
+            exit(3)
+
 
 if __name__ == "__main__":
-    deploy = Deployment()
-
-    deploy.set_client_id(os.getenv("ZEEBE_CLIENT_ID"))
-    deploy.set_client_secret(os.getenv('ZEEBE_CLIENT_SECRET'))
-    deploy.set_model_path(os.getenv("MODEL_PATH"))
-    deploy.set_deploy_authorization(os.getenv("DEPLOY_AUTHORIZATION"))
-    deploy.set_authorization_server_url(os.getenv("ZEEBE_AUTHORIZATION_SERVER_URL"))
-    deploy.set_oauth_audience(os.getenv("OAUTH_AUDIENCE") if not None else "zeebe-api")
-    deploy.set_oauth_scope(os.getenv("OAUTH_SCOPE"))
-    deploy.set_continue_on_error(os.getenv("CONTINUE_ON_ERROR"))
-
-    try:
-        if os.environ["CAMUNDA_CLUSTER_ID"] is not None and os.environ["CAMUNDA_CLUSTER_ID"] != "":
-            deploy.set_cluster_id(os.environ["CAMUNDA_CLUSTER_ID"])
-            deploy.set_region(os.environ["CAMUNDA_CLUSTER_REGION"])
-    except KeyError:
-        pass
-
-    try:
-        if os.environ["CAMUNDA_CLUSTER_HOST"] is not None and os.environ["CAMUNDA_CLUSTER_HOST"] != "":
-            deploy.set_cluster_host(os.environ["CAMUNDA_CLUSTER_HOST"])
-    except KeyError:
-        pass
-
-    try:
-        if os.environ["CAMUNDA_TENANT_ID"] is not None and os.environ["CAMUNDA_TENANT_ID"] != "":
-            deploy.set_tenant_ids(os.environ["CAMUNDA_TENANT_ID"].split(','))
-    except KeyError:
-        pass
-
-    try:
-        if os.environ["CAMUNDA_CLUSTER_PORT"] is not None and os.environ["CAMUNDA_CLUSTER_PORT"] != "":
-            deploy.set_cluster_port(int(os.environ["CAMUNDA_CLUSTER_PORT"]))
-    except KeyError:
-        pass
-
-    deploy.create_zeebe_client()
-
-    modelPath = os.environ["MODEL_PATH"]
-    deploy.set_model_path(modelPath)
-    modelPath = deploy.get_model_path()
-
-    if not os.path.exists(modelPath):
-        message = "Model Path directory '{}' doesn't exist".format(modelPath)
-        raise FileNotFoundError(message)
-
-    # Types we need to support according to:
-    # https://docs.camunda.io/docs/next/apis-tools/zeebe-api/gateway-service/#input-deployresourcerequest
-    model_types = ("*.bpmn", "*.dmn", "*.form")
-    models_list = []
-    for model_type in model_types:
-        models_list.extend(glob.glob("{}/**/{}".format(modelPath, model_type), recursive=True))
-    # print("Found resources: ", models)
-
-    if deploy.tenant_ids:
-        for tenant in deploy.tenant_ids:
-            deploy.deploy(models_list, tenant_id=tenant)
-    else:
-        deploy.deploy(models_list)
+    parser = configargparse.ArgumentParser(parents = [ModelAction.parser, OAuth2.parser],
+                                           formatter_class=configargparse.ArgumentDefaultsHelpFormatter)
+    cluster_group = parser.add_mutually_exclusive_group(required = True)
+    cluster_group.add_argument("--cluster-id", dest="cluster_id", help="For SaaS",
+                               env_var="ZEEBE_CLUSTER_ID")
+    cluster_group.add_argument("--cluster-host", dest="cluster_host", help="For self managed",
+                               env_var="ZEEBE_CLUSTER_HOST")
+    cluster_secondary = parser.add_mutually_exclusive_group(required = False)
+    cluster_secondary.add_argument("--cluster-region", dest="cluster_region", help="For SaaS",
+                                   env_var="ZEEBE_CLUSTER_REGION")
+    cluster_secondary.add_argument("--cluster-port", type=int, dest="cluster_port", help="For self managed",
+                                   env_var="ZEEBE_CLUSTER_PORT", default=26500)
+    parser.add_argument("--tenant-ids", dest="tenant_ids", help="Comma separated list of tenant IDs", env_var="ZEEBE_TENANT_IDS")
+    parser.add_argument("--continue-on-error", nargs="?", const=True, dest="continue_on_error",
+                        help="Continue deploying files even if one has errors", env_var="CONTINUE_ON_ERROR", default=False)
+    args = parser.parse_args()
+    if args.cluster_id is not None and args.cluster_region is None:
+        parser.print_usage()
+        print("error: argument --cluster-region is required with argument --cluster-id")
+        exit(2)
+    if args.cluster_host is not None and args.cluster_port is None:
+        parser.print_usage()
+        print("error: argument --cluster-port is required with argument --cluster-host")
+        exit(2)
+    if not os.path.exists(args.model_path):
+        print(f"error: argument --model-path: invalid path: '{args.model_path}' does not exist")
+        exit(2)
+    asyncio.run(Deployment(args).main())

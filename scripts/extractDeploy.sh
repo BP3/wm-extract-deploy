@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/sh -e
 
 ############################################################################
 #
@@ -11,83 +11,53 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
+SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 
-mode_extract=0
-mode_deploy=0
-mode_templates=0
+usage() {
+  if [ -n "$1" ]; then
+    echo "$1"
+  fi
 
-case "$1" in
+cat << EOF
+Usage: extractDeploy.sh <MODE>
+
+A CI/CD automation wrapper for interacting with assets between a Camunda 8 Web Modeler project, Zeebe cluster, and source control repositories.
+
+Available Modes:
+  extract            Extracts the assets from a web modeler project, and commits them to the repository
+  deploy             Deploys the assets from the repository to the specified Zeebe cluster
+  deploy templates   Deploys the Connector templates from the repository into Web Modeler
+
+The configuration options for the commands are defined in environment variables as this is intended to run as part of a CI/CD pipeline.
+See https://github.com/BP3/wm-extract-deploy for more details.
+EOF
+
+  if [ -n "$1" ]; then
+    exit 1
+  fi
+}
+
+mode="$1"
+shift
+case "${mode}" in
     extract)
-      mode_extract=1
-        ;;
+      echo "mode = 'extract'"
+      "${SCRIPT_DIR}"/extract.sh "$@"
+      ;;
     deploy)
-      if [ $# -gt 1 ] && [ "$2" == "templates" ]; then
-        mode_templates=1
+      if [ $# -gt 0 ] && [ "$1" = "templates" ]; then
+          shift
+          echo "mode = 'deploy templates'"
+          "${SCRIPT_DIR}"/deployTemplates.sh "$@"
       else
-        mode_deploy=1
+        echo "mode = 'deploy'"
+        "${SCRIPT_DIR}"/deploy.sh "$@"
       fi
-        ;;
+      ;;
     help)
-      $SCRIPT_DIR/help.sh
+      usage
       ;;
     *)
-      echo "Unknown mode: '$1'"
-      $SCRIPT_DIR/help.sh
-      exit 1
-        ;;
+      usage "Unknown mode: '${mode}'"
+      ;;
 esac
-
-if [ "$CICD_PLATFORM" = "" -o "$CICD_PLATFORM" = "gitlab" ]; then
-  CICD_PLATFORM=gitlab
-  if [ -z "$CICD_SERVER_HOST" ]; then
-    CICD_SERVER_HOST="gitlab.com"
-  fi
-  echo "Adding /builds/* to safe.directory config for git globally"
-  git config --global --add safe.directory \*
-elif [ "$CICD_PLATFORM" = "github" ]; then
-  if [ -z "$CICD_SERVER_HOST" ]; then
-    CICD_SERVER_HOST="github.com"
-  fi
-elif [ "$CICD_PLATFORM" = "bitbucket" ]; then
-  if [ -z "$CICD_SERVER_HOST" ]; then
-    CICD_SERVER_HOST="bitbucket.org"
-  fi
-    # See https://community.atlassian.com/t5/Bitbucket-questions/Bitbucket-Pipelines-dubious-ownership-error/qaq-p/2189169
-    # Allow for user mismatch between the repo owner (root) and our docker user (bp3user)
-    # Not clear yet whether this issue may also impact other platforms
-    # Updating global config ensures that the changes are only made in this environment and not to the repo itself
-    git config --global --add safe.directory /opt/atlassian/pipelines/agent/build
-fi
-echo "The CI/CD platform is: $CICD_PLATFORM"
-
-if [ $mode_extract == 1 ]; then
-  echo "mode = 'extract'"
-#  checkRequiredEnvVar CAMUNDA_WM_CLIENT_ID          "$CAMUNDA_WM_CLIENT_ID"
-#  checkRequiredEnvVar CAMUNDA_WM_CLIENT_SECRET      "$CAMUNDA_WM_CLIENT_SECRET"
-#  checkRequiredEnvVar CICD_PLATFORM                 "$CICD_PLATFORM"
-#  checkRequiredEnvVar CICD_ACCESS_TOKEN             "$CICD_ACCESS_TOKEN"
-#  checkRequiredEnvVar CICD_REPOSITORY_PATH          "$CICD_REPOSITORY_PATH"
-#  checkRequiredEnvVar GIT_USERNAME                  "$GIT_USERNAME"
-#  checkRequiredEnvVar GIT_USER_EMAIL                "$GIT_USER_EMAIL"
-
-  $SCRIPT_DIR/extract.sh
-fi
-
-if [ $mode_deploy == 1 ]; then
-  echo "mode = 'deploy'"
-#  checkRequiredEnvVar ZEEBE_CLIENT_ID               "$ZEEBE_CLIENT_ID"
-#  checkRequiredEnvVar ZEEBE_CLIENT_SECRET           "$ZEEBE_CLIENT_SECRET"
-#  checkRequiredEnvVar CAMUNDA_CLUSTER_ID            "$CAMUNDA_CLUSTER_ID"
-#  checkRequiredEnvVar CAMUNDA_CLUSTER_REGION        "$CAMUNDA_CLUSTER_REGION"
-#  checkRequiredEnvVar PROJECT_TAG                   "$PROJECT_TAG"
-
-  $SCRIPT_DIR/deploy.sh
-fi
-
-if [ $mode_templates == 1 ]; then
-  echo "mode = 'deploy templates'"
-#  checkRequiredEnvVar CAMUNDA_WM_CLIENT_ID          "$CAMUNDA_WM_CLIENT_ID"
-#  checkRequiredEnvVar CAMUNDA_WM_CLIENT_SECRET      "$CAMUNDA_WM_CLIENT_SECRET"
-
-  $SCRIPT_DIR/deployTemplates.sh
-fi
