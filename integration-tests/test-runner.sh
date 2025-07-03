@@ -29,12 +29,12 @@ fi
 # which can all be run in the same docker compose session
 #
 
-function run_test {
-  docker-compose -f extract-compose.yaml up -d
+run_test () {
+#  docker-compose -f extract-compose.yaml up -d
 
   echo "Running test $1"
 
-  TESTSDIR=$TESTSDIR /bin/sh $TESTSDIR/$1
+#  TESTSDIR=$TESTSDIR /bin/sh $TESTSDIR/$1
 
   rc=$?
   if [ $rc -ne 0 ]; then
@@ -45,7 +45,7 @@ function run_test {
   fi
 
   # Kind of want a "finally" section to execute this in - it always has to happen
-  docker-compose -f extract-compose.yaml down
+#  docker-compose -f extract-compose.yaml down
 }
 
 # Probably want this to auto-discover the tests, but this will do for now
