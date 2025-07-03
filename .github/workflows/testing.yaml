@@ -1,10 +1,10 @@
 name: Camunda CI
 
-on:
-  workflow_run:
-    workflows: [ "Release Pipeline" ]
-    types:
-      - completed
+on: workflow_dispatch
+  # workflow_run:
+  #   workflows: [ "Release Pipeline" ]
+  #   types:
+  #     - completed
 
 jobs:
   run_docker_compose:
