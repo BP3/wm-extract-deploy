@@ -83,18 +83,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
-      - name: Start extract-compose
-        run: docker-compose -f extract-compose.yaml up -d
+      - name: Run extract tests
+        run: integration-tests/test-runner.sh
 
-      - name: Show running containers
-        run: docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
-
-      - name: Check docker networks
-        run: docker network ls --format "{{.Name}}" | grep camunda || true
-
-      - name: Tear down stack
-        if: always()
-        run: docker-compose -f extract-compose.yaml down
 
   run_deploy_stack:
     name: Deploy Stack
