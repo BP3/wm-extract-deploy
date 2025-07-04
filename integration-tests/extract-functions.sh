@@ -171,9 +171,7 @@ create_file () {
     name="$name\.$ext"
   fi
 
-  # Probably a way to combine these two operations, but working for now
-  file_content=`sed -e 's|\"|\\\"|g' $1`
-  file_content=${file_content//$'\n'/\\n}
+  file_content=`sed -e 's|\"|\\\"|g' -e 's/$/\\n/g' $1 | tr -d '\n'`
 
   if [ $# -gt 2 ]; then
     body="{\"name\":\"$name\", \"folderId\":\"$3\", \"projectId\":\"$2\", \"content\":\"$file_content\", \"fileType\":\"bpmn\"}"
