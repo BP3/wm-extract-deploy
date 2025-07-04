@@ -35,13 +35,21 @@ TESTNAME=`basename $0 .sh`
 . $TESTSDIR/extract-functions.sh
 
 _setup () {
+  # Make sure everything is clean before we start
+  if [ -d $TESTSDIR/$TESTNAME ]; then
+    rm -rf $TESTSDIR/$TESTNAME
+  fi
+
   get_network_id
   echo "Network Id: $network_id"
 }
 
 _teardown () {
-  # Do nothing
   :
+  # Or we could leave everything behind so that it can be checked later
+#  if [ -d $TESTSDIR/$TESTNAME ]; then
+#    rm -rf $TESTSDIR/$TESTNAME
+#  fi
 }
 
 Given () {
@@ -68,8 +76,10 @@ Given () {
   #       process[.bpmn]
 
   create_project "Project"
+#  project_id=0caa33df-e339-44d5-8ea4-140138e68dfa
 #  add_collaborator demo@acme.com $project_id
   create_file files/process.bpmn $project_id
+#  file_id=53e55969-c144-4441-b44f-13eddce44c8b
 
 #  create_folder Folder1 $project_id
 #  create_file files/process1.bpmn $project_id $folder_id
@@ -100,37 +110,32 @@ When () {
   #      #-e CICD_ACCESS_TOKEN="<CI platform access token>" \
   #      #-e CICD_REPOSITORY_PATH="<The path of the repository>" \
   #         extract
-  mkdir -p $PWD/$TESTSDIR/$TESTNAME
+  mkdir -p $TESTSDIR/$TESTNAME
 
-  docker run --rm --network $network_id \
+  docker run --rm --net=host \
     --mount type=bind,src=$PWD/$TESTSDIR/$TESTNAME,dst=/local --workdir=/local \
     -e NO_GIT=true \
     -e OAUTH2_CLIENT_ID=wmed -e OAUTH2_CLIENT_SECRET=wmed \
-    -e OAUTH2_TOKEN_URL=http://keycloak:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
-    -e CAMUNDA_WM_PROJECT="13cffe71-8340-49e7-94c2-fa55adb5575c" \
-    -e CAMUNDA_WM_HOST="web-modeler-webapp:8070" \
+    -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
+    -e CAMUNDA_WM_PROJECT="$project_id" \
+    -e CAMUNDA_WM_HOST="localhost:8070" \
       bp3global/wm-extract-deploy extract
-
-#mode = 'extract'
-#Excluding paths with segments that match wmedIgnore
-#Traceback (most recent call last):
-#  File "/app/scripts/extract.py", line 75, in <module>
-#    Extraction(args).main()
-#    ~~~~~~~~~~~~~~~~~~~~~^^
-#  File "/app/scripts/extract.py", line 58, in main
-#    project_id = self.wm.get_project(args.project)["id"]
-#                 ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
-#  File "/app/scripts/web_modeler.py", line 214, in get_project
-#    projects = self.find_project("id", project_ref)
-#  File "/app/scripts/web_modeler.py", line 107, in find_project
-#    raise RuntimeError("Find project failed:", response.status_code, response.text, response.headers["www-authenticate"])
-#RuntimeError: ('Find project failed:', 401, '', 'Bearer error="invalid_token", error_description="An error occurred while attempting to decode the Jwt: The iss claim is not valid", error_uri="https://tools.ietf.org/html/rfc6750#section-3.1"')
 }
 
 Then () {
   echo "$TESTNAME: Then"
   # Then we have validate what we got back
   # Might be able to do this with a directory level diff
+
+  if [ ! -f $TESTSDIR/$TESTNAME/process.bpmn ]; then
+    exit 1
+#  else
+#    diff $TESTSDIR/$TESTNAME/process.bpmn < $(sed -e 's|\"|\\\"|g' -e 's/$/\\n/g' files/process.bpmn | tr -d '\n')
+  fi
+  ext_project_id=`yq '.project.id' $TESTSDIR/$TESTNAME/config.yml`
+  if [ "$ext_project_id" != "$project_id" ]; then
+    exit 1
+  fi
 }
 
 ############################################################################

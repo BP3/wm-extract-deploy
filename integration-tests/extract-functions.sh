@@ -43,8 +43,8 @@ get_wm_webapp_status () {
 }
 
 get_access_token () {
-  access_token=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
-    --location -s --request POST 'http://keycloak:18080/auth/realms/camunda-platform/protocol/openid-connect/token' \
+  access_token=$(docker run --rm --net=host curlimages/curl:$CURL_VERSION \
+    --location -s --request POST 'http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token' \
     --header 'Content-Type: application/x-www-form-urlencoded' \
     --data-urlencode "client_id=$CLIENT_ID" \
     --data-urlencode "client_secret=$CLIENT_SECRET" \
@@ -55,6 +55,7 @@ get_wm_info () {
   wm_api_info=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
     -s -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
     http://$WM_HOST:$WM_PORT/api/v1/info)
+  echo $wm_api_info
 }
 
 create_project () {
@@ -74,7 +75,7 @@ create_project () {
   response=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
       -s -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
       --data "$body" \
-	-X POST http://$WM_HOST:$WM_PORT/api/v1/projects)
+        -X POST http://$WM_HOST:$WM_PORT/api/v1/projects)
 
 #  echo $response
 
@@ -162,12 +163,13 @@ create_file () {
   #     }
   #
 
+  filename=`basename $1`
   # "name" is the name of the artifact as it appears in WM, i.e. without a file extension
   # Probably need to be able to deal with other file types as well
-  name=`echo $1 | cut -f 1 -d '.'`
-  ext=`echo $1 | cut -f 2 -d '.'`
+  name=`echo $filename | cut -f 1 -d '.'`
+  ext=`echo $filename | cut -f 2 -d '.'`
   if [ "$ext" = "wmedIgnore" ]; then
-    ext=`echo $1 | cut -f 3 -d '.'`
+    ext=`echo $filename | cut -f 3 -d '.'`
     name="$name\.$ext"
   fi
 

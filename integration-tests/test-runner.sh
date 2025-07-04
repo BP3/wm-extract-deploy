@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 
 ############################################################################
 #
@@ -12,13 +12,13 @@
 #
 ############################################################################
 
-if [ ! -n "$CI" ]; then
-  alias docker-compose='docker compose'
+if [ "$TESTSDIR" = "" ]; then
+  TESTSDIR=`dirname $0`
 fi
 
 status='Success'
-if [ "$TESTSDIR" = "" ]; then
-  TESTSDIR=`dirname $0`
+if [ ! -n "$CI" ]; then
+  alias "docker-compose"='docker compose'
 fi
 
 #
@@ -31,6 +31,7 @@ fi
 
 run_test () {
   docker-compose -f extract-compose.yaml up -d
+  sleep 15
 
   echo "Running test $1"
 
