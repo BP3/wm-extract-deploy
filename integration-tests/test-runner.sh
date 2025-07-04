@@ -34,7 +34,7 @@ run_test () {
 
   echo "Running test $1"
 
-#  TESTSDIR=$TESTSDIR /bin/sh $TESTSDIR/$1
+  TESTSDIR=$TESTSDIR /bin/sh -x $TESTSDIR/$1
 
   rc=$?
   if [ $rc -ne 0 ]; then
