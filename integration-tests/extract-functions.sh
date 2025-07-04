@@ -24,7 +24,7 @@ WM_PORT=8070
 # Load reusable core functions
 . $TESTSDIR/core-functions.sh
 
-function get_wm_restapi_status {
+get_wm_restapi_status () {
   # Readiness of WM REST API
   # Responds with {"status":"UP"}
   wm_restapi_status=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
@@ -33,7 +33,7 @@ function get_wm_restapi_status {
   echo "WM REST API: $wm_restapi_status"
 }
 
-function get_wm_webapp_status {
+get_wm_webapp_status () {
   # Readiness of WM WebApp
   # Responds with {"status":"READY","workers":[{"id":1,"state":"listening","pid":13}]}
   wm_webapp_status=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
@@ -42,7 +42,7 @@ function get_wm_webapp_status {
   echo "WM WebApp: $wm_webapp_status"
 }
 
-function get_access_token {
+get_access_token () {
   access_token=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
     --location -s --request POST 'http://keycloak:18080/auth/realms/camunda-platform/protocol/openid-connect/token' \
     --header 'Content-Type: application/x-www-form-urlencoded' \
@@ -51,13 +51,13 @@ function get_access_token {
     --data-urlencode 'grant_type=client_credentials' | jq '.access_token' | tr -d '"')
 }
 
-function get_wm_info {
+get_wm_info () {
   wm_api_info=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
     -s -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
     http://$WM_HOST:$WM_PORT/api/v1/info)
 }
 
-function create_project {
+create_project () {
   echo "create_project:"
   echo "  name: $1"
   #   This API will create a project
@@ -83,7 +83,7 @@ function create_project {
   echo $project_id
 }
 
-function add_project_collaborator {
+add_project_collaborator () {
   echo "add_project_collaborator:"
   echo "  email: $1"
   echo "  projectId: $2"
@@ -108,7 +108,7 @@ function add_project_collaborator {
   echo $response
 }
 
-function create_folder {
+create_folder () {
   echo "create_folder:"
   echo "  name: $1"
   echo "  project: $2"
@@ -144,7 +144,7 @@ function create_folder {
   echo $folder_id
 }
 
-function create_file {
+create_file () {
   echo "create_file:"
   echo "  file: $1"
   echo "  project: $2"

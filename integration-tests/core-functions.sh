@@ -14,6 +14,6 @@
 
 # This is very early days so really expect this to change/evolve a lot - but you have to start somewhere
 
-function get_network_id {
+get_network_id () {
   network_id=`docker network ls --format "{{.Name}}" | grep camunda-platform`
 }

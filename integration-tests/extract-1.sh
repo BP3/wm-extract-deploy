@@ -34,17 +34,17 @@ TESTNAME=`basename $0 .sh`
 # Load reusable extract functions
 . $TESTSDIR/extract-functions.sh
 
-function _setup {
+_setup () {
   get_network_id
   echo "Network Id: $network_id"
 }
 
-function _teardown {
+_teardown () {
   # Do nothing
   :
 }
 
-function Given {
+Given () {
   echo "$TESTNAME: Given"
   # 1.  Need a local version of what project will look like - maybe in a separate directory
   # 2.  Will first need to create/import project into Web Modeler
@@ -80,7 +80,7 @@ function Given {
 #  create_file files/Readme.md $project_id $folder_id
 }
 
-function When {
+When () {
   echo "$TESTNAME: When"
   # Extract command will look something a bit like
   #
@@ -127,7 +127,7 @@ function When {
 #RuntimeError: ('Find project failed:', 401, '', 'Bearer error="invalid_token", error_description="An error occurred while attempting to decode the Jwt: The iss claim is not valid", error_uri="https://tools.ietf.org/html/rfc6750#section-3.1"')
 }
 
-function Then {
+Then () {
   echo "$TESTNAME: Then"
   # Then we have validate what we got back
   # Might be able to do this with a directory level diff
