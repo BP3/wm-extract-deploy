@@ -10,10 +10,6 @@ jobs:
   run_docker_compose:
     name: Camunda Basics
     runs-on: ubuntu-latest
-    services:
-      docker:
-        image: docker:24.0.5-dind
-        options: --privileged
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
