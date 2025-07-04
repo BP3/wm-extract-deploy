@@ -7,13 +7,13 @@ on: workflow_dispatch
   #     - completed
 
 jobs:
-  run_docker_compose:
-    name: Camunda Basics
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
+#  run_docker_compose:
+#    name: Camunda Basics
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#
 #      - name: Set up Docker and dependencies
 #        run: |
 #          sudo apt-get update
