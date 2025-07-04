@@ -84,7 +84,7 @@ jobs:
           sudo apt-get install -y docker-compose
 
       - name: Run extract tests
-        run: integration-tests/test-runner.sh
+        run: sh -x integration-tests/test-runner.sh
 
 
 #  run_deploy_stack:

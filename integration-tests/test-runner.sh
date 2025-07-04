@@ -30,7 +30,7 @@ fi
 #
 
 run_test () {
-#  docker-compose -f extract-compose.yaml up -d
+  docker-compose -f extract-compose.yaml up -d
 
   echo "Running test $1"
 
@@ -45,7 +45,7 @@ run_test () {
   fi
 
   # Kind of want a "finally" section to execute this in - it always has to happen
-#  docker-compose -f extract-compose.yaml down
+  docker-compose -f extract-compose.yaml down
 }
 
 # Probably want this to auto-discover the tests, but this will do for now
