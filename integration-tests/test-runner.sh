@@ -25,9 +25,6 @@ else
   docker_tty_opts=-i
 fi
 
-# Test if the following are installed - they all are except xmllint
-which curl jq yq xmllint
-
 #
 # This function will run a single test. It runs the actual test in a new shell.
 # Since the test has "set -e" enabled then if it fails for any reason then it will cause the shell to terminate and
