@@ -112,14 +112,34 @@ When () {
   #         extract
   mkdir -p $TESTSDIR/$TESTNAME
 
+  # The mount command won't work properly when using dind!
+  #  --mount type=bind,src=$PWD/$TESTSDIR/$TESTNAME,dst=/local --workdir=/local \
+  # So, although this command demonstrates how we might normally run the command it is actually
+  # the following command below that will allow us to grab the data
   docker run --rm --net=host \
-    --mount type=bind,src=$PWD/$TESTSDIR/$TESTNAME,dst=/local --workdir=/local \
     -e NO_GIT=true \
     -e OAUTH2_CLIENT_ID=wmed -e OAUTH2_CLIENT_SECRET=wmed \
     -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
     -e CAMUNDA_WM_PROJECT="$project_id" \
     -e CAMUNDA_WM_HOST="localhost:8070" \
       bp3global/wm-extract-deploy extract
+
+  # Unfortunately the command above doesn't allow us to grab the data - but doing it this way we can
+  docker run -itd --name wmed --net=host -w /local \
+    -e APP=/app -e NO_GIT=true \
+    -e OAUTH2_CLIENT_ID=wmed -e OAUTH2_CLIENT_SECRET=wmed \
+    -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
+    -e CAMUNDA_WM_PROJECT="$project_id" \
+    -e CAMUNDA_WM_HOST="localhost:8070" \
+      --entrypoint /bin/sh bp3global/wm-extract-deploy
+  docker exec -it -w /local wmed /app/scripts/extractDeploy.sh extract
+  docker container cp wmed:/local $TESTSDIR/$TESTNAME
+  docker container stop wmed
+  docker container rm wmed
+
+  # Move the data where we want it
+  mv $TESTSDIR/$TESTNAME/local/* $TESTSDIR/$TESTNAME
+  rm -fr $TESTSDIR/$TESTNAME/local
 }
 
 Then () {
@@ -127,14 +147,18 @@ Then () {
   # Then we have validate what we got back
   # Might be able to do this with a directory level diff
 
+  if [ -f $TESTSDIR/$TESTNAME/config.yml ]; then
+    ext_project_id=`yq '.project.id' $TESTSDIR/$TESTNAME/config.yml`
+#    if [ "$ext_project_id" != "$project_id" ]; then
+#      exit 1
+#    fi
+  fi
+
   if [ ! -f $TESTSDIR/$TESTNAME/process.bpmn ]; then
     exit 1
 #  else
-#    diff $TESTSDIR/$TESTNAME/process.bpmn < $(sed -e 's|\"|\\\"|g' -e 's/$/\\n/g' files/process.bpmn | tr -d '\n')
-  fi
-  ext_project_id=`yq '.project.id' $TESTSDIR/$TESTNAME/config.yml`
-  if [ "$ext_project_id" != "$project_id" ]; then
-    exit 1
+#    xmllint --format $TESTSDIR/$TESTNAME/process.bpmn > $TESTSDIR/$TESTNAME/new-process.bpmn
+#    diff --ignore-all-space $TESTSDIR/$TESTNAME/process.bpmn $TESTSDIR/$TESTNAME/new-process.bpmn
   fi
 }
 

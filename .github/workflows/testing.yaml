@@ -23,10 +23,6 @@ jobs:
 #        run: docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
 #      - name: Check docker networks
 #        run: docker network ls --format "{{.Name}}" | grep camunda || true
-#      - name: List project dir
-#        run: ls -l "$GITHUB_WORKSPACE"
-#      - name: List files dir
-#        run: ls -l "$GITHUB_WORKSPACE/files"
 #      - name: Wait a bit
 #        run: sleep 5
 #      - name: Check Zeebe readiness

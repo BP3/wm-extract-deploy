@@ -21,6 +21,8 @@ if [ ! -n "$CI" ]; then
   alias "docker-compose"='docker compose'
 fi
 
+which curl jq yq xmllint
+
 #
 # This function will run a single test. It runs the actual test in a new shell.
 # Since the test has "set -e" enabled then if it fails for any reason then it will cause the shell to terminate and
