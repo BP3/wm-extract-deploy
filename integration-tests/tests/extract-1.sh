@@ -76,18 +76,18 @@ Given () {
   #       process[.bpmn]
 
   create_project "Project"
-#  project_id=0caa33df-e339-44d5-8ea4-140138e68dfa
 #  add_collaborator demo@acme.com $project_id
-  create_file files/process.bpmn $project_id
-#  file_id=53e55969-c144-4441-b44f-13eddce44c8b
+  create_file Readme $project_id files/Readme.md markdown
+  create_file process $project_id files/process.bpmn bpmn
 
-#  create_folder Folder1 $project_id
-#  create_file files/process1.bpmn $project_id $folder_id
-#  create_file files/process2.wmedIgnore.bpmn $project_id $folder_id
+  create_folder Folder1 $project_id
+  create_file Readme $project_id files/Readme.md markdown $folder_id
+  create_file process1 $project_id files/process.bpmn bpmn $folder_id
+  create_file process2-wmedIgnore $project_id files/process.bpmn bpmn $folder_id
 
-#  create_folder Folder2.wmedIgnore $project_id
-#  create_file files/process.bpmn $project_id $folder_id
-#  create_file files/Readme.md $project_id $folder_id
+  create_folder Folder2.wmedIgnore $project_id
+  create_file Readme files/Readme.md $project_id $markdown folder_id
+  create_file process $project_id files/process.bpmn bpmn $folder_id
 }
 
 When () {
@@ -125,14 +125,17 @@ When () {
       bp3global/wm-extract-deploy extract
 
   # Unfortunately the command above doesn't allow us to grab the data - but doing it this way we can
-  docker run -id --name wmed --net=host -w /local \
+  docker run -d $DOCKER_TTY_OPTS --name wmed --net=host -w /local \
     -e APP=/app -e NO_GIT=true \
     -e OAUTH2_CLIENT_ID=wmed -e OAUTH2_CLIENT_SECRET=wmed \
     -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
     -e CAMUNDA_WM_PROJECT="$project_id" \
     -e CAMUNDA_WM_HOST="localhost:8070" \
       --entrypoint /bin/sh bp3global/wm-extract-deploy
-  docker exec -i -w /local wmed /app/scripts/extractDeploy.sh extract
+
+  echo Sleep for a few seconds whilst docker container comes up ...
+  sleep 5
+  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh extract
   docker container cp wmed:/local $TESTSDIR/$TESTNAME
   docker container stop wmed
   docker container rm wmed
@@ -147,30 +150,52 @@ Then () {
   # Then we have validate what we got back
   # Might be able to do this with a directory level diff
 
-  if [ -f $TESTSDIR/$TESTNAME/config.yml ]; then
+  if [ ! -f $TESTSDIR/$TESTNAME/config.yml ]; then
+    exit 1
+  else
     ext_project_id=`yq '.project.id' $TESTSDIR/$TESTNAME/config.yml`
     if [ "$ext_project_id" != "$project_id" ]; then
       exit 1
     fi
   fi
-
+  if [ ! -f $TESTSDIR/$TESTNAME/Readme.md ]; then
+    exit 1
+  fi
   if [ ! -f $TESTSDIR/$TESTNAME/process.bpmn ]; then
     exit 1
 #  else
 #    xmllint --format $TESTSDIR/$TESTNAME/process.bpmn > $TESTSDIR/$TESTNAME/new-process.bpmn
 #    diff --ignore-all-space $TESTSDIR/$TESTNAME/process.bpmn $TESTSDIR/$TESTNAME/new-process.bpmn
   fi
+
+  if [ ! -d $TESTSDIR/$TESTNAME/Folder1 ]; then
+    exit 1
+  fi
+  if [ ! -f $TESTSDIR/$TESTNAME/Folder1/Readme.md ]; then
+    exit 1
+  fi
+  if [ ! -f $TESTSDIR/$TESTNAME/Folder1/process1.bpmn ]; then
+    exit 1
+#  else
+#    xmllint --format $TESTSDIR/$TESTNAME/Folder1/process1.bpmn > $TESTSDIR/$TESTNAME/Folder1/new-process1.bpmn
+#    diff --ignore-all-space $TESTSDIR/$TESTNAME/Folder1/process1.bpmn $TESTSDIR/$TESTNAME/Folder1/new-process1.bpmn
+  fi
+  if [ -f $TESTSDIR/$TESTNAME/Folder1/process2-wmedIgnore.bpmn ]; then
+    exit 1
+  fi
+
+  if [ -f $TESTSDIR/$TESTNAME/Folder2.wmedIgnore ]; then
+    exit 1
+  fi
 }
 
 ############################################################################
 # So, the actual test is
 
-# Scenario: WMED extracts files from project into a local directory
-
 _setup
 
-Given
-When
-Then
+  Given
+  When
+  Then
 
 _teardown

@@ -17,12 +17,16 @@ if [ "$TESTSDIR" = "" ]; then
 fi
 
 status='Success'
+# Are we running as part of a pipeline
 if [ ! -n "$CI" ]; then
   alias "docker-compose"='docker compose'
+  docker_tty_opts=-i
+else
+  docker_tty_opts=-i
 fi
 
 # Test if the following are installed - they all are except xmllint
-#which curl jq yq xmllint
+which curl jq yq xmllint
 
 #
 # This function will run a single test. It runs the actual test in a new shell.
@@ -33,12 +37,13 @@ fi
 #
 
 run_test () {
-  docker-compose -f extract-compose.yaml up -d
+  docker-compose -f $1 up -d
+  echo Sleeping whilst compose stack comes up properly ...
   sleep 15
 
-  echo "Running test $1"
+  echo "Running test $2"
 
-  TESTSDIR=$TESTSDIR /bin/sh -x $TESTSDIR/$1
+  TESTSDIR=$TESTSDIR DOCKER_TTY_OPTS=$docker_tty_opts /bin/sh -x $TESTSDIR/tests/$2
 
   rc=$?
   if [ $rc -ne 0 ]; then
@@ -49,12 +54,15 @@ run_test () {
   fi
 
   # Kind of want a "finally" section to execute this in - it always has to happen
-  docker-compose -f extract-compose.yaml down
+  docker-compose -f $1 down
 }
 
-# Probably want this to auto-discover the tests, but this will do for now
-run_test extract-1.sh
+'ls' -1S $TESTSDIR/tests/extract*.sh | while read tst; do
+  tst=`basename $tst`
+  run_test extract-compose.yaml $tst
+done
 
+# See if ANY of the tests failed
 if [ "$status" = "Success" ]; then
   rc=0
 else

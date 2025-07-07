@@ -112,7 +112,7 @@ add_project_collaborator () {
 create_folder () {
   echo "create_folder:"
   echo "  name: $1"
-  echo "  project: $2"
+  echo "  projectId: $2"
   if [ $# -gt 2 ]; then
     echo "  parent: $3"
   fi
@@ -148,9 +148,11 @@ create_folder () {
 create_file () {
   echo "create_file:"
   echo "  file: $1"
-  echo "  project: $2"
+  echo "  projectId: $2"
+  echo "  file: $3"
+  type "  type: $4"
   if [ $# -gt 2 ]; then
-    echo "  folder: $3"
+    echo "  folder: $5"
   fi
   #   This API will create a file
   #     POST /api/v1/files
@@ -163,22 +165,15 @@ create_file () {
   #     }
   #
 
-  filename=`basename $1`
-  # "name" is the name of the artifact as it appears in WM, i.e. without a file extension
-  # Probably need to be able to deal with other file types as well
-  name=`echo $filename | cut -f 1 -d '.'`
-  ext=`echo $filename | cut -f 2 -d '.'`
-  if [ "$ext" = "wmedIgnore" ]; then
-    ext=`echo $filename | cut -f 3 -d '.'`
-    name="$name\.$ext"
-  fi
+  name=`basename $1`
 
-  file_content=`sed -e 's|\"|\\\"|g' -e 's/$/\\n/g' $1 | tr -d '\n'`
+  # Works for .bpmn files, need something a bit different for .md files
+  file_content=`sed -e 's|\"|\\\"|g' -e 's/$/\\n/g' $3 | tr -d '\n'`
 
-  if [ $# -gt 2 ]; then
-    body="{\"name\":\"$name\", \"folderId\":\"$3\", \"projectId\":\"$2\", \"content\":\"$file_content\", \"fileType\":\"bpmn\"}"
+  if [ $# -gt 4 ]; then
+    body="{\"name\":\"$name\", \"folderId\":\"$5\", \"projectId\":\"$2\", \"content\":\"$file_content\", \"fileType\":\"$4\"}"
   else
-    body="{\"name\":\"$name\", \"projectId\":\"$2\", \"content\":\"$file_content\", \"fileType\":\"bpmn\"}"
+    body="{\"name\":\"$name\", \"projectId\":\"$2\", \"content\":\"$file_content\", \"fileType\":\"$4\"}"
   fi
 
   get_access_token

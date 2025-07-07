@@ -62,7 +62,7 @@ jobs:
       - name: Set up Docker and dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y docker-compose
+          sudo apt-get install -y docker-compose xmllint
 
       - name: Run extract tests
         run: integration-tests/test-runner.sh
