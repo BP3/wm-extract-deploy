@@ -21,7 +21,8 @@ if [ ! -n "$CI" ]; then
   alias "docker-compose"='docker compose'
 fi
 
-which curl jq yq xmllint
+# Test if the following are installed - they all are except xmllint
+#which curl jq yq xmllint
 
 #
 # This function will run a single test. It runs the actual test in a new shell.
