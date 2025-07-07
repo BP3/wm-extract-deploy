@@ -125,14 +125,14 @@ When () {
       bp3global/wm-extract-deploy extract
 
   # Unfortunately the command above doesn't allow us to grab the data - but doing it this way we can
-  docker run -d --name wmed --net=host -w /local \
+  docker run -id --name wmed --net=host -w /local \
     -e APP=/app -e NO_GIT=true \
     -e OAUTH2_CLIENT_ID=wmed -e OAUTH2_CLIENT_SECRET=wmed \
     -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
     -e CAMUNDA_WM_PROJECT="$project_id" \
     -e CAMUNDA_WM_HOST="localhost:8070" \
       --entrypoint /bin/sh bp3global/wm-extract-deploy
-  docker exec -w /local wmed /app/scripts/extractDeploy.sh extract
+  docker exec -i -w /local wmed /app/scripts/extractDeploy.sh extract
   docker container cp wmed:/local $TESTSDIR/$TESTNAME
   docker container stop wmed
   docker container rm wmed
