@@ -86,30 +86,12 @@ Given () {
   create_file process2-wmedIgnore $project_id files/process.bpmn bpmn $folder_id
 
   create_folder Folder2.wmedIgnore $project_id
-  create_file Readme files/Readme.md $project_id $markdown folder_id
+  create_file Readme $project_id files/Readme.md markdown $folder_id
   create_file process $project_id files/process.bpmn bpmn $folder_id
 }
 
 When () {
   echo "$TESTNAME: When"
-  # Extract command will look something a bit like
-  #
-  # docker run --rm --network "${CI_PROJECT_NAME}_camunda-platform"
-  #   --mount type=bind,src=${PWD},dst=/local --workdir /local \
-  #   -e NO_GIT=1
-  #      -e OAUTH2_CLIENT_ID="<Client Id>" \
-  #      -e OAUTH2_CLIENT_SECRET="<Client secret>" \
-  #      -e OAUTH2_TOKEN_URL="<The OAuth2 Token URL>" \
-  #      -e CAMUNDA_WM_PROJECT="<The WM project to extract from>" \
-  #      -e CAMUNDA_WM_HOST="<Web Modeller hostname>" \
-  #      #-e GIT_USERNAME="<Git Username>" \
-  #      #-e GIT_USER_EMAIL="<Git Email address>" \
-  #      #-e SKIP_CI="<Indicate (\"true\" | \"false\") if you want to run any pipelines or not on the commit>" \
-  #      #-e CICD_PLATFORM="Indicate which SCM platform is being used, such as \"gitlab\", \"github\" or \"bitbucket\"" \
-  #      #-e CICD_SERVER_HOST="<The host of the GIT server. Only needed if using GitLab>" \
-  #      #-e CICD_ACCESS_TOKEN="<CI platform access token>" \
-  #      #-e CICD_REPOSITORY_PATH="<The path of the repository>" \
-  #         extract
   mkdir -p $TESTSDIR/$TESTNAME
 
   # The mount command won't work properly when using dind!
@@ -163,9 +145,9 @@ Then () {
   fi
   if [ ! -f $TESTSDIR/$TESTNAME/process.bpmn ]; then
     exit 1
-#  else
-#    xmllint --format $TESTSDIR/$TESTNAME/process.bpmn > $TESTSDIR/$TESTNAME/new-process.bpmn
-#    diff --ignore-all-space $TESTSDIR/$TESTNAME/process.bpmn $TESTSDIR/$TESTNAME/new-process.bpmn
+  else
+    xmllint --format $TESTSDIR/$TESTNAME/process.bpmn > $TESTSDIR/$TESTNAME/new-process.bpmn
+    diff --ignore-all-space $TESTSDIR/$TESTNAME/process.bpmn $TESTSDIR/$TESTNAME/new-process.bpmn
   fi
 
   if [ ! -d $TESTSDIR/$TESTNAME/Folder1 ]; then
@@ -176,9 +158,9 @@ Then () {
   fi
   if [ ! -f $TESTSDIR/$TESTNAME/Folder1/process1.bpmn ]; then
     exit 1
-#  else
-#    xmllint --format $TESTSDIR/$TESTNAME/Folder1/process1.bpmn > $TESTSDIR/$TESTNAME/Folder1/new-process1.bpmn
-#    diff --ignore-all-space $TESTSDIR/$TESTNAME/Folder1/process1.bpmn $TESTSDIR/$TESTNAME/Folder1/new-process1.bpmn
+  else
+    xmllint --format $TESTSDIR/$TESTNAME/Folder1/process1.bpmn > $TESTSDIR/$TESTNAME/Folder1/new-process1.bpmn
+    diff --ignore-all-space $TESTSDIR/$TESTNAME/Folder1/process1.bpmn $TESTSDIR/$TESTNAME/Folder1/new-process1.bpmn
   fi
   if [ -f $TESTSDIR/$TESTNAME/Folder1/process2-wmedIgnore.bpmn ]; then
     exit 1
