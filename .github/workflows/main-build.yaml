@@ -1,4 +1,4 @@
-name: Release Pipeline
+name: Build Pipeline
 
 env:
   DOCKER_IMAGE_NAME: bp3global/wm-extract-deploy
