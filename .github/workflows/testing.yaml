@@ -7,8 +7,53 @@ on: workflow_dispatch
   #     - completed
 
 jobs:
-  run_docker_compose:
-    name: Camunda Basics
+#  run_docker_compose:
+#    name: Camunda Basics
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#      - name: Set up Docker and dependencies
+#        run: |
+#          sudo apt-get update
+#          sudo apt-get install -y docker-compose curl jq
+#      - name: Start docker-compose
+#        run: docker-compose -f docker-compose.yaml up -d
+#      - name: Show running containers
+#        run: docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
+#      - name: Check docker networks
+#        run: docker network ls --format "{{.Name}}" | grep camunda || true
+#      - name: Wait a bit
+#        run: sleep 5
+#      - name: Check Zeebe readiness
+#        run: |
+#          docker run --rm \
+#            --network "${GITHUB_REPOSITORY##*/}_camunda-platform" \
+#            curlimages/curl:7.85.0 \
+#            http://zeebe:9600/actuator/health/readiness
+#      - name: Get Zeebe topology
+#        run: |
+#          docker run --rm \
+#            --network "${GITHUB_REPOSITORY##*/}_camunda-platform" \
+#            curlimages/curl:7.85.0 \
+#            -u demo:demo \
+#            -X GET http://zeebe:8080/v2/topology
+#      - name: Deploy BPMN
+#        run: |
+#          docker run --rm \
+#            --network "${GITHUB_REPOSITORY##*/}_camunda-platform" \
+#            -v $GITHUB_WORKSPACE/files:/files \
+#            curlimages/curl:7.85.0 \
+#            -u demo:demo \
+#            -X POST http://zeebe:8080/v2/deployments \
+#            -H "Content-Type: multipart/form-data" \
+#            -F "resources=@/files/process.bpmn;type=application/xml"
+#      - name: Tear down stack
+#        if: always()
+#        run: docker-compose -f docker-compose.yaml down
+
+  run_extract_stack:
+    name: Extract Stack
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -17,120 +62,51 @@ jobs:
       - name: Set up Docker and dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y docker-compose curl jq
+          sudo apt-get install -y docker-compose libxml2-utils
 
-      - name: Start docker-compose
-        run: docker-compose -f docker-compose.yaml up -d
+      - name: Run extract tests
+        run: integration-tests/test-runner.sh
 
-      - name: Show running containers
-        run: docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
 
-      - name: Check docker networks
-        run: docker network ls --format "{{.Name}}" | grep camunda || true
-
-      - name: List project dir
-        run: ls -l "$GITHUB_WORKSPACE"
-
-      - name: List files dir
-        run: ls -l "$GITHUB_WORKSPACE/files"
-
-      - name: Wait a bit
-        run: sleep 5
-
-      - name: Check Zeebe readiness
-        run: |
-          docker run --rm \
-            --network "${GITHUB_REPOSITORY##*/}_camunda-platform" \
-            curlimages/curl:7.85.0 \
-            http://zeebe:9600/actuator/health/readiness
-
-      - name: Get Zeebe topology
-        run: |
-          docker run --rm \
-            --network "${GITHUB_REPOSITORY##*/}_camunda-platform" \
-            curlimages/curl:7.85.0 \
-            -u demo:demo \
-            -X GET http://zeebe:8080/v2/topology
-
-      - name: Deploy BPMN
-        run: |
-          docker run --rm \
-            --network "${GITHUB_REPOSITORY##*/}_camunda-platform" \
-            -v $GITHUB_WORKSPACE/files:/files \
-            curlimages/curl:7.85.0 \
-            -u demo:demo \
-            -X POST http://zeebe:8080/v2/deployments \
-            -H "Content-Type: multipart/form-data" \
-            -F "resources=@/files/process.bpmn;type=application/xml"
-
-      - name: Tear down stack
-        if: always()
-        run: docker-compose -f docker-compose.yaml down
-
-  run_extract_stack:
-    name: Extract Stack
-    runs-on: ubuntu-latest
-    needs: run_docker_compose
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Docker and dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-
-      - name: Start extract-compose
-        run: docker-compose -f extract-compose.yaml up -d
-
-      - name: Show running containers
-        run: docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
-
-      - name: Check docker networks
-        run: docker network ls --format "{{.Name}}" | grep camunda || true
-
-      - name: Tear down stack
-        if: always()
-        run: docker-compose -f extract-compose.yaml down
-
-  run_deploy_stack:
-    name: Deploy Stack
-    runs-on: ubuntu-latest
-    needs: run_extract_stack
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Docker and dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-
-      - name: Start deploy-compose
-        run: docker-compose -f deploy-compose.yaml up -d
-
-      - name: Show running containers
-        run: docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
-
-      - name: Check docker networks
-        run: docker network ls --format "{{.Name}}" | grep camunda || true
-
-      - name: Wait a bit
-        run: sleep 10
-
-      - name: Check Zeebe readiness
-        run: |
-          for i in {1..10}; do
-            if docker run --rm \
-            --network "${GITHUB_REPOSITORY##*/}_camunda-platform" \
-            curlimages/curl:7.85.0 \
-            http://localhost:9600/actuator/health/readiness | grep UP; then
-            echo "Zeebe is ready"
-            break
-            else
-            echo "Waiting for Zeebe..."
-            sleep 5
-            fi
-          done 
-
-      - name: Tear down stack
-        if: always()
-        run: docker-compose -f deploy-compose.yaml down
+#  run_deploy_stack:
+#    name: Deploy Stack
+#    runs-on: ubuntu-latest
+#    needs: run_extract_stack
+#    steps:
+#      - uses: actions/checkout@v3
+#
+#      - name: Set up Docker and dependencies
+#        run: |
+#          sudo apt-get update
+#          sudo apt-get install -y docker-compose
+#
+#      - name: Start deploy-compose
+#        run: docker-compose -f deploy-compose.yaml up -d
+#
+#      - name: Show running containers
+#        run: docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
+#
+#      - name: Check docker networks
+#        run: docker network ls --format "{{.Name}}" | grep camunda || true
+#
+#      - name: Wait a bit
+#        run: sleep 10
+#
+#      - name: Check Zeebe readiness
+#        run: |
+#          for i in {1..10}; do
+#            if docker run --rm \
+#            --network "${GITHUB_REPOSITORY##*/}_camunda-platform" \
+#            curlimages/curl:7.85.0 \
+#            http://localhost:9600/actuator/health/readiness | grep UP; then
+#            echo "Zeebe is ready"
+#            break
+#            else
+#            echo "Waiting for Zeebe..."
+#            sleep 5
+#            fi
+#          done
+#
+#      - name: Tear down stack
+#        if: always()
+#        run: docker-compose -f deploy-compose.yaml down
