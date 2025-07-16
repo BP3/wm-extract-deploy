@@ -15,7 +15,7 @@ RUN addgroup --gid 1000 bp3 && \
     adduser --uid 1000 --ingroup bp3 --home /home/bp3user --shell /bin/bash --disabled-password bp3user
 
 RUN --mount=type=bind,source=requirements.txt,target=/tmp/requirements.txt \
-    apk add --no-cache git=2.47.2-r0 openssh=9.9_p2-r0 && \
+    apk add --no-cache 'git>2.47.2' 'openssh>9.9' && \
     pip install --requirement /tmp/requirements.txt
 
 WORKDIR /app
