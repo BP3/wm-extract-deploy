@@ -30,4 +30,4 @@ jobs:
           sudo apt-get install -y docker-compose libxml2-utils
 
       - name: Run extract tests
-        run: integration-tests/test-runner.sh $GITHUB_REF_NAME
+        run: integration-tests/test-runner.sh ${{ github.head_ref || github.ref_name }}
