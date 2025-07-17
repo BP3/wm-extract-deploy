@@ -28,8 +28,10 @@ jobs:
           username: ${{ inputs.username }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build the docker image and apply the tag
       - name: Build Docker image of application
         run: |
           docker build -t ${{ inputs.image-name }}:${{ inputs.branch-name }} .
+
+      - name: Push to local registry
+        run: |
           docker push ${{ inputs.image-name }}:${{ inputs.branch-name }}

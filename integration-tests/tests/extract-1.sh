@@ -30,6 +30,8 @@
 ############################################################################
 
 TESTNAME=`basename $0 .sh`
+IMAGE_REF=$1
+echo $IMAGE_REF
 
 # Load reusable extract functions
 . $TESTSDIR/extract-functions.sh
