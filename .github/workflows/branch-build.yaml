@@ -13,7 +13,7 @@ jobs:
     with:
       username: ${{ github.actor }}
       image-name: $GITHUB_IMAGE_NAME
-      branch-name: $GITHUB_REF_NAMEUse
+      branch-name: $GITHUB_REF_NAME
     secrets: inherit
 
   run-extract-tests:
