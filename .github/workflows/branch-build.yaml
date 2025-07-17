@@ -14,8 +14,7 @@ jobs:
       username: ${{ github.actor }}
       image-name: $GITHUB_IMAGE_NAME
       branch-name: $GITHUB_REF_NAMEUse
-    secrets:
-      password: inherit
+    secrets: inherit
 
   run-extract-tests:
     name: Extract Stack
