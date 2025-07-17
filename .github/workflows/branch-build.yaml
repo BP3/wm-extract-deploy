@@ -10,6 +10,12 @@ on:
 jobs:
   call-workflow-build-image:
     uses: ./.github/workflows/build-image.yaml
+    with:
+      username: ${{ github.actor }}
+      image-name: $GITHUB_IMAGE_NAME
+      branch-name: $GITHUB_REF_NAMEUse
+    secrets:
+      password: inherit
 
   run-extract-tests:
     name: Extract Stack
