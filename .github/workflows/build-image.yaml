@@ -2,6 +2,16 @@ name: Build image
 
 on:
   workflow_call:
+    inputs:
+      username:
+        required: true
+        type: string
+      image-name:
+        required: true
+        type: string
+      branch-name:
+        required: true
+        type: string
 
 jobs:
   build-image:
@@ -15,11 +25,11 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
+          username: ${{ inputs.username }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # Build the docker image and apply the tag
       - name: Build Docker image of application
         run: |
-          docker build -t $GITHUB_IMAGE_NAME:$GITHUB_REF_NAME .
-          docker push $GITHUB_IMAGE_NAME:$GITHUB_REF_NAME
+          docker build -t ${{ inputs.image-name }}:${{ inputs.branch-name }} .
+          docker push ${{ inputs.image-name }}:${{ inputs.branch-name }}
