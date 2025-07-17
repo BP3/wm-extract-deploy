@@ -1,5 +1,8 @@
 name: Build main
 
+env:
+  GITHUB_IMAGE_NAME: ghcr.io/bp3/wm-extract-deploy
+
 on:
   push:
     branches:

@@ -1,5 +1,8 @@
 name: Build branch
 
+env:
+  GITHUB_IMAGE_NAME: ghcr.io/bp3/wm-extract-deploy
+
 on:
   pull_request:
   workflow_dispatch:
