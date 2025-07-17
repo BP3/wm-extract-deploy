@@ -147,7 +147,7 @@ Then () {
     exit 1
   else
     xmllint --format $TESTSDIR/$TESTNAME/process.bpmn > $TESTSDIR/$TESTNAME/new-process.bpmn
-    diff --ignore-all-space $TESTSDIR/$TESTNAME/process.bpmn $TESTSDIR/$TESTNAME/new-process.bpmn
+    diff --ignore-all-space files/process.bpmn $TESTSDIR/$TESTNAME/new-process.bpmn
   fi
 
   if [ ! -d $TESTSDIR/$TESTNAME/Folder1 ]; then
@@ -160,7 +160,7 @@ Then () {
     exit 1
   else
     xmllint --format $TESTSDIR/$TESTNAME/Folder1/process1.bpmn > $TESTSDIR/$TESTNAME/Folder1/new-process1.bpmn
-    diff --ignore-all-space $TESTSDIR/$TESTNAME/Folder1/process1.bpmn $TESTSDIR/$TESTNAME/Folder1/new-process1.bpmn
+    diff --ignore-all-space files/process.bpmn $TESTSDIR/$TESTNAME/Folder1/new-process1.bpmn
   fi
   if [ -f $TESTSDIR/$TESTNAME/Folder1/process2-wmedIgnore.bpmn ]; then
     exit 1
