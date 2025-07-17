@@ -17,6 +17,6 @@ jobs:
     uses: ./.github/workflows/build-image.yaml
     with:
       username: ${{ github.actor }}
-      image-name: ${{ vars.GITHUB_IMAGE_NAME }}
-      branch-name: ${{ vars.GITHUB_REF_NAME }}
+      image-name: ghcr.io/bp3/wm-extract-deploy
+      branch-name: ${{ github.ref_name }}
     secrets: inherit
