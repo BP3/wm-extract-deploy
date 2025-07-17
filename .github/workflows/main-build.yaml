@@ -18,5 +18,5 @@ jobs:
     with:
       username: ${{ github.actor }}
       image-name: ghcr.io/bp3/wm-extract-deploy
-      branch-name: ${{ github.ref_name }}
+      branch-name: ${{ github.head_ref || github.ref_name }}
     secrets: inherit
