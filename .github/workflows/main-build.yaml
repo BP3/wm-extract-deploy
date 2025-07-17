@@ -1,8 +1,4 @@
-name: Build Pipeline
-
-env:
-  DOCKER_IMAGE_NAME: bp3global/wm-extract-deploy
-  GITHUB_IMAGE_NAME: ghcr.io/bp3/wm-extract-deploy
+name: Build main
 
 on:
   push:
@@ -14,22 +10,5 @@ on:
   workflow_dispatch:
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
-    steps:
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      # Build the docker image and apply the tag
-      - name: Build Docker image of application
-        run: |
-          docker build -t $GITHUB_IMAGE_NAME:$GITHUB_REF_NAME .
-          docker push $GITHUB_IMAGE_NAME:$GITHUB_REF_NAME
+  call-workflow-build-image:
+    uses: ./.github/workflows/build-image.yaml
