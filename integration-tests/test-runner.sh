@@ -16,7 +16,6 @@ if [ "$TESTSDIR" = "" ]; then
   TESTSDIR=`dirname $0`
 fi
 IMAGE_REF=$1
-echo $IMAGE_REF
 
 status='Success'
 # Are we running as part of a pipeline

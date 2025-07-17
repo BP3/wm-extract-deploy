@@ -31,7 +31,6 @@
 
 TESTNAME=`basename $0 .sh`
 IMAGE_REF=$1
-echo $IMAGE_REF
 
 # Load reusable extract functions
 . $TESTSDIR/extract-functions.sh
@@ -106,7 +105,7 @@ When () {
     -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
     -e CAMUNDA_WM_PROJECT="$project_id" \
     -e CAMUNDA_WM_HOST="localhost:8070" \
-      bp3global/wm-extract-deploy extract
+      bp3global/wm-extract-deploy:$IMAGE_REF extract
 
   # Unfortunately the command above doesn't allow us to grab the data - but doing it this way we can
   docker run -d $DOCKER_TTY_OPTS --name wmed --net=host -w /local \
@@ -115,10 +114,11 @@ When () {
     -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
     -e CAMUNDA_WM_PROJECT="$project_id" \
     -e CAMUNDA_WM_HOST="localhost:8070" \
-      --entrypoint /bin/sh bp3global/wm-extract-deploy
+      --entrypoint /bin/sh bp3global/wm-extract-deploy:$IMAGE_REF
 
   echo Sleep for a few seconds whilst docker container comes up ...
   sleep 5
+
   docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh extract
   docker container cp wmed:/local $TESTSDIR/$TESTNAME
   docker container stop wmed
