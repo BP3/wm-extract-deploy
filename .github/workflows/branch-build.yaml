@@ -12,8 +12,8 @@ jobs:
     uses: ./.github/workflows/build-image.yaml
     with:
       username: ${{ github.actor }}
-      image-name: $GITHUB_IMAGE_NAME
-      branch-name: $GITHUB_REF_NAME
+      image-name: ${{ env.GITHUB_IMAGE_NAME }}
+      branch-name: ${{ env.GITHUB_REF_NAME }}
     secrets: inherit
 
   run-extract-tests:
