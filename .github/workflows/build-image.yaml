@@ -1,0 +1,37 @@
+name: Build image
+
+on:
+  workflow_call:
+    inputs:
+      username:
+        required: true
+        type: string
+      image-name:
+        required: true
+        type: string
+      branch-name:
+        required: true
+        type: string
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ inputs.username }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image of application
+        run: |
+          docker build -t ${{ inputs.image-name }}:${{ inputs.branch-name }} .
+
+      - name: Push to local registry
+        run: |
+          docker push ${{ inputs.image-name }}:${{ inputs.branch-name }}

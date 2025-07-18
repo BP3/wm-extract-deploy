@@ -30,6 +30,8 @@
 ############################################################################
 
 TESTNAME=`basename $0 .sh`
+IMAGE_NAME=ghcr.io/bp3/wm-extract-deploy
+IMAGE_REF=$1
 
 # Load reusable extract functions
 . $TESTSDIR/extract-functions.sh
@@ -104,7 +106,7 @@ When () {
     -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
     -e CAMUNDA_WM_PROJECT="$project_id" \
     -e CAMUNDA_WM_HOST="localhost:8070" \
-      bp3global/wm-extract-deploy extract
+      $IMAGE_NAME:$IMAGE_REF extract
 
   # Unfortunately the command above doesn't allow us to grab the data - but doing it this way we can
   docker run -d $DOCKER_TTY_OPTS --name wmed --net=host -w /local \
@@ -113,10 +115,11 @@ When () {
     -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
     -e CAMUNDA_WM_PROJECT="$project_id" \
     -e CAMUNDA_WM_HOST="localhost:8070" \
-      --entrypoint /bin/sh bp3global/wm-extract-deploy
+      --entrypoint /bin/sh $IMAGE_NAME:$IMAGE_REF
 
   echo Sleep for a few seconds whilst docker container comes up ...
   sleep 5
+
   docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh extract
   docker container cp wmed:/local $TESTSDIR/$TESTNAME
   docker container stop wmed
@@ -147,7 +150,7 @@ Then () {
     exit 1
   else
     xmllint --format $TESTSDIR/$TESTNAME/process.bpmn > $TESTSDIR/$TESTNAME/new-process.bpmn
-    diff --ignore-all-space $TESTSDIR/$TESTNAME/process.bpmn $TESTSDIR/$TESTNAME/new-process.bpmn
+    diff --ignore-all-space files/process.bpmn $TESTSDIR/$TESTNAME/new-process.bpmn
   fi
 
   if [ ! -d $TESTSDIR/$TESTNAME/Folder1 ]; then
@@ -160,7 +163,7 @@ Then () {
     exit 1
   else
     xmllint --format $TESTSDIR/$TESTNAME/Folder1/process1.bpmn > $TESTSDIR/$TESTNAME/Folder1/new-process1.bpmn
-    diff --ignore-all-space $TESTSDIR/$TESTNAME/Folder1/process1.bpmn $TESTSDIR/$TESTNAME/Folder1/new-process1.bpmn
+    diff --ignore-all-space files/process.bpmn $TESTSDIR/$TESTNAME/Folder1/new-process1.bpmn
   fi
   if [ -f $TESTSDIR/$TESTNAME/Folder1/process2-wmedIgnore.bpmn ]; then
     exit 1
