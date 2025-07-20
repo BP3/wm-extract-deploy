@@ -27,8 +27,7 @@ WM_PORT=8070
 get_wm_restapi_status () {
   # Readiness of WM REST API
   # Responds with {"status":"UP"}
-  wm_restapi_status=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
-      -s -H "$APP_JSON_HDR" http://web-modeler-restapi:8091/health/readiness \
+  wm_restapi_status=$(curl -s -H "$APP_JSON_HDR" http://localhost:8091/health/readiness \
       | jq '.status' | tr -d '"')
   echo "WM REST API: $wm_restapi_status"
 }
