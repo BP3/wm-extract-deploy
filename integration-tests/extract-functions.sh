@@ -41,7 +41,7 @@ get_wm_webapp_status () {
 }
 
 get_access_token () {
-  access_token=$(docker run --rm --net=host curlimages/curl:$CURL_VERSION \
+  access_token=$(curl \
     --location -s --request POST 'http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token' \
     --header 'Content-Type: application/x-www-form-urlencoded' \
     --data-urlencode "client_id=$CLIENT_ID" \
