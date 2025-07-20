@@ -24,7 +24,7 @@ get_image () {
 
 # Read compose file to find which images we need
 grep 'image:' $composeFile | while read imageLine; do
-  imgRef=`echo imageLine | cut -d' ' -f2`
+  imgRef=`echo $imageLine | cut -d' ' -f2`
   # Use eval to de-reference the version EnvVar
   image=`eval echo "$imgRef"`
   get_image $image
