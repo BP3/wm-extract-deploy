@@ -223,6 +223,7 @@ services:
     image: camunda/web-modeler-webapp:${CAMUNDA_WEB_MODELER_VERSION}
     ports:
       - "8070:8070"
+      - "8071:8071"
     depends_on:
       web-modeler-restapi:
         condition: service_healthy

@@ -35,8 +35,7 @@ get_wm_restapi_status () {
 get_wm_webapp_status () {
   # Readiness of WM WebApp
   # Responds with {"status":"READY","workers":[{"id":1,"state":"listening","pid":13}]}
-  wm_webapp_status=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
-      -s -H "$APP_JSON_HDR" http://web-modeler-webapp:8071/health/readiness \
+  wm_webapp_status=$(curl -s -H "$APP_JSON_HDR" http://localhost:8071/health/readiness \
       | jq '.status' | tr -d '"')
   echo "WM WebApp: $wm_webapp_status"
 }
