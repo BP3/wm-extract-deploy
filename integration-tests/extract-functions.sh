@@ -17,8 +17,8 @@
 APP_JSON_HDR="Content-Type: application/json"
 CLIENT_ID=wmed
 CLIENT_SECRET=wmed
-CURL_VERSION=7.85.0
-WM_HOST=web-modeler-webapp
+#CURL_VERSION=7.85.0
+WM_HOST=localhost
 WM_PORT=8070
 
 # Load reusable core functions
@@ -52,7 +52,7 @@ get_access_token () {
 get_wm_info () {
   wm_api_info=$(curl \
     -s -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
-    http://localhost:$WM_PORT/api/v1/info)
+    http://$WM_HOST:$WM_PORT/api/v1/info)
   echo $wm_api_info
 }
 
@@ -70,7 +70,7 @@ create_project () {
 
   get_access_token
 
-  response=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
+  response=$(curl \
       -s -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
       --data "$body" \
         -X POST http://$WM_HOST:$WM_PORT/api/v1/projects)
@@ -99,7 +99,7 @@ add_project_collaborator () {
 
   get_access_token
 
-  response=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
+  response=$(curl \
       -s -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
       --data "$body" \
 	-X PUT http://$WM_HOST:$WM_PORT/api/v1/collaborators)
@@ -131,7 +131,7 @@ create_folder () {
 
   get_access_token
 
-  response=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
+  response=$(curl \
     -s -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
     --data "$body" \
       -X POST http://$WM_HOST:$WM_PORT/api/v1/folders)
@@ -176,7 +176,7 @@ create_file () {
 
   get_access_token
 
-  response=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
+  response=$(curl \
     -s -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
     --data "$body" \
       -X POST http://$WM_HOST:$WM_PORT/api/v1/files)
