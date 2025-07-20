@@ -12,10 +12,26 @@
 #
 ############################################################################
 
+#echo $RUNDIR
 if [ "$TESTSDIR" = "" ]; then
   TESTSDIR=`dirname $0`
 fi
+IMAGE_NAME=bp3/wm-extract-deploy
 IMAGE_REF=$1
+composeFile=$2
+
+# Want to make sure that we have the image we are supposed to be working with
+image=`docker images --format "{{.ID}} \t{{.Repository}} \t{{.Tag}}" --filter=reference="ghcr.io/$IMAGE_NAME:$IMAGE_REF" | wc -l`
+if [ $(( image )) -ne 1 ]; then
+  echo "Image $IMAGE_NAME:$IMAGE_REF not found, so pull it from registry"
+  docker pull ghcr.io/$IMAGE_NAME:$IMAGE_REF
+  if [ $? -ge 0 ]; then
+    echo "Image $IMAGE_NAME:$IMAGE_REF not found in registry, so exit\!"
+    exit 1
+  fi
+else
+  echo "Docker image $IMAGE_NAME:$IMAGE_REF found"
+fi
 
 status='Success'
 # Are we running as part of a pipeline
@@ -57,7 +73,7 @@ run_test () {
 
 'ls' -1S $TESTSDIR/tests/extract*.sh | while read tst; do
   tst=`basename $tst`
-  run_test extract-compose.yaml $tst
+  run_test $composeFile $tst
 done
 
 # See if ANY of the tests failed

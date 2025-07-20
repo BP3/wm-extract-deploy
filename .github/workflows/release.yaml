@@ -1,7 +1,7 @@
 # The docker image has already been built - when the PR was merged to main - and it tagged as 'main'.
 # All we need to do here for a "release" is to re-tag the 'main' image and push it to docker hub.concurrency.
 
-name: Release Pipeline
+name: Release new version
 
 env:
   DOCKER_IMAGE_NAME: bp3global/wm-extract-deploy

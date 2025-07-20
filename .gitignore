@@ -5,6 +5,8 @@ wm-project-id
 config.json
 config.yml
 
+integration-tests/extract-*/**
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
