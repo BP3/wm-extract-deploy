@@ -32,5 +32,15 @@ jobs:
       - name: Pre-fetch the images we want to use
         run: RUNDIR=$PWD integration-tests/load-images.sh extract-compose.yaml
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull image to test
+        run: docker pull ghcr.io/bp3/wm-extract-deploy:${{ github.head_ref || github.ref_name }}
+
       - name: Run extract tests
         run: RUNDIR=$PWD integration-tests/test-runner.sh ${{ github.head_ref || github.ref_name }} extract-compose.yaml
