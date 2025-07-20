@@ -50,9 +50,9 @@ get_access_token () {
 }
 
 get_wm_info () {
-  wm_api_info=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
+  wm_api_info=$(curl \
     -s -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
-    http://$WM_HOST:$WM_PORT/api/v1/info)
+    http://localhost:$WM_PORT/api/v1/info)
   echo $wm_api_info
 }
 
