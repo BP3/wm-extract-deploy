@@ -189,3 +189,36 @@ create_file () {
   file_id=$(echo $response | jq '.id' | tr -d '"')
   echo $file_id
 }
+
+# Helper functions for testing
+
+# Check for the existence of a file
+file_exists () {
+  if [ ! -f $1 ]; then
+    exit 1
+  fi
+}
+file_not_exists () {
+  if [ -f $1 ]; then
+    # Error if the file exists
+    exit 1
+  fi
+}
+file_exists_xml_match () {
+  file_exists $TESTSDIR/$TESTNAME/process.bpmn
+  xmllint --format $1 > $1.format
+  diff --ignore-all-space $2 $1.format
+}
+
+# Check for the existence of a folder
+folder_exists () {
+  if [ ! -d $1 ]; then
+    exit 1
+  fi
+}
+folder_not_exists () {
+  if [ -d $1 ]; then
+    # Error if the folder exists
+    exit 1
+  fi
+}
