@@ -17,7 +17,6 @@
 APP_JSON_HDR="Content-Type: application/json"
 CLIENT_ID=wmed
 CLIENT_SECRET=wmed
-#CURL_VERSION=7.85.0
 WM_HOST=localhost
 WM_PORT=8070
 
