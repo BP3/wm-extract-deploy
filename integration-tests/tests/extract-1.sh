@@ -130,48 +130,57 @@ When () {
   rm -fr $TESTSDIR/$TESTNAME/local
 }
 
+# Check for the existence of a file
+file_exists () {
+  if [ ! -f $1 ]; then
+    exit 1
+  fi
+}
+file_not_exists () {
+  if [ -f $1 ]; then
+    # Error if the file exists
+    exit 1
+  fi
+}
+file_exists_xml_match () {
+  file_exists $TESTSDIR/$TESTNAME/process.bpmn
+  xmllint --format $1 > $1.format
+  diff --ignore-all-space $2 $1.format
+}
+
+# Check for the existence of a folder
+folder_exists () {
+  if [ ! -d $1 ]; then
+    exit 1
+  fi
+}
+folder_not_exists () {
+  if [ -d $1 ]; then
+    # Error if the folder exists
+    exit 1
+  fi
+}
+
 Then () {
   echo "$TESTNAME: Then"
   # Then we have validate what we got back
   # Might be able to do this with a directory level diff
 
-  if [ ! -f $TESTSDIR/$TESTNAME/config.yml ]; then
-    exit 1
-  else
-    ext_project_id=`yq '.project.id' $TESTSDIR/$TESTNAME/config.yml`
-    if [ "$ext_project_id" != "$project_id" ]; then
-      exit 1
-    fi
-  fi
-  if [ ! -f $TESTSDIR/$TESTNAME/Readme.md ]; then
+  file_exists $TESTSDIR/$TESTNAME/config.yml
+  ext_project_id=`yq '.project.id' $TESTSDIR/$TESTNAME/config.yml`
+  if [ "$ext_project_id" != "$project_id" ]; then
     exit 1
   fi
-  if [ ! -f $TESTSDIR/$TESTNAME/process.bpmn ]; then
-    exit 1
-  else
-    xmllint --format $TESTSDIR/$TESTNAME/process.bpmn > $TESTSDIR/$TESTNAME/new-process.bpmn
-    diff --ignore-all-space files/process.bpmn $TESTSDIR/$TESTNAME/new-process.bpmn
-  fi
+  file_exists $TESTSDIR/$TESTNAME/Readme.md
+  file_exists_xml_match $TESTSDIR/$TESTNAME/process.bpmn files/process.bpmn
 
-  if [ ! -d $TESTSDIR/$TESTNAME/Folder1 ]; then
-    exit 1
-  fi
-  if [ ! -f $TESTSDIR/$TESTNAME/Folder1/Readme.md ]; then
-    exit 1
-  fi
-  if [ ! -f $TESTSDIR/$TESTNAME/Folder1/process1.bpmn ]; then
-    exit 1
-  else
-    xmllint --format $TESTSDIR/$TESTNAME/Folder1/process1.bpmn > $TESTSDIR/$TESTNAME/Folder1/new-process1.bpmn
-    diff --ignore-all-space files/process.bpmn $TESTSDIR/$TESTNAME/Folder1/new-process1.bpmn
-  fi
-  if [ -f $TESTSDIR/$TESTNAME/Folder1/process2-wmedIgnore.bpmn ]; then
-    exit 1
-  fi
+  folder_exists $TESTSDIR/$TESTNAME/Folder1
+  file_exists $TESTSDIR/$TESTNAME/Folder1/Readme.md
 
-  if [ -f $TESTSDIR/$TESTNAME/Folder2.wmedIgnore ]; then
-    exit 1
-  fi
+  file_exists_xml_match $TESTSDIR/$TESTNAME/Folder1/process1.bpmn files/process.bpmn
+  file_not_exists $TESTSDIR/$TESTNAME/Folder1/process2-wmedIgnore.bpmn
+
+  folder_not_exists $TESTSDIR/$TESTNAME/Folder2.wmedIgnore
 }
 
 ############################################################################
