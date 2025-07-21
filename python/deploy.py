@@ -13,6 +13,7 @@ import configargparse
 import asyncio
 import glob
 import os
+import logging
 from typing import List, cast
 from grpc.aio import AioRpcError
 from pyzeebe import (
@@ -25,6 +26,8 @@ from pyzeebe.errors import ZeebeGatewayUnavailableError, ProcessInvalidError
 
 from model_action import ModelAction
 from oauth import OAuth2
+
+logger = logging.getLogger()
 
 class Deployment(ModelAction):
 
@@ -76,14 +79,13 @@ class Deployment(ModelAction):
         self.zeebe_client = ZeebeClient(grpc_channel)
 
     async def deploy(self, resource_file_paths: List[os.PathLike[str]], tenant_id: str = None) -> None:
-        print(f"Deploying resources: {resource_file_paths}" + (f" to tenant {tenant_id}" if tenant_id is not None else "") + "...")
+        logger.info("Deploying resources: %s" + (" to tenant %s" if tenant_id is not None else "") + "...", resource_file_paths, tenant_id)
         if self.continue_on_error:
             for resource_file_path in resource_file_paths:
                 try:
                     await self.zeebe_client.deploy_resource(resource_file_path, tenant_id = tenant_id)
                 except Exception as x:
-                    print("*** FILE: {} COULD NOT BE DEPLOYED ***".format(resource_file_path))
-                    print(repr(x))
+                    logger.exception("*** FILE: %s COULD NOT BE DEPLOYED ***", resource_file_path)
         else:
             await self.zeebe_client.deploy_resource(*resource_file_paths, tenant_id = tenant_id)
 
@@ -95,10 +97,10 @@ class Deployment(ModelAction):
         for file_type in file_types:
             files.extend(glob.glob(f"{self.model_path}/**/{file_type}", recursive=True))
         if len(files) == 0:
-            print(f"Didn't find any files to deploy in '{self.model_path}' matching {file_types}.")
+            logger.warning("Didn't find any files to deploy in '%s' matching %s.", self.model_path, file_types)
             return
 
-        # print("Found files: ", files)
+        logger.debug("Found files: %s", files)
 
         self.create_zeebe_client()
         try:
@@ -109,10 +111,10 @@ class Deployment(ModelAction):
             else:
                 await self.deploy(files)
         except ZeebeGatewayUnavailableError as ex:
-            print(ex.grpc_error)
+            logger.error(ex.grpc_error)
             exit(3)
         except ProcessInvalidError as ex:
-            print(cast(AioRpcError, ex.__cause__)._details)
+            logger.error(cast(AioRpcError, ex.__cause__)._details)
             exit(3)
 
 

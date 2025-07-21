@@ -11,10 +11,13 @@
 ############################################################################
 import configargparse
 import requests
+import logging
 import os
 import json
 import yaml
 from oauth import OAuth2
+
+logger = logging.getLogger()
 
 class NotFoundError(Exception):
     def __init__(self, resource_type: str, key: str = None, value: str = None):
@@ -100,7 +103,7 @@ class WebModeler:
                 },
                 headers=headers
             )
-            # print("Find project response", response.status_code)
+            logger.debug("Find project response %s", response.status_code)
             if response.status_code == 404:
                 raise NotFoundError("Project", key, value)
             elif response.status_code == 401:
@@ -109,7 +112,7 @@ class WebModeler:
                 raise RuntimeError("Find project failed:", response.status_code, response.text)
             return response.json()
         except requests.exceptions.ConnectionError as ex:
-            print(f"Error while finding project: {ex}")
+            logger.exception("Error while finding project")
             exit(3)
 
     def list_files(self, project_id: str, name: str = None) -> dict:
@@ -158,7 +161,7 @@ class WebModeler:
             self.__wm_api_url + "/files/" + file_id,
             headers = self.__get_headers()
         )
-        # print("Retrieve file content response", response.status_code)
+        logger.debug("Retrieve file content response %s", response.status_code)
         return response.json()
 
     def __create_config_file(self, data: dict):
@@ -182,7 +185,7 @@ class WebModeler:
                     self.__config = yaml.safe_load(file)
                 elif self.config_file.endswith("json"):
                     self.__config = json.load(file)
-                print(f"Loaded config {self.__config} from {self.config_file}")
+                logger.info("Loaded config %s from %s", self.__config, self.config_file)
 
     def get_project(self, project_ref: str) -> dict:
         projects = None
@@ -193,23 +196,24 @@ class WebModeler:
         if self.__config is not None:
             project_ = self.__config["project"]
             if project_ref is not None and project_ref != project_["name"]:
-                print(f"The project '{project_ref}' does not match the project '{project_["name"]}' from {self.config_file}, ignoring contents and regenerating.")
+                logger.info("The project '%s' does not match the project '%s' from %s, ignoring contents and regenerating.",
+                            project_ref, project_["name"], self.config_file)
                 self.__delete_config_file()
                 projects = None
             else:
                 project_id = project_["id"]
                 projects = self.find_project("id", project_id)
                 if projects is None:
-                    print(f"Project not found using project ID {project_id} from {self.config_file}")
+                    logger.warning("Project not found using project ID %s from %s", project_id, self.config_file)
                 elif not projects['items']:
-                    print(f"Project not found using project ID {project_id} from {self.config_file}")
+                    logger.warning("Project not found using project ID %s from %s", project_id, self.config_file)
                     projects = None
 
         # If we failed to find the specified project, or no config was supplied, then try looking it up by project_ref
         if projects is None:
             create_config_file = True
             # First, try by id
-            # print(f"project_ref = '{project_ref}'")
+            logger.debug("project_ref = '%s'", project_ref)
             if project_ref is not None and project_ref != "":
                 projects = self.find_project("id", project_ref)
                 # Then try by name
@@ -268,7 +272,7 @@ class WebModeler:
             headers = self.__get_headers()
         )
 
-        print("Update file response", response.status_code)
+        logger.info("Update file response %s", response.status_code)
         if response.status_code != 200:
             raise RuntimeError("Attempt to update file failed.", response.json())
         return response.json()
@@ -283,7 +287,7 @@ class WebModeler:
             headers = self.__get_headers()
         )
 
-        print("Create milestone response", response.status_code)
+        logger.info("Create milestone response %s", response.status_code)
         if response.status_code != 200:
             raise RuntimeError("Attempt to create milestone failed.", response.json())
         return response.json()
