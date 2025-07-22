@@ -135,43 +135,23 @@ Then () {
   # Then we have validate what we got back
   # Might be able to do this with a directory level diff
 
-  if [ ! -f $TESTSDIR/$TESTNAME/config.yml ]; then
-    exit 1
-  else
-    ext_project_id=`yq '.project.id' $TESTSDIR/$TESTNAME/config.yml`
-    if [ "$ext_project_id" != "$project_id" ]; then
-      exit 1
-    fi
-  fi
-  if [ ! -f $TESTSDIR/$TESTNAME/Readme.md ]; then
+  assert_file_exists $TESTSDIR/$TESTNAME/config.yml
+  ext_project_id=`yq '.project.id' $TESTSDIR/$TESTNAME/config.yml`
+  if [ "$ext_project_id" != "$project_id" ]; then
     exit 1
   fi
-  if [ ! -f $TESTSDIR/$TESTNAME/process.bpmn ]; then
-    exit 1
-  else
-    xmllint --format $TESTSDIR/$TESTNAME/process.bpmn > $TESTSDIR/$TESTNAME/new-process.bpmn
-    diff --ignore-all-space files/process.bpmn $TESTSDIR/$TESTNAME/new-process.bpmn
-  fi
+  assert_file_exists $TESTSDIR/$TESTNAME/Readme.md
+  assert_file_exists $TESTSDIR/$TESTNAME/process.bpmn
+  assert_xml_match $TESTSDIR/$TESTNAME/process.bpmn files/process.bpmn
 
-  if [ ! -d $TESTSDIR/$TESTNAME/Folder1 ]; then
-    exit 1
-  fi
-  if [ ! -f $TESTSDIR/$TESTNAME/Folder1/Readme.md ]; then
-    exit 1
-  fi
-  if [ ! -f $TESTSDIR/$TESTNAME/Folder1/process1.bpmn ]; then
-    exit 1
-  else
-    xmllint --format $TESTSDIR/$TESTNAME/Folder1/process1.bpmn > $TESTSDIR/$TESTNAME/Folder1/new-process1.bpmn
-    diff --ignore-all-space files/process.bpmn $TESTSDIR/$TESTNAME/Folder1/new-process1.bpmn
-  fi
-  if [ -f $TESTSDIR/$TESTNAME/Folder1/process2-wmedIgnore.bpmn ]; then
-    exit 1
-  fi
+  assert_folder_exists $TESTSDIR/$TESTNAME/Folder1
+  assert_file_exists $TESTSDIR/$TESTNAME/Folder1/Readme.md
 
-  if [ -f $TESTSDIR/$TESTNAME/Folder2.wmedIgnore ]; then
-    exit 1
-  fi
+  assert_file_exists $TESTSDIR/$TESTNAME/Folder1/process1.bpmn
+  assert_xml_match $TESTSDIR/$TESTNAME/Folder1/process1.bpmn files/process.bpmn
+  assert_file_not_exists $TESTSDIR/$TESTNAME/Folder1/process2-wmedIgnore.bpmn
+
+  assert_folder_not_exists $TESTSDIR/$TESTNAME/Folder2.wmedIgnore
 }
 
 ############################################################################

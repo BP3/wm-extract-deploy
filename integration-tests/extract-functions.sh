@@ -186,3 +186,35 @@ create_file () {
   file_id=$(echo $response | jq '.id' | tr -d '"')
   echo $file_id
 }
+
+# Helper functions for testing
+
+# Check for the existence of a file
+assert_file_exists () {
+  if [ ! -f $1 ]; then
+    exit 1
+  fi
+}
+assert_file_not_exists () {
+  if [ -f $1 ]; then
+    # Error if the file exists
+    exit 1
+  fi
+}
+assert_xml_match () {
+  xmllint --format $1 > $1.format
+  diff --ignore-all-space $2 $1.format
+}
+
+# Check for the existence of a folder
+assert_folder_exists () {
+  if [ ! -d $1 ]; then
+    exit 1
+  fi
+}
+assert_folder_not_exists () {
+  if [ -d $1 ]; then
+    # Error if the folder exists
+    exit 1
+  fi
+}
