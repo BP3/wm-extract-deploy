@@ -17,8 +17,7 @@
 APP_JSON_HDR="Content-Type: application/json"
 CLIENT_ID=wmed
 CLIENT_SECRET=wmed
-CURL_VERSION=7.85.0
-WM_HOST=web-modeler-webapp
+WM_HOST=localhost
 WM_PORT=8070
 
 # Load reusable core functions
@@ -27,8 +26,7 @@ WM_PORT=8070
 get_wm_restapi_status () {
   # Readiness of WM REST API
   # Responds with {"status":"UP"}
-  wm_restapi_status=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
-      -s -H "$APP_JSON_HDR" http://web-modeler-restapi:8091/health/readiness \
+  wm_restapi_status=$(curl -s -H "$APP_JSON_HDR" http://localhost:8091/health/readiness \
       | jq '.status' | tr -d '"')
   echo "WM REST API: $wm_restapi_status"
 }
@@ -36,14 +34,13 @@ get_wm_restapi_status () {
 get_wm_webapp_status () {
   # Readiness of WM WebApp
   # Responds with {"status":"READY","workers":[{"id":1,"state":"listening","pid":13}]}
-  wm_webapp_status=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
-      -s -H "$APP_JSON_HDR" http://web-modeler-webapp:8071/health/readiness \
+  wm_webapp_status=$(curl -s -H "$APP_JSON_HDR" http://localhost:8071/health/readiness \
       | jq '.status' | tr -d '"')
   echo "WM WebApp: $wm_webapp_status"
 }
 
 get_access_token () {
-  access_token=$(docker run --rm --net=host curlimages/curl:$CURL_VERSION \
+  access_token=$(curl \
     --location -s --request POST 'http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token' \
     --header 'Content-Type: application/x-www-form-urlencoded' \
     --data-urlencode "client_id=$CLIENT_ID" \
@@ -52,7 +49,7 @@ get_access_token () {
 }
 
 get_wm_info () {
-  wm_api_info=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
+  wm_api_info=$(curl \
     -s -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
     http://$WM_HOST:$WM_PORT/api/v1/info)
   echo $wm_api_info
@@ -72,7 +69,7 @@ create_project () {
 
   get_access_token
 
-  response=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
+  response=$(curl \
       -s -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
       --data "$body" \
         -X POST http://$WM_HOST:$WM_PORT/api/v1/projects)
@@ -101,7 +98,7 @@ add_project_collaborator () {
 
   get_access_token
 
-  response=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
+  response=$(curl \
       -s -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
       --data "$body" \
 	-X PUT http://$WM_HOST:$WM_PORT/api/v1/collaborators)
@@ -133,7 +130,7 @@ create_folder () {
 
   get_access_token
 
-  response=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
+  response=$(curl \
     -s -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
     --data "$body" \
       -X POST http://$WM_HOST:$WM_PORT/api/v1/folders)
@@ -178,7 +175,7 @@ create_file () {
 
   get_access_token
 
-  response=$(docker run --rm --network $network_id curlimages/curl:$CURL_VERSION \
+  response=$(curl \
     -s -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
     --data "$body" \
       -X POST http://$WM_HOST:$WM_PORT/api/v1/files)
