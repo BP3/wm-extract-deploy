@@ -193,30 +193,29 @@ create_file () {
 # Helper functions for testing
 
 # Check for the existence of a file
-file_exists () {
+assert_file_exists () {
   if [ ! -f $1 ]; then
     exit 1
   fi
 }
-file_not_exists () {
+assert_file_not_exists () {
   if [ -f $1 ]; then
     # Error if the file exists
     exit 1
   fi
 }
-file_exists_xml_match () {
-  file_exists $TESTSDIR/$TESTNAME/process.bpmn
+assert_xml_match () {
   xmllint --format $1 > $1.format
   diff --ignore-all-space $2 $1.format
 }
 
 # Check for the existence of a folder
-folder_exists () {
+assert_folder_exists () {
   if [ ! -d $1 ]; then
     exit 1
   fi
 }
-folder_not_exists () {
+assert_folder_not_exists () {
   if [ -d $1 ]; then
     # Error if the folder exists
     exit 1

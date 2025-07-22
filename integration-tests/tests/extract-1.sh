@@ -135,21 +135,23 @@ Then () {
   # Then we have validate what we got back
   # Might be able to do this with a directory level diff
 
-  file_exists $TESTSDIR/$TESTNAME/config.yml
+  assert_file_exists $TESTSDIR/$TESTNAME/config.yml
   ext_project_id=`yq '.project.id' $TESTSDIR/$TESTNAME/config.yml`
   if [ "$ext_project_id" != "$project_id" ]; then
     exit 1
   fi
-  file_exists $TESTSDIR/$TESTNAME/Readme.md
-  file_exists_xml_match $TESTSDIR/$TESTNAME/process.bpmn files/process.bpmn
+  assert_file_exists $TESTSDIR/$TESTNAME/Readme.md
+  assert_file_exists $TESTSDIR/$TESTNAME/process.bpmn
+  assert_xml_match $TESTSDIR/$TESTNAME/process.bpmn files/process.bpmn
 
-  folder_exists $TESTSDIR/$TESTNAME/Folder1
-  file_exists $TESTSDIR/$TESTNAME/Folder1/Readme.md
+  assert_folder_exists $TESTSDIR/$TESTNAME/Folder1
+  assert_file_exists $TESTSDIR/$TESTNAME/Folder1/Readme.md
 
-  file_exists_xml_match $TESTSDIR/$TESTNAME/Folder1/process1.bpmn files/process.bpmn
-  file_not_exists $TESTSDIR/$TESTNAME/Folder1/process2-wmedIgnore.bpmn
+  assert_file_exists $TESTSDIR/$TESTNAME/Folder1/process1.bpmn
+  assert_xml_match $TESTSDIR/$TESTNAME/Folder1/process1.bpmn files/process.bpmn
+  assert_file_not_exists $TESTSDIR/$TESTNAME/Folder1/process2-wmedIgnore.bpmn
 
-  folder_not_exists $TESTSDIR/$TESTNAME/Folder2.wmedIgnore
+  assert_folder_not_exists $TESTSDIR/$TESTNAME/Folder2.wmedIgnore
 }
 
 ############################################################################
