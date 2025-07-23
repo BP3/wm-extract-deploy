@@ -10,11 +10,14 @@
 #
 ############################################################################
 import configargparse
+import logging
 import os
 import re
 from model_action import ModelAction
 from web_modeler import WebModeler, NotFoundError, MultipleFoundError
 from oauth import AuthenticationError
+
+logger = logging.getLogger()
 
 class Extraction(ModelAction):
 
@@ -22,7 +25,7 @@ class Extraction(ModelAction):
         super().__init__(args)
         self.wm = WebModeler(args)
         if args.exclude is not None:
-            print(f"Excluding paths with segments that match {args.exclude}")
+            logger.info("Excluding paths with segments that match %s", args.exclude)
             self.exclude_pattern = re.compile(args.exclude)
         else:
             self.exclude_pattern = None
@@ -43,7 +46,7 @@ class Extraction(ModelAction):
                         break
 
             if included:
-                print(f"Extracting item to {file_path}")
+                logger.info("Extracting item to %s", file_path)
                 if item["canonicalPath"] is not None and item["canonicalPath"]:
                     os.makedirs(os.path.dirname(file_path), exist_ok = True)
 
@@ -57,7 +60,7 @@ class Extraction(ModelAction):
 
             project_id = self.wm.get_project(args.project)["id"]
         except ValueError as error:
-            print(error)
+            logger.error(error)
             parser.print_usage()
             exit(2)
         project_items = self.wm.list_files(project_id)
@@ -74,5 +77,5 @@ if __name__ == "__main__":
     try:
         Extraction(args).main()
     except (AuthenticationError, NotFoundError, MultipleFoundError) as ex:
-        print(ex)
+        logger.error(ex)
         exit(3)
