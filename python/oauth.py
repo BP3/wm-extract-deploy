@@ -11,9 +11,12 @@
 ############################################################################
 import os
 import configargparse
+import logging
 import requests
 from oauthlib.oauth2 import BackendApplicationClient, OAuth2Error
 from requests_oauthlib import OAuth2Session
+
+logger = logging.getLogger()
 
 class AuthenticationError(Exception):
     def __init__(self, status_code = None, response_text = None):
@@ -77,8 +80,8 @@ class OAuth2:
                                                     client_secret=self.client_secret,
                                                     kwargs=data)["access_token"]
         except OAuth2Error as ex:
-            print(f"Error while authenticating: {ex}")
+            logger.exception("Error while authenticating")
             exit(3)
         except requests.exceptions.ConnectionError as ex:
-            print(f"Error while retrieving OAuth token: {ex}")
+            logger.exception("Error while retrieving OAuth token")
             exit(3)
