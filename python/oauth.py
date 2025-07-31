@@ -75,9 +75,7 @@ class OAuth2:
             }
             if self.audience is not None:
                 data["audience"] = self.audience
-            if self.scope is not None:
-                data["scope"] = self.scope
-            client = BackendApplicationClient(client_id=self.client_id)
+            client = BackendApplicationClient(client_id=self.client_id, scope=self.scope)
             oauth = OAuth2Session(client=client)
             os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
             self.__access_token = oauth.fetch_token(token_url=self.token_url,
