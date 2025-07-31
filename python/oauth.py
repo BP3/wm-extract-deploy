@@ -23,14 +23,6 @@ class AuthenticationError(Exception):
 
 
 class OAuth2:
-    __access_token = None
-    token_url = None
-    audience = None
-    grant_type = None
-    scope = None
-    client_id = None
-    client_secret = None
-
     parser = configargparse.ArgumentParser(add_help = False)
     client_id_group = parser.add_mutually_exclusive_group(required = False)
     client_id_group.add_argument("--oauth2-client-id", dest="client_id", help = "OAuth2 client ID",
@@ -59,6 +51,7 @@ class OAuth2:
         self.scope = args.scope
         self.client_id = args.client_id
         self.client_secret = args.client_secret
+        self.__access_token = None
 
     def access_token(self):
         return self.__access_token
