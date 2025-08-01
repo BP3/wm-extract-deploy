@@ -29,9 +29,21 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker image of application
+        id: build
         run: |
+          inspect=$(docker image inspect -f '{{join .RepoDigests "\n"}}' ${{ inputs.image-name }}:${{ inputs.branch-name }} || :)
+          if [ "$inspect" != "" ]; then
+            digest=$(echo $inspect | grep ${{ inputs.image-name }} | cut -d':' -f2)
+          fi
           docker build -t ${{ inputs.image-name }}:${{ inputs.branch-name }} .
+          echo "old_digest=$digest" >> $GITHUB_OUTPUT
 
       - name: Push to local registry
         run: |
           docker push ${{ inputs.image-name }}:${{ inputs.branch-name }}
+
+      - name: Clean up "detached" image
+        run: |
+          if [ "${{ steps.build.outputs.old_digest }}" != "" ]; then
+            docker image rm ${{ steps.build.outputs.old_digest }}
+          fi
