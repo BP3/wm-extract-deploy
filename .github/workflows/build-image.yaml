@@ -31,8 +31,8 @@ jobs:
       - name: Delete all untagged container versions - except last N
         uses: vlaurin/action-ghcr-prune@v0.6.0
         with:
+          user: ${{ inputs.username }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          organization: bp3
           container: ${{ inputs.image-name }}
           dry-run: true
           keep-younger-than: 7
