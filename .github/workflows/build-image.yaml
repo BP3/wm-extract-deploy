@@ -29,12 +29,15 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Delete all untagged container versions - except last N
-        uses: actions/delete-package-versions@v5
+        uses: vlaurin/action-ghcr-prune@v0.6.0
         with:
-          package-name: ${{ inputs.image-name }}
-          package-type: 'container'
-          min-versions-to-keep: 12
-          delete-only-untagged-versions: 'true'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          organization: bp3
+          container: ${{ inputs.image-name }}
+          dry-run: true
+          keep-younger-then: 7
+          keep-last: 12
+          rune-untagged: true
 
       - name: Build Docker image of application
         run: |
