@@ -35,9 +35,9 @@ jobs:
           organization: bp3
           container: ${{ inputs.image-name }}
           dry-run: true
-          keep-younger-then: 7
+          keep-younger-than: 7
           keep-last: 12
-          rune-untagged: true
+          prune-untagged: true
 
       - name: Build Docker image of application
         run: |
