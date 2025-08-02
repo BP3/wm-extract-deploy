@@ -28,9 +28,16 @@ jobs:
           username: ${{ inputs.username }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Delete all untagged container versions - except last N
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ inputs.image-name }}
+          package-type: 'container'
+          min-versions-to-keep: 12
+          delete-only-untagged-versions: 'true'
+
       - name: Build Docker image of application
         run: |
-          docker image rm ${{ inputs.image-name }}:${{ inputs.branch-name }}
           docker build -t ${{ inputs.image-name }}:${{ inputs.branch-name }} .
 
       - name: Push to local registry
