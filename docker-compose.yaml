@@ -188,7 +188,7 @@ services:
 
   postgres: # https://hub.docker.com/_/postgres
     container_name: postgres
-    image: ${POSTGRES_REGISTRY}postgres:${POSTGRES_VERSION}
+    image: ${POSTGRES_REGISTRY}/postgres:${POSTGRES_VERSION}
     environment:
       POSTGRES_DB: bitnami_keycloak
       POSTGRES_USER: bn_keycloak
@@ -261,7 +261,7 @@ services:
 
   web-modeler-db:
     container_name: web-modeler-db
-    image: ${POSTGRES_REGISTRY}postgres:${POSTGRES_VERSION}
+    image: ${POSTGRES_REGISTRY}/postgres:${POSTGRES_VERSION}
     healthcheck:
       test: pg_isready -d web-modeler-db -U web-modeler-db-user
       interval: 5s
