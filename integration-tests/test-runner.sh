@@ -32,7 +32,7 @@ else
   echo "Docker image $IMAGE_NAME:$IMAGE_REF found"
 fi
 
-status='Success'
+suiteStatus='Success'
 # Are we running as part of a pipeline
 if [ ! -n "$CI" ]; then
   alias "docker-compose"='docker compose'
@@ -61,7 +61,7 @@ run_test () {
   rc=$?
   if [ $rc -ne 0 ]; then
     echo "Test $1 completed with an error"
-    status='Failure'
+    suiteStatus='Failure'
   else
     echo "Test completed successfully"
   fi
@@ -76,7 +76,7 @@ run_test () {
 done
 
 # See if ANY of the tests failed
-if [ "$status" = "Success" ]; then
+if [ "$suiteStatus" = "Success" ]; then
   rc=0
 else
   rc=1
