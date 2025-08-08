@@ -70,7 +70,8 @@ run_test () {
   docker-compose -f $1 down
 }
 
-'ls' -1S $TESTSDIR/tests/extract*.sh | while read tst; do
+testsType=`echo $composeFile | cut -d'-' -f1`
+'ls' -1S $TESTSDIR/tests/${testsType}*.sh | while read tst; do
   tst=`basename $tst`
   run_test $composeFile $tst
 done

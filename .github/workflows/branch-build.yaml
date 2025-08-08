@@ -30,7 +30,7 @@ jobs:
           sudo apt-get install -y docker-compose libxml2-utils
 
       - name: Pre-fetch the images we want to use
-        run: integration-tests/load-images.sh extract-compose.yaml
+        run: integration-tests/load-images.sh
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -44,3 +44,6 @@ jobs:
 
       - name: Run extract tests
         run: integration-tests/test-runner.sh ${{ github.head_ref || github.ref_name }} extract-compose.yaml
+
+      - name: Run deploy tests
+        run: integration-tests/test-runner.sh ${{ github.head_ref || github.ref_name }} deploy-compose.yaml
