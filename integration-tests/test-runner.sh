@@ -15,15 +15,15 @@
 if [ "$TESTSDIR" = "" ]; then
   TESTSDIR=`dirname $0`
 fi
-IMAGE_NAME=bp3/wm-extract-deploy
+IMAGE_NAME=ghcr.io/bp3/wm-extract-deploy
 IMAGE_REF=$1
 composeFile=$2
 
 # Want to make sure that we have the image we are supposed to be working with
-image=`docker images --format "{{.ID}} \t{{.Repository}} \t{{.Tag}}" --filter=reference="ghcr.io/$IMAGE_NAME:$IMAGE_REF" | wc -l`
+image=`docker images --format "{{.ID}} \t{{.Repository}} \t{{.Tag}}" --filter=reference="$IMAGE_NAME:$IMAGE_REF" | wc -l`
 if [ $(( image )) -ne 1 ]; then
   echo "Image $IMAGE_NAME:$IMAGE_REF not found, so pull it from registry"
-  docker pull ghcr.io/$IMAGE_NAME:$IMAGE_REF
+  docker pull $IMAGE_NAME:$IMAGE_REF
   if [ $? -ge 0 ]; then
     echo "Image $IMAGE_NAME:$IMAGE_REF not found in registry, so exit\!"
     exit 1
