@@ -37,7 +37,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pre-fetch the images we want to use
-        run: integration-tests/load-images.sh extract-compose.yaml
+        run: integration-tests/load-images.sh
 
       - name: Pull image to test
         run: docker pull $GITHUB_IMAGE_NAME:${{ github.head_ref || github.ref_name }}
