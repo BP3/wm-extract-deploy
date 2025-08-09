@@ -18,16 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-#      # Don't think that we need anything from the repository
-#      - name: Checkout repository
-#        uses: actions/checkout@v4
-
-# We certainly don't need to build the image
-#      # Build the docker image and apply the tag
-#      - name: Build Docker image of application
-#        run: |
-#          docker build -t $DOCKER_IMAGE_NAME:$GITHUB_REF_NAME .
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -38,7 +28,7 @@ jobs:
       # Pull the docker image and apply the tag
       - name: Pull Docker image of application
         run: |
-          docker pull ${{ env.GITHUB_IMAGE_NAME }}:main
+          docker pull $GITHUB_IMAGE_NAME:main
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -48,12 +38,12 @@ jobs:
 
       - name: Tag image and push to local registry
         run: |
-          docker tag {{ env.GITHUB_IMAGE_NAME }}:main {{ env.GITHUB_IMAGE_NAME }}:${{ github.head_ref || github.ref_name }}
-          docker push {{ env.GITHUB_IMAGE_NAME }}:${{ github.head_ref || github.ref_name }}
+          docker tag $GITHUB_IMAGE_NAME:main $GITHUB_IMAGE_NAME:$GITHUB_REF_NAME
+          docker push $GITHUB_IMAGE_NAME:$GITHUB_REF_NAME
 
       - name: Tag and push image to Docker Hub
         run: |
-          docker tag {{ env.GITHUB_IMAGE_NAME }}:$GITHUB_REF_NAME ${{ env.DOCKER_IMAGE_NAME }}:${{ github.head_ref || github.ref_name }}
-          docker tag {{ env.GITHUB_IMAGE_NAME }}:$GITHUB_REF_NAME {{ env.DOCKER_IMAGE_NAME }}:latest
-          docker push {{ env.DOCKER_IMAGE_NAME }}:${{ github.head_ref || github.ref_name }}
-          docker push {{ env.DOCKER_IMAGE_NAME }}:latest
+          docker tag $GITHUB_IMAGE_NAME:$GITHUB_REF_NAME $DOCKER_IMAGE_NAME:$GITHUB_REF_NAME
+          docker tag $GITHUB_IMAGE_NAME:$GITHUB_REF_NAME $DOCKER_IMAGE_NAME:latest
+          docker push $DOCKER_IMAGE_NAME:$GITHUB_REF_NAME
+          docker push $DOCKER_IMAGE_NAME:latest

@@ -26,6 +26,7 @@ envFile=.env
 # Load environment variables
 . ./$envFile
 
+# You will need to set GHCR_PAT locally for this command to work
 echo $GHCR_PAT | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
 
 # Read compose file(s) to find which images we need

@@ -18,8 +18,6 @@ envFile=.env
 echo "Loading environment variables"
 . ./$envFile
 
-env | sort
-
 # Read compose file to find which images we need
 cat *-compose.yaml | grep -v '^#' | grep 'image:' | sort -u | while read imageLine; do
   imgRef=`echo $imageLine | cut -d' ' -f2`
