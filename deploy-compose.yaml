@@ -53,6 +53,52 @@ services:
       - elasticsearch
       - identity
 
+  operate: # https://docs.camunda.io/docs/self-managed/platform-deployment/docker/#operate
+    image: ${CAMUNDA_REGISTRY}/operate:${CAMUNDA_OPERATE_VERSION}
+    container_name: operate
+    ports:
+      - "8081:8080"
+    environment: # https://docs.camunda.io/docs/self-managed/operate-deployment/configuration/
+      - CAMUNDA_OPERATE_ZEEBE_GATEWAYADDRESS=zeebe:26500
+      - ZEEBE_CLIENT_ID=${ZEEBE_CLIENT_ID}
+      - ZEEBE_CLIENT_SECRET=${ZEEBE_CLIENT_SECRET}
+      - ZEEBE_TOKEN_AUDIENCE=zeebe-api
+      - ZEEBE_AUTHORIZATION_SERVER_URL=http://keycloak:18080/auth/realms/camunda-platform/protocol/openid-connect/token
+      - CAMUNDA_OPERATE_ELASTICSEARCH_URL=http://elasticsearch:9200
+      - CAMUNDA_OPERATE_ZEEBEELASTICSEARCH_URL=http://elasticsearch:9200
+      # For more information regarding configuration with Identity see:
+      # https://docs.camunda.io/docs/self-managed/operate-deployment/authentication/#identity
+      - SPRING_PROFILES_ACTIVE=identity-auth
+      - CAMUNDA_OPERATE_IDENTITY_BASEURL=http://identity:8084
+      - CAMUNDA_OPERATE_IDENTITY_ISSUER_URL=http://${KEYCLOAK_HOST}:18080/auth/realms/camunda-platform
+      - CAMUNDA_OPERATE_IDENTITY_ISSUER_BACKEND_URL=http://keycloak:18080/auth/realms/camunda-platform
+      - CAMUNDA_OPERATE_IDENTITY_CLIENTID=operate
+      - CAMUNDA_OPERATE_IDENTITY_CLIENTSECRET=XALaRPl5qwTEItdwCMiPS62nVpKs7dL7
+      - CAMUNDA_OPERATE_IDENTITY_AUDIENCE=operate-api
+      - CAMUNDA_OPERATE_MULTITENANCY_ENABLED=${MULTI_TENANCY_ENABLED}
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:18080/auth/realms/camunda-platform
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:18080/auth/realms/camunda-platform/protocol/openid-connect/certs
+      - CAMUNDA_OPERATE_IDENTITY_RESOURCEPERMISSIONSENABLED=${RESOURCE_AUTHORIZATIONS_ENABLED}
+      - CAMUNDA_DATABASE_URL=http://elasticsearch:9200
+      - management.endpoints.web.exposure.include=health,info,metrics,prometheus,configprops
+      - MANAGEMENT_ENDPOINT_CONFIGPROPS_SHOW_VALUES=ALWAYS
+      - management.endpoint.health.probes.enabled=true
+      - ZEEBE_CLIENT_CONFIG_PATH=/tmp/zeebe_auth_cache
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -O - -q 'http://localhost:9600/actuator/health/readiness'" ]
+      interval: 30s
+      timeout: 1s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - operate_tmp:/tmp
+    networks:
+      - camunda-platform
+    depends_on:
+      - zeebe
+      - identity
+      - elasticsearch
+
   identity: # https://docs.camunda.io/docs/self-managed/platform-deployment/docker/#identity
     container_name: identity
     image: ${CAMUNDA_REGISTRY}/identity:${CAMUNDA_IDENTITY_VERSION}
