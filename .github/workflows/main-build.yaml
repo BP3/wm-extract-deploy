@@ -1,8 +1,5 @@
 name: Build main
 
-env:
-  GITHUB_IMAGE_NAME: ghcr.io/bp3/wm-extract-deploy
-
 on:
   push:
     branches:
@@ -17,6 +14,6 @@ jobs:
     uses: ./.github/workflows/build-image.yaml
     with:
       username: ${{ github.actor }}
-      image-name: ${{ image-name }}
+      image-name: ghcr.io/bp3/wm-extract-deploy
       branch-name: ${{ github.head_ref || github.ref_name }}
     secrets: inherit
