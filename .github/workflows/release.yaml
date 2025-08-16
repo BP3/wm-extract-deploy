@@ -18,16 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-#      # Don't think that we need anything from the repository
-#      - name: Checkout repository
-#        uses: actions/checkout@v4
-
-# We certainly don't need to build the image
-#      # Build the docker image and apply the tag
-#      - name: Build Docker image of application
-#        run: |
-#          docker build -t $DOCKER_IMAGE_NAME:$GITHUB_REF_NAME .
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
