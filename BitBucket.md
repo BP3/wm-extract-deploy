@@ -148,8 +148,8 @@ definitions:
             - |
               export ZEEBE_CLIENT_ID=$CAMUNDA_ZEEBE_CLIENT_ID
               export ZEEBE_CLIENT_SECRET=$CAMUNDA_ZEEBE_CLIENT_SECRET
-              export CAMUNDA_CLUSTER_ID=$CAMUNDA_CLUSTER_ID
-              export CAMUNDA_CLUSTER_REGION=$CAMUNDA_CLUSTER_REGION
+              export CLUSTER_ID=$CAMUNDA_CLUSTER_ID
+              export CLUSTER_REGION=$CAMUNDA_CLUSTER_REGION
               export PROJECT_TAG=$DEPLOY_TAG
               /scripts/extractDeploy.sh deploy
               
@@ -165,8 +165,8 @@ definitions:
             - |
               export ZEEBE_CLIENT_ID=$CAMUNDA_ZEEBE_CLIENT_ID
               export ZEEBE_CLIENT_SECRET=$CAMUNDA_ZEEBE_CLIENT_SECRET
-              export CAMUNDA_CLUSTER_HOST=$CAMUNDA_CLUSTER_HOST
-              export CAMUNDA_CLUSTER_PORT=$CAMUNDA_CLUSTER_PORT
+              export CLUSTER_HOST=$CAMUNDA_CLUSTER_HOST
+              export CLUSTER_PORT=$CAMUNDA_CLUSTER_PORT
               export PROJECT_TAG=$DEPLOY_TAG
               export OAUTH2_TOKEN_URL=$OAUTH2_TOKEN_URL
               /scripts/extractDeploy.sh deploy

@@ -104,8 +104,8 @@ jobs:
         env:
           ZEEBE_CLIENT_ID: ${{ vars.CAMUNDA_ZEEBE_CLIENT_ID }}
           ZEEBE_CLIENT_SECRET: ${{ secrets.CAMUNDA_ZEEBE_CLIENT_SECRET }}
-          CAMUNDA_CLUSTER_ID: ${{ vars.CAMUNDA_CLUSTER_ID }}
-          CAMUNDA_CLUSTER_REGION: ${{ vars.CAMUNDA_CLUSTER_REGION }}
+          CLUSTER_ID: ${{ vars.CAMUNDA_CLUSTER_ID }}
+          CLUSTER_REGION: ${{ vars.CAMUNDA_CLUSTER_REGION }}
           PROJECT_TAG: ${{ inputs.deploy_tag }}
           OAUTH2_TOKEN_URL: ${{ vars.OAUTH2_TOKEN_URL }}
         run:
