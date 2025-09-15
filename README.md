@@ -136,7 +136,6 @@ docker run -it --rm \
       -e CICD_SERVER_HOST="<The host of the GIT server. Only needed if using GitLab>" \
       -e CICD_ACCESS_TOKEN="<CI platform access token>" \
       -e CICD_REPOSITORY_PATH="<The path of the repository>" \
-      -e OAUTH2_TOKEN_URL="<The OAuth2 Token URL>" \
           bp3global/wm-extract-deploy deploy templates
 ```
 
@@ -198,7 +197,7 @@ project:
 ## Docker and hostnames
 If you are running the extract/deploy app on the same host as the Zeebe docker stack (i.e. on a developer's computer)
 you need to make some changes to the Docker compose file for the Zeebe stack in order for the authentication to work
-between the local containers, or your will get `An error occurred while attempting to decode the Jwt: The iss claim is not valid`
+between the local containers, or you will get `An error occurred while attempting to decode the Jwt: The iss claim is not valid`
 
 Assuming that you are using the docker compose files from [this repo](https://github.com/camunda/camunda-platform); In the directory with the Camunda 8
 docker-compose file you should edit the `.env` file and change the `HOST` variable from `localhost` to your hosts IP address.
@@ -231,4 +230,4 @@ You can use the standard client id: `zeebe` and client secret: `zecret`, or add
 
 `docker build -t bp3global/wm-extract-deploy .`
 
-See (TESTING.md)
+See [TESTING.md](TESTING.md)
