@@ -64,6 +64,7 @@ class Deployment(ModelAction):
         elif self.cluster_host is not None and self.cluster_host != "":
             if self.oauth.client_id:
                 grpc_channel = create_oauth2_client_credentials_channel(
+                    grpc_address = self.cluster_host + ':' + str(self.cluster_port),
                     client_id = self.oauth.client_id,
                     client_secret = self.oauth.client_secret,
                     authorization_server = self.oauth.token_url,
