@@ -52,16 +52,16 @@ pipelines:
             - docker
           script:
             - |
+              export CAMUNDA_WM_PROJECT=$CAMUNDA_WM_PROJECT
               export CICD_PLATFORM="bitbucket"
               export CICD_SERVER_HOST="bitbucket.org"
               export CICD_ACCESS_TOKEN=$BUILD_ACCOUNT_ACCESS_TOKEN
               export CICD_REPOSITORY_PATH=$BITBUCKET_REPO_FULL_NAME
               export CICD_BRANCH=$BITBUCKET_BRANCH
-              export CAMUNDA_WM_CLIENT_ID=$CAMUNDA_WM_CLIENT_ID
-              export CAMUNDA_WM_CLIENT_SECRET=$CAMUNDA_WM_CLIENT_SECRET
-              export CAMUNDA_WM_PROJECT=$CAMUNDA_WM_PROJECT
               export GIT_USERNAME=$BUILD_ACCOUNT_USER
               export GIT_USER_EMAIL=$BUILD_ACCOUNT_EMAIL
+              export OAUTH2_CLIENT_ID=$CAMUNDA_WM_CLIENT_ID
+              export OAUTH2_CLIENT_SECRET=$CAMUNDA_WM_CLIENT_SECRET
               export OAUTH2_TOKEN_URL=$OAUTH2_TOKEN_URL
               export SKIP_CI="true"
               /scripts/extractDeploy.sh extract
@@ -75,11 +75,11 @@ pipelines:
             - docker
           script:
             - |
-              export ZEEBE_CLIENT_ID=$CAMUNDA_ZEEBE_CLIENT_ID
-              export ZEEBE_CLIENT_SECRET=$CAMUNDA_ZEEBE_CLIENT_SECRET
-              export CAMUNDA_CLUSTER_ID=$CAMUNDA_CLUSTER_ID
-              export CAMUNDA_CLUSTER_REGION=$CAMUNDA_CLUSTER_REGION
+              export OAUTH2_CLIENT_ID=$CAMUNDA_ZEEBE_CLIENT_ID
+              export OAUTH2_CLIENT_SECRET=$CAMUNDA_ZEEBE_CLIENT_SECRET
               export PROJECT_TAG=$DEPLOY_TAG
+              export ZEEBE_CLUSTER_ID=$CAMUNDA_CLUSTER_ID
+              export ZEEBE_CLUSTER_REGION=$CAMUNDA_CLUSTER_REGION
               /scripts/extractDeploy.sh deploy
               
     deploy-sm-dc:
@@ -92,12 +92,12 @@ pipelines:
             - docker
           script:
             - |
-              export ZEEBE_CLIENT_ID=$CAMUNDA_ZEEBE_CLIENT_ID
-              export ZEEBE_CLIENT_SECRET=$CAMUNDA_ZEEBE_CLIENT_SECRET
-              export CAMUNDA_CLUSTER_HOST=$CAMUNDA_CLUSTER_HOST
-              export CAMUNDA_CLUSTER_PORT=$CAMUNDA_CLUSTER_PORT
-              export PROJECT_TAG=$DEPLOY_TAG
+              export OAUTH2_CLIENT_ID=$CAMUNDA_ZEEBE_CLIENT_ID
+              export OAUTH2_CLIENT_SECRET=$CAMUNDA_ZEEBE_CLIENT_SECRET
               export OAUTH2_TOKEN_URL=$OAUTH2_TOKEN_URL
+              export PROJECT_TAG=$DEPLOY_TAG
+              export ZEEBE_CLUSTER_HOST=$CAMUNDA_CLUSTER_HOST
+              export ZEEBE_CLUSTER_PORT=$CAMUNDA_CLUSTER_PORT
               /scripts/extractDeploy.sh deploy
 ```
 
@@ -121,20 +121,20 @@ definitions:
             - docker
           script:
             - |
+              export CAMUNDA_WM_PROJECT=$CAMUNDA_WM_PROJECT
               export CICD_PLATFORM="bitbucket"
               export CICD_SERVER_HOST="bitbucket.org"
               export CICD_ACCESS_TOKEN=$BUILD_ACCOUNT_ACCESS_TOKEN
               export CICD_REPOSITORY_PATH=$BITBUCKET_REPO_FULL_NAME
               export CICD_BRANCH=$BITBUCKET_BRANCH
-              export CAMUNDA_WM_CLIENT_ID=$CAMUNDA_WM_CLIENT_ID
-              export CAMUNDA_WM_CLIENT_SECRET=$CAMUNDA_WM_CLIENT_SECRET
-              export CAMUNDA_WM_PROJECT=$CAMUNDA_WM_PROJECT
-              export CAMUNDA_CLUSTER_ID=$CAMUNDA_CLUSTER_ID
-              export CAMUNDA_CLUSTER_REGION=$CAMUNDA_CLUSTER_REGION
               export GIT_USERNAME=$BUILD_ACCOUNT_USER
               export GIT_USER_EMAIL=$BUILD_ACCOUNT_EMAIL
-              export SKIP_CI="true"
+              export OAUTH2_CLIENT_ID=$CAMUNDA_WM_CLIENT_ID
+              export OAUTH2_CLIENT_SECRET=$CAMUNDA_WM_CLIENT_SECRET
               export OAUTH2_TOKEN_URL=$OAUTH2_TOKEN_URL
+              export SKIP_CI="true"
+              export ZEEBE_CLUSTER_ID=$CAMUNDA_CLUSTER_ID
+              export ZEEBE_CLUSTER_REGION=$CAMUNDA_CLUSTER_REGION
               /scripts/extractDeploy.sh extract
     deploy-saas:
       - variables:
@@ -146,11 +146,11 @@ definitions:
             - docker
           script:
             - |
-              export ZEEBE_CLIENT_ID=$CAMUNDA_ZEEBE_CLIENT_ID
-              export ZEEBE_CLIENT_SECRET=$CAMUNDA_ZEEBE_CLIENT_SECRET
-              export CAMUNDA_CLUSTER_ID=$CAMUNDA_CLUSTER_ID
-              export CAMUNDA_CLUSTER_REGION=$CAMUNDA_CLUSTER_REGION
+              export OAUTH2_CLIENT_ID=$CAMUNDA_ZEEBE_CLIENT_ID
+              export OAUTH2_CLIENT_SECRET=$CAMUNDA_ZEEBE_CLIENT_SECRET
               export PROJECT_TAG=$DEPLOY_TAG
+              export ZEEBE_CLUSTER_ID=$CAMUNDA_CLUSTER_ID
+              export ZEEBE_CLUSTER_REGION=$CAMUNDA_CLUSTER_REGION
               /scripts/extractDeploy.sh deploy
               
     deploy-sm-dc:
@@ -163,12 +163,12 @@ definitions:
             - docker
           script:
             - |
-              export ZEEBE_CLIENT_ID=$CAMUNDA_ZEEBE_CLIENT_ID
-              export ZEEBE_CLIENT_SECRET=$CAMUNDA_ZEEBE_CLIENT_SECRET
-              export CAMUNDA_CLUSTER_HOST=$CAMUNDA_CLUSTER_HOST
-              export CAMUNDA_CLUSTER_PORT=$CAMUNDA_CLUSTER_PORT
-              export PROJECT_TAG=$DEPLOY_TAG
+              export OAUTH2_CLIENT_ID=$CAMUNDA_ZEEBE_CLIENT_ID
+              export OAUTH2_CLIENT_SECRET=$CAMUNDA_ZEEBE_CLIENT_SECRET
               export OAUTH2_TOKEN_URL=$OAUTH2_TOKEN_URL
+              export PROJECT_TAG=$DEPLOY_TAG
+              export ZEEBE_CLUSTER_HOST=$CAMUNDA_CLUSTER_HOST
+              export ZEEBE_CLUSTER_PORT=$CAMUNDA_CLUSTER_PORT
               /scripts/extractDeploy.sh deploy
 ```
 

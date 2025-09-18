@@ -10,6 +10,8 @@
 #
 ############################################################################
 import os
+from argparse import _MutuallyExclusiveGroup
+
 import configargparse
 import logging
 import requests
@@ -26,25 +28,33 @@ class AuthenticationError(Exception):
 
 
 class OAuth2:
+    @staticmethod
+    def add_deprecated_options(client_id_group: _MutuallyExclusiveGroup, client_secret_group: _MutuallyExclusiveGroup):
+        client_id_group.add_argument("--camunda-wm-client-id", dest="client_id", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth-client-id instead",
+                                     env_var = "CAMUNDA_WM_CLIENT_ID", deprecated = True)
+        client_id_group.add_argument("--zeebe-client-id", dest="client_id", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth-client-id instead",
+                                     env_var = "ZEEBE_CLIENT_ID", deprecated = True)
+        client_secret_group.add_argument("--camunda-wm-client-secret", dest="client_secret", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth-client-secret instead",
+                                         env_var = "CAMUNDA_WM_CLIENT_SECRET", deprecated = True)
+        client_secret_group.add_argument("--zeebe-client-secret", dest="client_secret", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth-client-secret instead",
+                                         env_var = "ZEEBE_CLIENT_SECRET", deprecated = True)
+
     parser = configargparse.ArgumentParser(add_help = False)
     client_id_group = parser.add_mutually_exclusive_group(required = False)
     client_id_group.add_argument("--oauth2-client-id", dest="client_id", help = "OAuth2 client ID",
                         env_var = "OAUTH2_CLIENT_ID")
-    client_id_group.add_argument("--camunda-wm-client-id", dest="client_id", help = "Deprecated: Use --oauth-client-id instead",
-                        env_var = "CAMUNDA_WM_CLIENT_ID", deprecated = True)
     client_secret_group = parser.add_mutually_exclusive_group(required = False)
     client_secret_group.add_argument("--oauth2-client-secret", dest="client_secret", help = "OAuth2 client secret",
                         env_var = "OAUTH2_CLIENT_SECRET")
-    client_secret_group.add_argument("--camunda-wm-client-secret", dest="client_secret", help = "Deprecated: Use --oauth-client-secret instead",
-                        env_var = "CAMUNDA_WM_CLIENT_SECRET", deprecated = True)
     parser.add_argument("--oauth2-token-url", dest="token_url", help = "OAuth2 Token URL",
                         env_var = "OAUTH2_TOKEN_URL")
     parser.add_argument("--oauth2-audience", dest="audience", help = "OAuth2 audience",
                         env_var = "OAUTH2_AUDIENCE")
-    parser.add_argument("--oauth2-grant-type", dest="grant_type", help = configargparse.SUPPRESS, #"OAuth2 audience",
+    parser.add_argument("--oauth2-grant-type", dest="grant_type", help = "OAuth2 grant type",
                         env_var = "OAUTH2_GRANT_TYPE", default = "client_credentials", choices = ["client_credentials", "password"])
     parser.add_argument("--oauth2-scope", dest="scope", help = "OAuth2 scope",
                         env_var = "OAUTH2_SCOPE")
+    add_deprecated_options(client_id_group, client_secret_group)
 
     def __init__(self, args):
         super().__init__()

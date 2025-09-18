@@ -9,6 +9,8 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
+from argparse import _MutuallyExclusiveGroup
+
 import configargparse
 import asyncio
 import glob
@@ -64,6 +66,7 @@ class Deployment(ModelAction):
         elif self.cluster_host is not None and self.cluster_host != "":
             if self.oauth.client_id:
                 grpc_channel = create_oauth2_client_credentials_channel(
+                    grpc_address = self.cluster_host + ':' + str(self.cluster_port),
                     client_id = self.oauth.client_id,
                     client_secret = self.oauth.client_secret,
                     authorization_server = self.oauth.token_url,
@@ -117,6 +120,25 @@ class Deployment(ModelAction):
             logger.error(cast(AioRpcError, ex.__cause__)._details)
             exit(3)
 
+    @staticmethod
+    def add_deprecated_options(cluster_group: _MutuallyExclusiveGroup, cluster_secondary: _MutuallyExclusiveGroup):
+        cluster_group.add_argument("--camunda-cluster-id", dest="cluster_id", help = configargparse.SUPPRESS, #"Deprecated: Use --cluster-id instead",
+                                       env_var = "CAMUNDA_CLUSTER_ID", deprecated = True)
+        cluster_group.add_argument("--zeebe-cluster-id", dest="cluster_id", help = configargparse.SUPPRESS, #"Deprecated: Use --cluster-id instead",
+                                       env_var="ZEEBE_CLUSTER_ID", deprecated = True)
+        cluster_group.add_argument("--camunda-cluster-host", dest="cluster_host", help = configargparse.SUPPRESS, #"Deprecated: Use --cluster-host instead",
+                                       env_var = "CAMUNDA_CLUSTER_HOST", deprecated = True)
+        cluster_group.add_argument("--zeebe-cluster-host", dest="cluster_host", help = configargparse.SUPPRESS, #"Deprecated: Use --cluster-host instead",
+                                       env_var="ZEEBE_CLUSTER_HOST", deprecated = True)
+        cluster_secondary.add_argument("--camunda-cluster-region", dest="cluster_region", help = configargparse.SUPPRESS, #"Deprecated: Use --cluster-region instead",
+                                       env_var = "CAMUNDA_CLUSTER_REGION", deprecated = True)
+        cluster_secondary.add_argument("--zeebe-cluster-region", dest="cluster_region", help = configargparse.SUPPRESS, #"Deprecated: Use --cluster-region instead",
+                                       env_var="ZEEBE_CLUSTER_REGION", deprecated = True)
+        cluster_secondary.add_argument("--camunda-cluster-port", dest="cluster_port", help = configargparse.SUPPRESS, #"Deprecated: Use --cluster-port instead",
+                                       env_var = "CAMUNDA_CLUSTER_PORT", deprecated = True)
+        cluster_secondary.add_argument("--zeebe-cluster-port", dest="cluster_port", help = configargparse.SUPPRESS, #"Deprecated: Use --cluster-port instead",
+                                       env_var="ZEEBE_CLUSTER_PORT", deprecated = True)
+
 
 if __name__ == "__main__":
     parser = configargparse.ArgumentParser(parents = [ModelAction.parser, OAuth2.parser],
@@ -128,9 +150,10 @@ if __name__ == "__main__":
                                env_var="ZEEBE_CLUSTER_HOST")
     cluster_secondary = parser.add_mutually_exclusive_group(required = False)
     cluster_secondary.add_argument("--cluster-region", dest="cluster_region", help="For SaaS",
-                                   env_var="ZEEBE_CLUSTER_REGION")
+                                   env_var="CLUSTER_REGION")
     cluster_secondary.add_argument("--cluster-port", type=int, dest="cluster_port", help="For self managed",
-                                   env_var="ZEEBE_CLUSTER_PORT", default=26500)
+                                   env_var="CLUSTER_PORT", default=26500)
+    Deployment.add_deprecated_options(cluster_group, cluster_secondary)
     parser.add_argument("--tenant-ids", dest="tenant_ids", help="Comma separated list of tenant IDs", env_var="ZEEBE_TENANT_IDS")
     parser.add_argument("--continue-on-error", nargs="?", const=True, dest="continue_on_error",
                         help="Continue deploying files even if one has errors", env_var="CONTINUE_ON_ERROR", default=False)
