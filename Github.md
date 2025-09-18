@@ -62,15 +62,15 @@ jobs:
 
       - name: Extract resource files
         env:
+          CAMUNDA_WM_PROJECT: ${{ vars.CAMUNDA_WM_PROJECT }}
           CICD_PLATFORM: "github"
           CICD_ACCESS_TOKEN: ${{ secrets.BUILD_ACCOUNT_ACCESS_TOKEN }}
           CICD_REPOSITORY_PATH: ${{ github.repository }}
           CICD_BRANCH: ${{ github.ref_name }}
-          CAMUNDA_WM_CLIENT_ID: ${{ vars.CAMUNDA_WM_CLIENT_ID }}
-          CAMUNDA_WM_CLIENT_SECRET: ${{ secrets.CAMUNDA_WM_CLIENT_SECRET }}
-          CAMUNDA_WM_PROJECT: ${{ vars.CAMUNDA_WM_PROJECT }}
           GIT_USERNAME: ${{ vars.BUILD_ACCOUNT_USER }}
           GIT_USER_EMAIL: ${{ vars.BUILD_ACCOUNT_EMAIL }}
+          OAUTH2_CLIENT_ID: ${{ vars.CAMUNDA_WM_CLIENT_ID }}
+          OAUTH2_CLIENT_SECRET: ${{ secrets.CAMUNDA_WM_CLIENT_SECRET }}
           OAUTH2_TOKEN_URL: ${{ vars.OAUTH2_TOKEN_URL }}
           SKIP_CI: "true"
         run:
@@ -102,12 +102,12 @@ jobs:
 
       - name: Extract resource files
         env:
-          ZEEBE_CLIENT_ID: ${{ vars.CAMUNDA_ZEEBE_CLIENT_ID }}
-          ZEEBE_CLIENT_SECRET: ${{ secrets.CAMUNDA_ZEEBE_CLIENT_SECRET }}
-          CAMUNDA_CLUSTER_ID: ${{ vars.CAMUNDA_CLUSTER_ID }}
-          CAMUNDA_CLUSTER_REGION: ${{ vars.CAMUNDA_CLUSTER_REGION }}
           PROJECT_TAG: ${{ inputs.deploy_tag }}
+          OAUTH2_CLIENT_ID: ${{ vars.CAMUNDA_ZEEBE_CLIENT_ID }}
+          OAUTH2_CLIENT_SECRET: ${{ secrets.CAMUNDA_ZEEBE_CLIENT_SECRET }}
           OAUTH2_TOKEN_URL: ${{ vars.OAUTH2_TOKEN_URL }}
+          ZEEBE_CLUSTER_ID: ${{ vars.CAMUNDA_CLUSTER_ID }}
+          ZEEBE_CLUSTER_REGION: ${{ vars.CAMUNDA_CLUSTER_REGION }}
         run:
           /scripts/extractDeploy.sh deploy
 ```
