@@ -70,7 +70,8 @@ class Deployment(ModelAction):
                     client_id = self.oauth.client_id,
                     client_secret = self.oauth.client_secret,
                     authorization_server = self.oauth.token_url,
-                    audience = self.oauth.audience
+                    audience = self.oauth.audience,
+                    scope = self.oauth.scope
                 )
             else:
                 grpc_channel = create_insecure_channel(
