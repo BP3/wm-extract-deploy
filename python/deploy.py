@@ -145,9 +145,9 @@ if __name__ == "__main__":
                                            formatter_class=configargparse.ArgumentDefaultsHelpFormatter)
     cluster_group = parser.add_mutually_exclusive_group(required = True)
     cluster_group.add_argument("--cluster-id", dest="cluster_id", help="For SaaS",
-                               env_var="ZEEBE_CLUSTER_ID")
+                               env_var="CLUSTER_ID")
     cluster_group.add_argument("--cluster-host", dest="cluster_host", help="For self managed",
-                               env_var="ZEEBE_CLUSTER_HOST")
+                               env_var="CLUSTER_HOST")
     cluster_secondary = parser.add_mutually_exclusive_group(required = False)
     cluster_secondary.add_argument("--cluster-region", dest="cluster_region", help="For SaaS",
                                    env_var="CLUSTER_REGION")
