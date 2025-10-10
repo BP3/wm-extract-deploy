@@ -70,10 +70,19 @@ run_test () {
   docker-compose -f $1 down
 }
 
-'ls' -1S $TESTSDIR/tests/extract*.sh | while read tst; do
-  tst=`basename $tst`
-  run_test $composeFile $tst
-done
+if [ $composeFile = "extract-compose.yaml" ]; then
+  'ls' -1S $TESTSDIR/tests/extract*.sh | while read tst; do
+    tst=`basename $tst`
+    run_test $composeFile $tst
+  done
+fi
+
+if [ $composeFile = "deploy-compose.yaml" ]; then
+  'ls' -1S $TESTSDIR/tests/deploy*.sh | while read tst; do
+    tst=`basename $tst`
+    run_test $composeFile $tst
+  done
+fi
 
 # See if ANY of the tests failed
 if [ "$status" = "Success" ]; then

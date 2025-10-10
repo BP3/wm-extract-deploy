@@ -17,3 +17,12 @@
 get_network_id () {
   network_id=`docker network ls --format "{{.Name}}" | grep camunda-platform`
 }
+
+get_access_token () {
+  access_token=$(curl \
+    --location -s --request POST 'http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token' \
+    --header 'Content-Type: application/x-www-form-urlencoded' \
+    --data-urlencode "client_id=$CLIENT_ID" \
+    --data-urlencode "client_secret=$CLIENT_SECRET" \
+    --data-urlencode 'grant_type=client_credentials' | jq '.access_token' | tr -d '"')
+}

@@ -48,3 +48,6 @@ jobs:
 
       - name: Run extract tests
         run: integration-tests/test-runner.sh ${{ github.head_ref || github.ref_name }} extract-compose.yaml
+
+      - name: Run deploy tests
+        run: integration-tests/test-runner.sh ${{ github.head_ref || github.ref_name }} deploy-compose.yaml

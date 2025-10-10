@@ -39,15 +39,6 @@ get_wm_webapp_status () {
   echo "WM WebApp: $wm_webapp_status"
 }
 
-get_access_token () {
-  access_token=$(curl \
-    --location -s --request POST 'http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token' \
-    --header 'Content-Type: application/x-www-form-urlencoded' \
-    --data-urlencode "client_id=$CLIENT_ID" \
-    --data-urlencode "client_secret=$CLIENT_SECRET" \
-    --data-urlencode 'grant_type=client_credentials' | jq '.access_token' | tr -d '"')
-}
-
 get_wm_info () {
   wm_api_info=$(curl \
     -s -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
