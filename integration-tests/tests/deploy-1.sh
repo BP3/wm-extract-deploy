@@ -92,10 +92,10 @@ Then () {
 
   expected_version=1
 
-  search_process_definitions_by_bpmn_id_and_return_version "Process_ConnectorTest" | jq ".version"
+  search_process_definitions_by_bpmn_id_and_return_version "Process_ConnectorTest"
   assert_equals $expected_version, $actual_version
 
-  search_process_definitions_by_bpmn_id_and_return_version "Process_Second" | jq ".version"
+  search_process_definitions_by_bpmn_id_and_return_version "Process_Second"
   assert_equals $expected_version, $actual_version
 
   # TODO What other tests would be needed?
