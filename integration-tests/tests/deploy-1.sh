@@ -71,29 +71,30 @@ When () {
   #  --mount type=bind,src=$PWD/$TESTSDIR/$TESTNAME,dst=/local --workdir=/local \
   # So, although this command demonstrates how we might normally run the command it is actually
   # the following command below that will allow us to grab the data
-  docker run --rm --net=host \
+  docker run --rm --net=host --mount type=bind,src=${PWD},dst=/local --workdir /local \
     -e NO_GIT=true \
-    -e OAUTH2_CLIENT_ID=wmed -e OAUTH2_CLIENT_SECRET=wmed \
+    -e OAUTH2_CLIENT_ID=wmed \
+    -e OAUTH2_CLIENT_SECRET=wmed \
     -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
-    -e ZEEBE_CLIENT_ID=$ZEEBE_CLIENT_ID \
-    -e ZEEBE_CLIENT_SECRET=$ZEEBE_CLIENT_SECRET \
+    -e CLUSTER_HOST=localhost \
+    -e MODEL_PATH=./files \
       $IMAGE_NAME:$IMAGE_REF deploy
 
   echo Sleep for a few seconds whilst docker container comes up ...
   sleep 5
 
-  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh deploy
-# TODO Put these back later if needed
-#  docker container cp wmed:/local $TESTSDIR/$TESTNAME
-#  docker container stop wmed
-#  docker container rm wmed
+#  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh deploy
+  docker container cp wmed:/local $TESTSDIR/$TESTNAME
+  docker container stop wmed
+  docker container rm wmed
 }
 
 Then () {
   echo "$TESTNAME: Then"
-  # TODO Call the Operate API to check that the process model has been deployed
 
-  search_process_definitions_by_bpmn_id "Process_ConnectorTest" | jq.
+  search_process_definitions_by_bpmn_id_and_return_version "Process_ConnectorTest" | jq ".version"
+  expected_version=1
+  assert_equals $expected_version, $actual_version
 }
 
 ############################################################################

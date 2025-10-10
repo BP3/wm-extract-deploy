@@ -217,7 +217,8 @@ services:
       - postgres
 
   elasticsearch: # https://hub.docker.com/_/elasticsearch
-    image: ${ELASTIC_REGISTRY}/elasticsearch:${ELASTIC_VERSION}
+    #image: ${ELASTIC_REGISTRY}/elasticsearch:${ELASTIC_VERSION}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION}
     container_name: elasticsearch
     ports:
       - "9200:9200"
@@ -261,4 +262,3 @@ networks:
   # processes or Identity to log in.
   camunda-platform:
   identity-network:
-  web-modeler:
