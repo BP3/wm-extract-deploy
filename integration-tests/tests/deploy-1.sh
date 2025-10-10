@@ -71,7 +71,7 @@ When () {
   #  --mount type=bind,src=$PWD/$TESTSDIR/$TESTNAME,dst=/local --workdir=/local \
   # So, although this command demonstrates how we might normally run the command it is actually
   # the following command below that will allow us to grab the data
-  docker run --rm --net=host --mount type=bind,src=${PWD},dst=/local --workdir /local \
+  docker run --rm --name wmed --net=host --mount type=bind,src=${PWD},dst=/local --workdir /local \
     -e NO_GIT=true \
     -e OAUTH2_CLIENT_ID=wmed \
     -e OAUTH2_CLIENT_SECRET=wmed \
@@ -83,11 +83,8 @@ When () {
   echo Sleep for a few seconds whilst docker container comes up ...
   sleep 5
 
-  # TODO Not sure if any of this is needed?
-#  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh deploy
-#  docker container cp wmed:/local $TESTSDIR/$TESTNAME
-#  docker container stop wmed
-#  docker container rm wmed
+  docker container stop wmed
+  docker container rm wmed
 }
 
 Then () {
