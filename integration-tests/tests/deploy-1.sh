@@ -83,9 +83,10 @@ When () {
   sleep 5
 
   docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh deploy
-  docker container cp wmed:/local $TESTSDIR/$TESTNAME
-  docker container stop wmed
-  docker container rm wmed
+# TODO Put these back later if needed
+#  docker container cp wmed:/local $TESTSDIR/$TESTNAME
+#  docker container stop wmed
+#  docker container rm wmed
 }
 
 Then () {
