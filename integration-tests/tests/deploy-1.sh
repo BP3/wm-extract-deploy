@@ -83,18 +83,27 @@ When () {
   echo Sleep for a few seconds whilst docker container comes up ...
   sleep 5
 
+  # TODO Not sure if any of this is needed?
 #  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh deploy
-  docker container cp wmed:/local $TESTSDIR/$TESTNAME
-  docker container stop wmed
-  docker container rm wmed
+#  docker container cp wmed:/local $TESTSDIR/$TESTNAME
+#  docker container stop wmed
+#  docker container rm wmed
 }
 
 Then () {
   echo "$TESTNAME: Then"
 
-  search_process_definitions_by_bpmn_id_and_return_version "Process_ConnectorTest" | jq ".version"
   expected_version=1
+
+  search_process_definitions_by_bpmn_id_and_return_version "Process_ConnectorTest" | jq ".version"
   assert_equals $expected_version, $actual_version
+
+  search_process_definitions_by_bpmn_id_and_return_version "Process_Second" | jq ".version"
+  assert_equals $expected_version, $actual_version
+
+  # TODO What other tests would be needed?
+  #  1/ Change the process and check that its version number increments, or is this just
+  #     testing the Camunda platform?
 }
 
 ############################################################################

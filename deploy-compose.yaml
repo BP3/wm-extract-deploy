@@ -217,6 +217,7 @@ services:
       - postgres
 
   elasticsearch: # https://hub.docker.com/_/elasticsearch
+    # TODO Restore this back, only changed for local testing
     #image: ${ELASTIC_REGISTRY}/elasticsearch:${ELASTIC_VERSION}
     image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION}
     container_name: elasticsearch
