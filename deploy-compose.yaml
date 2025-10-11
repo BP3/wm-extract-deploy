@@ -261,4 +261,3 @@ networks:
   # processes or Identity to log in.
   camunda-platform:
   identity-network:
-  web-modeler:
