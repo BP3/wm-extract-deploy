@@ -16,7 +16,7 @@ jobs:
       branch-name: ${{ github.head_ref || github.ref_name }}
     secrets: inherit
 
-  run-extract-tests:
+  run-integration-tests:
     name: Run Integration tests
     permissions:
       contents: read

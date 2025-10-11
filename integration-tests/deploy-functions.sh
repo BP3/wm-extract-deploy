@@ -12,11 +12,12 @@
 #
 ############################################################################
 
-# This is very early days so really expect this to change/evolve a lot - but you have to start somewhere
-
-APP_JSON_HDR="Content-Type: application/json"
-CLIENT_ID=wmed
-CLIENT_SECRET=wmed
+# These probably aren't the right credentials for what we need here - since they are for Web Modeler!
+# "demo/demo" credentials don't work either
+ZEEBE_CLIENT_ID=zeebe
+ZEEBE_CLIENT_SECRET=zecret
+CLIENT_ID=$ZEEBE_CLIENT_ID
+CLIENT_SECRET=$ZEEBE_CLIENT_SECRET
 OPERATE_HOST=localhost
 OPERATE_PORT=8081
 

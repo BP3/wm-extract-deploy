@@ -14,6 +14,8 @@
 
 # This is very early days so really expect this to change/evolve a lot - but you have to start somewhere
 
+APP_JSON_HDR="Content-Type: application/json"
+
 get_network_id () {
   network_id=`docker network ls --format "{{.Name}}" | grep camunda-platform`
 }

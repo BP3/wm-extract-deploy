@@ -73,8 +73,8 @@ When () {
   # the following command below that will allow us to grab the data
   docker run --rm --name wmed --net=host --mount type=bind,src=${PWD},dst=/local --workdir /local \
     -e NO_GIT=true \
-    -e OAUTH2_CLIENT_ID=wmed \
-    -e OAUTH2_CLIENT_SECRET=wmed \
+    -e OAUTH2_CLIENT_ID=$CLIENT_ID \
+    -e OAUTH2_CLIENT_SECRET=$CLIENT_SECRET \
     -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
     -e CLUSTER_HOST=localhost \
     -e MODEL_PATH=./files \
