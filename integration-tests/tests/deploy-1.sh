@@ -92,11 +92,22 @@ Then () {
 
   expected_version=1
 
-  search_process_definitions_by_bpmn_id_and_return_version "Process_ConnectorTest"
-  assert_equals $expected_version, $actual_version
+  # Get the deployed version and key for the first process
+  search_process_definitions_by_bpmn_id "Process_ConnectorTest"
+  assert_equals $expected_version, response | jq ".items[0].version"
+  process_1_key=$(response | jq ".items[0].key")
 
-  search_process_definitions_by_bpmn_id_and_return_version "Process_Second"
-  assert_equals $expected_version, $actual_version
+  # Get the deployed version and key for the second process
+  search_process_definitions_by_bpmn_id "Process_Second"
+  assert_equals $expected_version, response | jq ".items[0].version"
+  process_2_key=$(response | jq ".items[0].key")
+
+  # Now get back the deployed XML for the key, and check that it exactly matches what we deployed
+  get_process_definition_xml_by_key "$process_1_key"
+  # TODO Load the XML contents of the first process BPMN file and then compare with the returned XML
+
+  get_process_definition_xml_by_key "$process_2_key"
+  # TODO Load the XML contents of the first process BPMN file and then compare with the returned XML
 
   # TODO What other tests would be needed?
   #  1/ Change the process and check that its version number increments, or is this just

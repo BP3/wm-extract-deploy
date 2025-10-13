@@ -24,12 +24,21 @@ OPERATE_PORT=8081
 # Load reusable core functions
 . $TESTSDIR/core-functions.sh
 
-search_process_definitions_by_bpmn_id_and_return_version () {
+search_process_definitions_by_bpmn_id () {
   get_access_token
 
   body="{\"filter\": {\"bpmnProcessId\": $1 }, \"size\": 1, \"sort\": [{\"field\": \"version\", \"order\": \"DESC\" } ] }"
 
-  actual_version=$(curl -v -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
+  response=$(curl -v -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
         --data "$body" \
-          -X GET http://$OPERATE_HOST:$OPERATE_PORT/v1/process-definitions/search | jq ".items[0].version")
+          -X GET http://$OPERATE_HOST:$OPERATE_PORT/v1/process-definitions/search)
 }
+
+get_process_definition_xml_by_key() {
+  get_access_token
+
+  response=$(curl -v -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
+            -X GET http://$OPERATE_HOST:$OPERATE_PORT/v1/process-definitions/$1/xml)
+}
+
+http://localhost:8080/v1/process-definitions/:key/xml
