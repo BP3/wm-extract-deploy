@@ -94,24 +94,24 @@ Then () {
 
   # Get the deployed version and key for the first process
   search_process_definitions_by_bpmn_id "Process_ConnectorTest"
-  assert_equals $expected_version, response | jq ".items[0].version"
-  process_1_key=$(response | jq ".items[0].key")
+  assert_equals $expected_version, $response | jq ".items[0].version"
+  process_1_key=$($response | jq ".items[0].key")
 
   # Get the deployed version and key for the second process
   search_process_definitions_by_bpmn_id "Process_Second"
-  assert_equals $expected_version, response | jq ".items[0].version"
-  process_2_key=$(response | jq ".items[0].key")
+  assert_equals $expected_version, $response | jq ".items[0].version"
+  process_2_key=$($response | jq ".items[0].key")
 
   # Now get back the deployed XML for the key, and check that it exactly matches what we deployed
   get_process_definition_xml_by_key "$process_1_key"
-  # TODO Load the XML contents of the first process BPMN file and then compare with the returned XML
+  actual_process_1_xml=$response
+  expected_process_1_xml=$(cat files/process.bpmn)
+  assert_equals "$actual_process_1_xml" "$expected_process_1_xml"
 
   get_process_definition_xml_by_key "$process_2_key"
-  # TODO Load the XML contents of the first process BPMN file and then compare with the returned XML
-
-  # TODO What other tests would be needed?
-  #  1/ Change the process and check that its version number increments, or is this just
-  #     testing the Camunda platform?
+  actual_process_2_xml=$response
+  expected_process_2_xml=$(cat files/process2.bpmn)
+  assert_equals "$actual_process_2_xml" "$expected_process_2_xml"
 }
 
 ############################################################################
