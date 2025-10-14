@@ -94,24 +94,26 @@ Then () {
 
   # Get the deployed version and key for the first process
   search_process_definitions_by_bpmn_id "Process_ConnectorTest"
-  assert_numeric_equals $expected_version, "$response" | jq ".items[0].version"
+  actual_version=$($response | jq ".items[0].version")
+  assert_numeric_equals $actual_version $expected_version
   process_1_key=$($response | jq ".items[0].key")
 
   # Get the deployed version and key for the second process
   search_process_definitions_by_bpmn_id "Process_Second"
-  assert_numeric_equals $expected_version, "$response" | jq ".items[0].version"
+  actual_version=$($response | jq ".items[0].version")
+  assert_numeric_equals $actual_version $expected_version
   process_2_key=$($response | jq ".items[0].key")
 
   # Now get back the deployed XML for the key, and check that it exactly matches what we deployed
   get_process_definition_xml_by_key "$process_1_key"
   actual_process_1_xml=$response
   expected_process_1_xml=$(cat files/process.bpmn)
-  assert_equals "$actual_process_1_xml" "$expected_process_1_xml"
+  assert_xml_match "$actual_process_1_xml" "$expected_process_1_xml"
 
   get_process_definition_xml_by_key "$process_2_key"
   actual_process_2_xml=$response
   expected_process_2_xml=$(cat files/process2.bpmn)
-  assert_equals "$actual_process_2_xml" "$expected_process_2_xml"
+  assert_xml_match "$actual_process_2_xml" "$expected_process_2_xml"
 }
 
 ############################################################################
