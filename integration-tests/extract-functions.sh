@@ -189,10 +189,6 @@ assert_file_not_exists () {
     exit 1
   fi
 }
-assert_xml_match () {
-  xmllint --format $1 > $1.format
-  diff --ignore-all-space $2 $1.format
-}
 
 # Check for the existence of a folder
 assert_folder_exists () {

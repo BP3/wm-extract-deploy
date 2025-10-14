@@ -36,9 +36,7 @@ assert_numeric_equals() {
   fi
 }
 
-assert_equals() {
-  if [ "$1" != "$2" ]; then
-    echo "$1 does not equal $2"
-    exit 1
-  fi
+assert_xml_match () {
+  xmllint --format $1 > $1.format
+  diff --ignore-all-space $2 $1.format
 }
