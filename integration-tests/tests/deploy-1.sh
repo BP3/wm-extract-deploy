@@ -95,13 +95,13 @@ Then () {
   # Get the deployed version and key for the first process
   search_process_definitions_by_bpmn_id "Process_ConnectorTest"
   actual_version=$($response | jq ".items[0].version")
-  assert_numeric_equals $actual_version $expected_version
+  assert_equals $actual_version $expected_version
   process_1_key=$($response | jq ".items[0].key")
 
   # Get the deployed version and key for the second process
   search_process_definitions_by_bpmn_id "Process_Second"
   actual_version=$($response | jq ".items[0].version")
-  assert_numeric_equals $actual_version $expected_version
+  assert_equals $actual_version $expected_version
   process_2_key=$($response | jq ".items[0].key")
 
   # Now get back the deployed XML for the key, and check that it exactly matches what we deployed
