@@ -35,3 +35,10 @@ assert_numeric_equals() {
     exit 1
   fi
 }
+
+assert_equals() {
+  if [ "$1" != "$2" ]; then
+    echo "$1 does not equal $2"
+    exit 1
+  fi
+}
