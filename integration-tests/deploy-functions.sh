@@ -40,5 +40,3 @@ get_process_definition_xml_by_key() {
   response=$(curl -v -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
             -X GET http://$OPERATE_HOST:$OPERATE_PORT/v1/process-definitions/$1/xml)
 }
-
-http://localhost:8080/v1/process-definitions/:key/xml

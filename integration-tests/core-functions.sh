@@ -29,8 +29,8 @@ get_access_token () {
     --data-urlencode 'grant_type=client_credentials' | jq '.access_token' | tr -d '"')
 }
 
-assert_equals() {
-  if [ $1 != $2 ]; then
+assert_numeric_equals() {
+  if [ "$1" -ne "$2" ]; then
     echo "$1 does not equal $2"
     exit 1
   fi
