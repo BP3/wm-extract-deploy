@@ -106,14 +106,12 @@ Then () {
 
   # Now get back the deployed XML for the key, and check that it exactly matches what we deployed
   get_process_definition_xml_by_key "$process_1_key"
-  actual_process_1_xml=$response # TODO Save this to a file so we can use the "assert_xml_match" function correctly
-  expected_process_1_xml=$(cat files/process.bpmn)
-  assert_xml_match "$actual_process_1_xml" "$expected_process_1_xml"
+  $response >> $TESTSDIR/$TESTNAME/actual_process_1_xml.xml
+  assert_xml_match $TESTSDIR/$TESTNAME/actual_process_1_xml.xml files/process.bpmn
 
   get_process_definition_xml_by_key "$process_2_key"
-  actual_process_2_xml=$response # TODO Save this to a file so we can use the "assert_xml_match" function correctly
-  expected_process_2_xml=$(cat files/process2.bpmn)
-  assert_xml_match "$actual_process_2_xml" "$expected_process_2_xml"
+  $response >> $TESTSDIR/$TESTNAME/actual_process_2_xml.xml
+  assert_xml_match $TESTSDIR/$TESTNAME/actual_process_2_xml.xml files/process2.bpmn
 }
 
 ############################################################################
