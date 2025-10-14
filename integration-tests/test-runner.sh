@@ -67,8 +67,7 @@ run_test () {
   fi
 
   # Kind of want a "finally" section to execute this in - it always has to happen
-  # TODO Put this back - just stops having to wait for it to come backup each time I run the test locally
-  #docker-compose -f $1 down
+  docker-compose -f $1 down
 }
 
 if [ $composeFile = "extract-compose.yaml" ]; then
