@@ -29,6 +29,7 @@ search_process_definitions_by_bpmn_id () {
 
   body="{\"filter\": {\"bpmnProcessId\": $1 }, \"size\": 1, \"sort\": [{\"field\": \"version\", \"order\": \"DESC\" } ] }"
 
+  # TODO Switch to silent once this is all working
   response=$(curl -v -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
         --data "$body" \
           -X GET http://$OPERATE_HOST:$OPERATE_PORT/v1/process-definitions/search)
@@ -37,6 +38,7 @@ search_process_definitions_by_bpmn_id () {
 get_process_definition_xml_by_key() {
   get_access_token
 
+  # TODO Switch to silent once this is all working
   response=$(curl -v -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
             -X GET http://$OPERATE_HOST:$OPERATE_PORT/v1/process-definitions/$1/xml)
 }
