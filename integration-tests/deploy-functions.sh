@@ -12,6 +12,8 @@
 #
 ############################################################################
 
+CLIENT_ID=zeebe
+CLIENT_SECRET=zecret
 OPERATE_HOST=localhost
 OPERATE_PORT=8081
 
