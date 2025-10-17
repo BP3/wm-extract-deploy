@@ -29,4 +29,9 @@ if [ -z "$NO_GIT" ] && [ -z "$NO_GIT_FETCH" ]; then
   git -c advice.detachedHead=false checkout "${GIT_REF}"
 fi
 
+if [ "$MODEL_PATH" = "" ]; then
+  MODEL_PATH=.
+  echo "Defaulting the model path to '.' as the variable exists but is not set"
+fi
+
 python "${SCRIPT_DIR}"/deploy.py "$@"
