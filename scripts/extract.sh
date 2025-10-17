@@ -24,6 +24,11 @@ if [ -z "$NO_GIT" ]; then
   echo "Checkout branch: ${CICD_BRANCH}"
   git checkout -B "${CICD_BRANCH}"
 
+  if [ "$MODEL_PATH" = "" ]; then
+    MODEL_PATH=.
+    echo "Defaulting the model path to '.' as the variable exists but is not set"
+  fi
+
   # Delete BPM artifacts to propagate deletions from Web Modeller
   git rm --ignore-unmatch "${MODEL_PATH}"/*.bpmn
   git rm --ignore-unmatch "${MODEL_PATH}"/*.dmn
