@@ -6,6 +6,7 @@ config.json
 config.yml
 
 integration-tests/extract-*/**
+integration-tests/deploy-*/**
 **/*.lst
 
 # Byte-compiled / optimized / DLL files
