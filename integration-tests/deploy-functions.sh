@@ -12,12 +12,6 @@
 #
 ############################################################################
 
-# These probably aren't the right credentials for what we need here - since they are for Web Modeler!
-# "demo/demo" credentials don't work either
-ZEEBE_CLIENT_ID=zeebe
-ZEEBE_CLIENT_SECRET=zecret
-CLIENT_ID=$ZEEBE_CLIENT_ID
-CLIENT_SECRET=$ZEEBE_CLIENT_SECRET
 OPERATE_HOST=localhost
 OPERATE_PORT=8081
 
@@ -25,20 +19,17 @@ OPERATE_PORT=8081
 . $TESTSDIR/core-functions.sh
 
 search_process_definitions_by_bpmn_id () {
-  get_access_token
+  id=$1
+  body="{\"filter\": {\"bpmnProcessId\": \"$id\" }, \"size\": 1, \"sort\": [{\"field\": \"version\", \"order\": \"DESC\" }] }"
 
-  body="{\"filter\": {\"bpmnProcessId\": $1 }, \"size\": 1, \"sort\": [{\"field\": \"version\", \"order\": \"DESC\" } ] }"
-
-  # TODO Switch to silent once this is all working
-  response=$(curl -v -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
+  response=$(curl -s -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
         --data "$body" \
-          -X GET http://$OPERATE_HOST:$OPERATE_PORT/v1/process-definitions/search)
+          -X POST http://$OPERATE_HOST:$OPERATE_PORT/v1/process-definitions/search)
 }
 
 get_process_definition_xml_by_key() {
-  get_access_token
+  key=$1
 
-  # TODO Switch to silent once this is all working
-  response=$(curl -v -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
-            -X GET http://$OPERATE_HOST:$OPERATE_PORT/v1/process-definitions/$1/xml)
+  response=$(curl -s -H "$APP_JSON_HDR" -H "Authorization: Bearer ${access_token}" \
+            -X GET http://$OPERATE_HOST:$OPERATE_PORT/v1/process-definitions/$key/xml)
 }
