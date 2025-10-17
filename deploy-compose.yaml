@@ -84,6 +84,12 @@ services:
       - MANAGEMENT_ENDPOINT_CONFIGPROPS_SHOW_VALUES=ALWAYS
       - management.endpoint.health.probes.enabled=true
       - ZEEBE_CLIENT_CONFIG_PATH=/tmp/zeebe_auth_cache
+#      - KEYCLOAK_CLIENTS_0_NAME=deploy_operate
+#      - KEYCLOAK_CLIENTS_0_ID=${OPERATE_CLIENT_ID}
+#      - KEYCLOAK_CLIENTS_0_SECRET=${OPERATE_CLIENT_SECRET}
+#      - KEYCLOAK_CLIENTS_0_TYPE=M2M
+#      - KEYCLOAK_CLIENTS_0_PERMISSIONS_1_RESOURCE_SERVER_ID=operate-api
+#      - KEYCLOAK_CLIENTS_0_PERMISSIONS_1_DEFINITION=write:*
     healthcheck:
       test: [ "CMD-SHELL", "wget -O - -q 'http://localhost:9600/actuator/health/readiness'" ]
       interval: 30s
@@ -261,4 +267,3 @@ networks:
   # processes or Identity to log in.
   camunda-platform:
   identity-network:
-  web-modeler:
