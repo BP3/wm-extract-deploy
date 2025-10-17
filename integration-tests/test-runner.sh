@@ -32,7 +32,7 @@ else
   echo "Docker image $IMAGE_NAME:$IMAGE_REF found"
 fi
 
-status='Success'
+testStatus='Success'
 # Are we running as part of a pipeline
 if [ ! -n "$CI" ]; then
   alias "docker-compose"='docker compose'
@@ -61,7 +61,7 @@ run_test () {
   rc=$?
   if [ $rc -ne 0 ]; then
     echo "Test $1 completed with an error"
-    status='Failure'
+    testStatus='Failure'
   else
     echo "Test completed successfully"
   fi
@@ -70,13 +70,22 @@ run_test () {
   docker-compose -f $1 down
 }
 
-'ls' -1S $TESTSDIR/tests/extract*.sh | while read tst; do
-  tst=`basename $tst`
-  run_test $composeFile $tst
-done
+if [ $composeFile = "extract-compose.yaml" ]; then
+  'ls' -1S $TESTSDIR/tests/extract*.sh | while read tst; do
+    tst=`basename $tst`
+    run_test $composeFile $tst
+  done
+fi
+
+if [ $composeFile = "deploy-compose.yaml" ]; then
+  'ls' -1S $TESTSDIR/tests/deploy*.sh | while read tst; do
+    tst=`basename $tst`
+    run_test $composeFile $tst
+  done
+fi
 
 # See if ANY of the tests failed
-if [ "$status" = "Success" ]; then
+if [ "$testStatus" = "Success" ]; then
   rc=0
 else
   rc=1

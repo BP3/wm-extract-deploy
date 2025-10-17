@@ -12,9 +12,6 @@
 #
 ############################################################################
 
-# This is very early days so really expect this to change/evolve a lot - but you have to start somewhere
-
-APP_JSON_HDR="Content-Type: application/json"
 CLIENT_ID=wmed
 CLIENT_SECRET=wmed
 WM_HOST=localhost
@@ -37,15 +34,6 @@ get_wm_webapp_status () {
   wm_webapp_status=$(curl -s -H "$APP_JSON_HDR" http://localhost:8071/health/readiness \
       | jq '.status' | tr -d '"')
   echo "WM WebApp: $wm_webapp_status"
-}
-
-get_access_token () {
-  access_token=$(curl \
-    --location -s --request POST 'http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token' \
-    --header 'Content-Type: application/x-www-form-urlencoded' \
-    --data-urlencode "client_id=$CLIENT_ID" \
-    --data-urlencode "client_secret=$CLIENT_SECRET" \
-    --data-urlencode 'grant_type=client_credentials' | jq '.access_token' | tr -d '"')
 }
 
 get_wm_info () {
@@ -200,10 +188,6 @@ assert_file_not_exists () {
     # Error if the file exists
     exit 1
   fi
-}
-assert_xml_match () {
-  xmllint --format $1 > $1.format
-  diff --ignore-all-space $2 $1.format
 }
 
 # Check for the existence of a folder

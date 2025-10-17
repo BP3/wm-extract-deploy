@@ -16,7 +16,7 @@ jobs:
       branch-name: ${{ github.head_ref || github.ref_name }}
     secrets: inherit
 
-  run-extract-tests:
+  run-integration-tests:
     name: Run Integration tests
     permissions:
       contents: read
@@ -48,3 +48,6 @@ jobs:
 
       - name: Run extract tests
         run: integration-tests/test-runner.sh ${{ github.head_ref || github.ref_name }} extract-compose.yaml
+
+      - name: Run deploy tests
+        run: integration-tests/test-runner.sh ${{ github.head_ref || github.ref_name }} deploy-compose.yaml
