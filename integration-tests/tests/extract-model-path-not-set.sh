@@ -48,8 +48,9 @@ _setup () {
 
 _teardown () {
   :
-#  docker container stop wmed
-#  docker container rm wmed
+  docker container stop wmed
+  docker container rm wmed
+
   # Or we could leave everything behind so that it can be checked later
 #  if [ -d $TESTSDIR/$TESTNAME ]; then
 #    rm -rf $TESTSDIR/$TESTNAME
@@ -58,40 +59,12 @@ _teardown () {
 
 Given () {
   echo "$TESTNAME: Given"
-  # 1.  Need a local version of what project will look like - maybe in a separate directory
-  # 2.  Will first need to create/import project into Web Modeler
-
-  # Just trying some stuff out. This probably needs to go into functions later
-  # Assumes that we have already run 'docker-compose -f ../extract-compose.yaml up -d'
 
   get_access_token
 
-  # Big picture is
-  #
-  #   Project
-  #     Readme[.md]
-  #     process[.bpmn]
-  #     Folder1
-  #       Readme[.md]
-  #       process1[.bpmn]
-  #       process2.wmedIgnore[.bpmn]
-  #     Folder2.wmedIgnore
-  #       Readme[.md]
-  #       process[.bpmn]
-
-#  create_project "Project"
-##  add_collaborator demo@acme.com $project_id
-#  create_file Readme $project_id files/Readme.md markdown
-#  create_file process $project_id files/process.bpmn bpmn
-#
-#  create_folder Folder1 $project_id
-#  create_file Readme $project_id files/Readme.md markdown $folder_id
-#  create_file process1 $project_id files/process.bpmn bpmn $folder_id
-#  create_file process2-wmedIgnore $project_id files/process.bpmn bpmn $folder_id
-#
-#  create_folder Folder2.wmedIgnore $project_id
-#  create_file Readme $project_id files/Readme.md markdown $folder_id
-#  create_file process $project_id files/process.bpmn bpmn $folder_id
+  # Give us something to extract although we are not testing this specifically
+  # as that test case is handled in other tests
+  create_file process $project_id files/process.bpmn bpmn
 }
 
 When () {
@@ -116,6 +89,7 @@ When () {
   sleep 5
 
   docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh extract
+  docker container cp wmed:/local $TESTSDIR/$TESTNAME
 }
 
 Then () {
