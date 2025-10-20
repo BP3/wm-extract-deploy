@@ -69,6 +69,7 @@ run_test () {
   # Kind of want a "finally" section to execute this in - it always has to happen
   docker-compose -f $1 down
 
+  # TODO Remove this once its all working
   echo "Last exit code was $?"
 }
 
