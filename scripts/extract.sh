@@ -26,7 +26,7 @@ if [ -z "$NO_GIT" ]; then
 
   if [ "$MODEL_PATH" = "" ]; then
     MODEL_PATH=.
-    echo "Defaulting the model path to '.' as the variable exists but is not set"
+    echo "MODEL_PATH variable not set, defaulting to '.'"
   fi
 
   # Delete BPM artifacts to propagate deletions from Web Modeller
