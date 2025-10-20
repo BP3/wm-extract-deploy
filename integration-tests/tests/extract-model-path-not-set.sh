@@ -80,6 +80,7 @@ When () {
     -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
     -e CAMUNDA_WM_PROJECT="$project_id" \
     -e CAMUNDA_WM_HOST="localhost:8070" \
+    -e NO_GIT_SETUP=true \
     -e CICD_BRANCH="$GITHUB_REF" \
     -e CICD_ACCESS_TOKEN=dummy \
     -e CICD_REPOSITORY_PATH="$GITHUB_WORKSPACE" \
