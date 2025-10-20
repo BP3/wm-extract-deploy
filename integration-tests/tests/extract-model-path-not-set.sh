@@ -80,7 +80,7 @@ When () {
     -e CAMUNDA_WM_PROJECT="$project_id" \
     -e CAMUNDA_WM_HOST="localhost:8070" \
     -e CICD_BRANCH="$GITHUB_REF" \
-    -e CICD_ACCESS_TOKEN="${GITHUB_TOKEN}" \
+    -e CICD_ACCESS_TOKEN="$GITHUB_TOKEN" \
     -e CICD_REPOSITORY_PATH="$GITHUB_WORKSPACE" \
     -e CICD_SERVER_HOST="$GITHUB_SERVER_URL" \
       --entrypoint /bin/sh $IMAGE_NAME:$IMAGE_REF
