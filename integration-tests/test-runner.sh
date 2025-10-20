@@ -73,15 +73,14 @@ run_test () {
 if [ $composeFile = "extract-compose.yaml" ]; then
   # TODO Remove debug once working
   echo "*** Found tests:\n$('ls' -1S $TESTSDIR/tests/extract*.sh)"
-  'ls' -1S $TESTSDIR/tests/extract*.sh | while read tst; do
+  while read tst; do
     next_tst=`basename $tst`
     echo "*** Running test $next_tst"
     run_test $composeFile $next_tst
 
     # TODO Remove debug once working
     echo "*** Test $next_tst has completed"
-    echo "*** Last exit code was $?"
-  done
+  done < <('ls' -1S "$TESTSDIR/tests/extract*.sh")
 
   echo "*** Done!"
 fi
