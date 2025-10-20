@@ -79,7 +79,12 @@ if [ $composeFile = "extract-compose.yaml" ]; then
   'ls' -1S $TESTSDIR/tests/extract*.sh | while read tst; do
     tst=`basename $tst`
     run_test $composeFile $tst
+
+    # TODO Remove debug once working
+    echo "Test $tst has completed"
   done
+
+  echo "Done!"
 fi
 
 if [ $composeFile = "deploy-compose.yaml" ]; then
