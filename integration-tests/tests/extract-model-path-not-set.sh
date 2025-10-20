@@ -72,8 +72,9 @@ When () {
   echo "$TESTNAME: When"
   mkdir -p $TESTSDIR/$TESTNAME
 
-  # This test requires us to run in Git mode because that is when the MODEL_PATH
-  # is checked, so we have to set GIT related env vars to pass the argument validation stage
+  # Running this in interactive mode so we can run the extract script and check for the MODEL_PATH
+  # env var, otherwise if we run it without overriding the entry point the container will have exited
+  # before we get a chance to check
   docker run -d "$DOCKER_TTY_OPTS" --name wmed --net=host -w /local \
     -e APP=/app -e NO_GIT=true \
     -e OAUTH2_CLIENT_ID=wmed -e OAUTH2_CLIENT_SECRET=wmed \
