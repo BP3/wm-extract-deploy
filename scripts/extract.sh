@@ -14,6 +14,11 @@
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 . "${SCRIPT_DIR}"/functions.sh
 
+if [ "$MODEL_PATH" = "" ]; then
+  MODEL_PATH=.
+  echo "MODEL_PATH variable not set, defaulting to '.'"
+fi
+
 if [ -z "$NO_GIT" ]; then
   GIT_REPO_URL="$(getGitRepoUrl)"
   setupGit
@@ -23,11 +28,6 @@ if [ -z "$NO_GIT" ]; then
   fi
   echo "Checkout branch: ${CICD_BRANCH}"
   git checkout -B "${CICD_BRANCH}"
-
-  if [ "$MODEL_PATH" = "" ]; then
-    MODEL_PATH=.
-    echo "MODEL_PATH variable not set, defaulting to '.'"
-  fi
 
   # Delete BPM artifacts to propagate deletions from Web Modeller
   git rm --ignore-unmatch "${MODEL_PATH}"/*.bpmn
