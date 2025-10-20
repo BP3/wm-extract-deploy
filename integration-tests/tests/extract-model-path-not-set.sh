@@ -75,18 +75,11 @@ When () {
   # This test requires us to run in Git mode because that is when the MODEL_PATH
   # is checked, so we have to set GIT related env vars to pass the argument validation stage
   docker run -d "$DOCKER_TTY_OPTS" --name wmed --net=host -w /local \
-    -e APP=/app \
+    -e APP=/app -e NO_GIT=true \
     -e OAUTH2_CLIENT_ID=wmed -e OAUTH2_CLIENT_SECRET=wmed \
     -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
     -e CAMUNDA_WM_PROJECT="$project_id" \
     -e CAMUNDA_WM_HOST="localhost:8070" \
-    -e NO_GIT_SETUP=true \
-    -e CICD_BRANCH="$IMAGE_REF" \
-    -e CICD_ACCESS_TOKEN=dummy \
-    -e CICD_REPOSITORY_PATH="$GITHUB_WORKSPACE" \
-    -e CICD_SERVER_HOST="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
-    -e GIT_USERNAME="$GITHUB_ACTOR" \
-    -e GIT_USER_EMAIL="$GITHUB_ACTOR_ID+$GITHUB_ACTOR@users.noreply.github.com" \
       --entrypoint /bin/sh $IMAGE_NAME:$IMAGE_REF
 
   echo Sleep for a few seconds whilst docker container comes up ...
