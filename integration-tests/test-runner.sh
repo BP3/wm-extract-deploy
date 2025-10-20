@@ -68,6 +68,8 @@ run_test () {
 
   # Kind of want a "finally" section to execute this in - it always has to happen
   docker-compose -f $1 down
+
+  echo "Last exit code was $?"
 }
 
 if [ $composeFile = "extract-compose.yaml" ]; then
