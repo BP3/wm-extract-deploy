@@ -80,10 +80,12 @@ When () {
     -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
     -e CAMUNDA_WM_PROJECT="$project_id" \
     -e CAMUNDA_WM_HOST="localhost:8070" \
-    -e CICD_BRANCH="$GITHUB_REF_NAME" \
+    -e CICD_BRANCH="$IMAGE_REF" \
     -e CICD_ACCESS_TOKEN=dummy \
     -e CICD_REPOSITORY_PATH="$GITHUB_WORKSPACE" \
     -e CICD_SERVER_HOST="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
+    -e GIT_USERNAME="$GITHUB_ACTOR" \
+    -e GIT_USER_EMAIL="$GITHUB_ACTOR@bp-3.com"
       --entrypoint /bin/sh $IMAGE_NAME:$IMAGE_REF
 
   echo Sleep for a few seconds whilst docker container comes up ...
