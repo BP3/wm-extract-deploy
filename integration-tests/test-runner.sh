@@ -68,23 +68,21 @@ run_test () {
 
   # Kind of want a "finally" section to execute this in - it always has to happen
   docker-compose -f $1 down
-
-  # TODO Remove this once its all working
-  echo "Last exit code was $?"
 }
 
 if [ $composeFile = "extract-compose.yaml" ]; then
   # TODO Remove debug once working
-  echo "Found tests:\n$('ls' -1S $TESTSDIR/tests/extract*.sh)"
+  echo "*** Found tests:\n$('ls' -1S $TESTSDIR/tests/extract*.sh)"
   'ls' -1S $TESTSDIR/tests/extract*.sh | while read tst; do
     tst=`basename $tst`
     run_test $composeFile $tst
 
     # TODO Remove debug once working
-    echo "Test $tst has completed"
+    echo "*** Test $tst has completed"
+    echo "*** Last exit code was $?"
   done
 
-  echo "Done!"
+  echo "*** Done!"
 fi
 
 if [ $composeFile = "deploy-compose.yaml" ]; then
