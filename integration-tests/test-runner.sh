@@ -80,7 +80,7 @@ if [ $composeFile = "extract-compose.yaml" ]; then
 
     # TODO Remove debug once working
     echo "*** Test $next_tst has completed"
-  done < <('ls' -1S "$TESTSDIR/tests/extract*.sh")
+  done < $('ls' -1S "$TESTSDIR/tests/extract*.sh")
 
   echo "*** Done!"
 fi
