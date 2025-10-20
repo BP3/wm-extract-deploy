@@ -85,7 +85,7 @@ When () {
     -e CICD_REPOSITORY_PATH="$GITHUB_WORKSPACE" \
     -e CICD_SERVER_HOST="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
     -e GIT_USERNAME="$GITHUB_ACTOR" \
-    -e GIT_USER_EMAIL="$GITHUB_ACTOR@bp-3.com" \
+    -e GIT_USER_EMAIL="$GITHUB_ACTOR+$GITHUB_ACTOR_ID@users.noreply.github.com" \
       --entrypoint /bin/sh $IMAGE_NAME:$IMAGE_REF
 
   echo Sleep for a few seconds whilst docker container comes up ...
