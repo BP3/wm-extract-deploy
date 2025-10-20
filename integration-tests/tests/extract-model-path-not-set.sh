@@ -89,7 +89,6 @@ When () {
   sleep 5
 
   docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh extract
-  docker container cp wmed:/local $TESTSDIR/$TESTNAME
 }
 
 Then () {
