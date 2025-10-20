@@ -64,6 +64,7 @@ Given () {
 
   # Give us something to extract although we are not testing this specifically
   # as that test case is handled in other tests
+  create_project "Project"
   create_file process $project_id files/process.bpmn bpmn
 }
 
@@ -81,8 +82,8 @@ When () {
     -e CAMUNDA_WM_HOST="localhost:8070" \
     -e CICD_BRANCH="$GITHUB_REF_NAME" \
     -e CICD_ACCESS_TOKEN=dummy \
-    -e CICD_REPOSITORY_PATH="$GITHUB_WORKSPACE/$GITHUB_REPOSITORY" \
-    -e CICD_SERVER_HOST="$GITHUB_SERVER_URL" \
+    -e CICD_REPOSITORY_PATH="$GITHUB_WORKSPACE" \
+    -e CICD_SERVER_HOST="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
       --entrypoint /bin/sh $IMAGE_NAME:$IMAGE_REF
 
   echo Sleep for a few seconds whilst docker container comes up ...
