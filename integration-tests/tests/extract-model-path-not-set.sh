@@ -73,7 +73,7 @@ When () {
 
   # This test requires us to run in Git mode because that is when the MODEL_PATH
   # is checked, so we have to set GIT related env vars to pass the argument validation stage
-  docker run -d $DOCKER_TTY_OPTS --name wmed --net=host -w /local \
+  docker run -d "$DOCKER_TTY_OPTS" --name wmed --net=host -w /local \
     -e APP=/app \
     -e OAUTH2_CLIENT_ID=wmed -e OAUTH2_CLIENT_SECRET=wmed \
     -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
@@ -88,7 +88,7 @@ When () {
   echo Sleep for a few seconds whilst docker container comes up ...
   sleep 5
 
-  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh extract
+  docker exec "$DOCKER_TTY_OPTS" -w /local wmed /app/scripts/extractDeploy.sh extract
 }
 
 Then () {
@@ -96,6 +96,8 @@ Then () {
 
   model_path=$(echo docker exec wmed printenv MODEL_PATH)
   echo "The MODEL_PATH has been set to ${model_path}"
+
+  assert_equals "$model_path" "$GITHUB_WORKSPACE"
 }
 
 ############################################################################
