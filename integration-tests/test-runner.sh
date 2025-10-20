@@ -74,6 +74,8 @@ run_test () {
 }
 
 if [ $composeFile = "extract-compose.yaml" ]; then
+  # TODO Remove debug once working
+  echo "Found tests:\n$('ls' -1S $TESTSDIR/tests/extract*.sh)"
   'ls' -1S $TESTSDIR/tests/extract*.sh | while read tst; do
     tst=`basename $tst`
     run_test $composeFile $tst
