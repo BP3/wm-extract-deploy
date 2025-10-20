@@ -31,7 +31,7 @@ fi
 
 if [ "$MODEL_PATH" = "" ]; then
   MODEL_PATH=.
-  echo "Defaulting the model path to '.' as the variable exists but is not set"
+  echo "MODEL_PATH variable not set, defaulting to '.'"
 fi
 
 python "${SCRIPT_DIR}"/deploy.py "$@"
