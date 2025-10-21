@@ -160,7 +160,7 @@ Then () {
 _setup
 
   Given
-#  When
+  When
 #  Then
 
 _teardown
