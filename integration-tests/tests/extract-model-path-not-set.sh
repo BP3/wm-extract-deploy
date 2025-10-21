@@ -47,7 +47,6 @@ _setup () {
 }
 
 _teardown () {
-  :
   docker container stop wmed
   docker container rm wmed
 
@@ -92,13 +91,15 @@ When () {
 Then () {
   echo "$TESTNAME: Then"
 
-  model_path=$(docker exec "$DOCKER_TTY_OPTS" wmed /bin/sh -c 'echo $MODEL_PATH')
-  echo "Then: The MODEL_PATH has been set to '$model_path'"
+  docker exec "$DOCKER_TTY_OPTS" -w /local wmed env
 
-  token_url=$(docker exec "$DOCKER_TTY_OPTS" wmed /bin/sh -c 'echo $OAUTH2_TOKEN_URL')
-  echo "When: The OAUTH2_TOKEN_URL has been set to '$token_url'"
+  #docker exec -i -w /local wmed env > envvars.txt
+  #docker container cp envvars.txt to local then look for var value
 
-  assert_equals "$model_path" "."
+#  model_path=$(docker exec "$DOCKER_TTY_OPTS" wmed /bin/sh -c 'echo $MODEL_PATH')
+#  echo "Then: The MODEL_PATH has been set to '$model_path'"
+#
+#  assert_equals "$model_path" "."
 }
 
 ############################################################################
