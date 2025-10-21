@@ -86,13 +86,13 @@ When () {
   echo Sleep for a few seconds whilst docker container comes up ...
   sleep 5
 
-  docker exec "$DOCKER_TTY_OPTS" -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null
+  docker exec "$DOCKER_TTY_OPTS" -w /local wmed /app/scripts/extractDeploy.sh extract
 }
 
 Then () {
   echo "$TESTNAME: Then"
 
-  model_path=$(echo docker exec wmed printenv MODEL_PATH)
+  model_path=$(docker exec wmed printenv MODEL_PATH)
   echo "The MODEL_PATH has been set to $model_path"
 
   assert_equals "$model_path" "."
