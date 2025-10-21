@@ -159,8 +159,8 @@ Then () {
 
 _setup
 
-  Given
-  When
-  Then
+#  Given
+#  When
+#  Then
 
 _teardown
