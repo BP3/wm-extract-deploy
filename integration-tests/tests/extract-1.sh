@@ -100,13 +100,13 @@ When () {
   #  --mount type=bind,src=$PWD/$TESTSDIR/$TESTNAME,dst=/local --workdir=/local \
   # So, although this command demonstrates how we might normally run the command it is actually
   # the following command below that will allow us to grab the data
-  docker run --rm --net=host \
-    -e NO_GIT=true \
-    -e OAUTH2_CLIENT_ID=wmed -e OAUTH2_CLIENT_SECRET=wmed \
-    -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
-    -e CAMUNDA_WM_PROJECT="$project_id" \
-    -e CAMUNDA_WM_HOST="localhost:8070" \
-      $IMAGE_NAME:$IMAGE_REF extract
+#  docker run --rm --net=host \
+#    -e NO_GIT=true \
+#    -e OAUTH2_CLIENT_ID=wmed -e OAUTH2_CLIENT_SECRET=wmed \
+#    -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
+#    -e CAMUNDA_WM_PROJECT="$project_id" \
+#    -e CAMUNDA_WM_HOST="localhost:8070" \
+#      $IMAGE_NAME:$IMAGE_REF extract
 
   # Unfortunately the command above doesn't allow us to grab the data - but doing it this way we can
   docker run -d $DOCKER_TTY_OPTS --name wmed --net=host -w /local \
@@ -160,7 +160,7 @@ Then () {
 _setup
 
   Given
-  #When
+  When
 #  Then
 
 _teardown
