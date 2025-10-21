@@ -92,7 +92,7 @@ When () {
 Then () {
   echo "$TESTNAME: Then"
 
-  model_path=$(docker exec "$DOCKER_TTY_OPT" wmed printenv MODEL_PATH)
+  model_path=$(docker exec "$DOCKER_TTY_OPTS" wmed printenv MODEL_PATH)
   echo "The MODEL_PATH has been set to $model_path"
 
   assert_equals "$model_path" "."
