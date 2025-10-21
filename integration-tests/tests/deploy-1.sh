@@ -93,7 +93,7 @@ When () {
 
   # Now we can copy into the container the files that we will want to deploy
   docker container cp $TESTSDIR/$TESTNAME/deploy-files wmed:/local
-  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh deploy
+  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh deploy < /dev/null
   docker container stop wmed
   docker container rm wmed
 }
