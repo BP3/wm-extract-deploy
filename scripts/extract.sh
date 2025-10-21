@@ -15,7 +15,8 @@ SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 . "${SCRIPT_DIR}"/functions.sh
 
 if [ "$MODEL_PATH" = "" ]; then
-  MODEL_PATH=.
+  MODEL_PATH="."
+  export MODEL_PATH
   echo "MODEL_PATH variable not set, defaulting to '$MODEL_PATH'"
 fi
 
