@@ -123,8 +123,8 @@ When () {
   docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh extract
   echo "*** Exit code = $?"
 #  docker container cp wmed:/local $TESTSDIR/$TESTNAME
-#  docker container stop wmed
-#  docker container rm wmed
+  docker container stop wmed
+  docker container rm wmed
 #
 #  # Move the data where we want it
 #  mv $TESTSDIR/$TESTNAME/local/* $TESTSDIR/$TESTNAME
