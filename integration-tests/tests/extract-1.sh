@@ -117,17 +117,17 @@ When () {
     -e CAMUNDA_WM_HOST="localhost:8070" \
       --entrypoint /bin/sh $IMAGE_NAME:$IMAGE_REF
 
-  echo Sleep for a few seconds whilst docker container comes up ...
-  sleep 5
-
-  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh extract
-  docker container cp wmed:/local $TESTSDIR/$TESTNAME
-  docker container stop wmed
-  docker container rm wmed
-
-  # Move the data where we want it
-  mv $TESTSDIR/$TESTNAME/local/* $TESTSDIR/$TESTNAME
-  rm -fr $TESTSDIR/$TESTNAME/local
+#  echo Sleep for a few seconds whilst docker container comes up ...
+#  sleep 5
+#
+#  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh extract
+#  docker container cp wmed:/local $TESTSDIR/$TESTNAME
+#  docker container stop wmed
+#  docker container rm wmed
+#
+#  # Move the data where we want it
+#  mv $TESTSDIR/$TESTNAME/local/* $TESTSDIR/$TESTNAME
+#  rm -fr $TESTSDIR/$TESTNAME/local
 }
 
 Then () {
@@ -160,7 +160,7 @@ Then () {
 _setup
 
   Given
-#  When
+  When
 #  Then
 
 _teardown
