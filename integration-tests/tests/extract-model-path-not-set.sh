@@ -90,6 +90,9 @@ When () {
 
   model_path=$(docker exec "$DOCKER_TTY_OPTS" wmed /bin/sh -c 'echo $MODEL_PATH')
   echo "When: The MODEL_PATH has been set to '$model_path'"
+
+  token_url=$(docker exec "$DOCKER_TTY_OPTS" wmed /bin/sh -c 'echo $OAUTH2_TOKEN_URL')
+  echo "When: The OAUTH2_TOKEN_URL has been set to '$token_url'"
 }
 
 Then () {
