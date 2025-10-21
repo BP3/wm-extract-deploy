@@ -120,7 +120,7 @@ When () {
   echo Sleep for a few seconds whilst docker container comes up ...
   sleep 5
 
-  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh extract
+  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null
   echo "*** Exit code = $?"
   docker container cp wmed:/local $TESTSDIR/$TESTNAME
   docker container stop wmed
