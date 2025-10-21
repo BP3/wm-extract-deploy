@@ -159,7 +159,7 @@ Then () {
 
 _setup
 
-#  Given
+  Given
 #  When
 #  Then
 
