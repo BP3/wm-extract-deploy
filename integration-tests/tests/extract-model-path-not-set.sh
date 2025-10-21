@@ -87,12 +87,6 @@ When () {
   sleep 5
 
   docker exec "$DOCKER_TTY_OPTS" -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null
-
-  model_path=$(docker exec "$DOCKER_TTY_OPTS" wmed /bin/sh -c 'echo $MODEL_PATH')
-  echo "When: The MODEL_PATH has been set to '$model_path'"
-
-  token_url=$(docker exec "$DOCKER_TTY_OPTS" wmed /bin/sh -c 'echo $OAUTH2_TOKEN_URL')
-  echo "When: The OAUTH2_TOKEN_URL has been set to '$token_url'"
 }
 
 Then () {
@@ -100,6 +94,9 @@ Then () {
 
   model_path=$(docker exec "$DOCKER_TTY_OPTS" wmed /bin/sh -c 'echo $MODEL_PATH')
   echo "Then: The MODEL_PATH has been set to '$model_path'"
+
+  token_url=$(docker exec "$DOCKER_TTY_OPTS" wmed /bin/sh -c 'echo $OAUTH2_TOKEN_URL')
+  echo "When: The OAUTH2_TOKEN_URL has been set to '$token_url'"
 
   assert_equals "$model_path" "."
 }
