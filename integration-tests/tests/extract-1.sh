@@ -120,15 +120,14 @@ When () {
   echo Sleep for a few seconds whilst docker container comes up ...
   sleep 5
 
-  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh extract
-  echo "*** Exit code = $?"
+  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null
   docker container cp wmed:/local $TESTSDIR/$TESTNAME
   docker container stop wmed
   docker container rm wmed
-#
-#  # Move the data where we want it
-#  mv $TESTSDIR/$TESTNAME/local/* $TESTSDIR/$TESTNAME
-#  rm -fr $TESTSDIR/$TESTNAME/local
+
+  # Move the data where we want it
+  mv $TESTSDIR/$TESTNAME/local/* $TESTSDIR/$TESTNAME
+  rm -fr $TESTSDIR/$TESTNAME/local
 }
 
 Then () {
@@ -162,6 +161,6 @@ _setup
 
   Given
   When
-#  Then
+  Then
 
 _teardown
