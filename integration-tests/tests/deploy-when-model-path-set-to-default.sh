@@ -92,7 +92,7 @@ When () {
 
   # Now we can copy into the container the files to the root of the repository which is the default location
   # of MODEL_PATH that is set by the 'deploy.sh' script, which is where we will deploy the process models from
-  docker container cp $TESTSDIR/$TESTNAME/deploy-files wmed:/local
+  docker container cp $TESTSDIR/$TESTNAME wmed:/local
   docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh deploy < /dev/null
   docker container stop wmed
   docker container rm wmed
@@ -113,7 +113,7 @@ Then () {
   # Now get back the deployed XML for the key, and check that it exactly matches what we deployed
   get_process_definition_xml_by_key "$process_1_key"
   echo $response >> $TESTSDIR/$TESTNAME/actual_process_1_xml.xml
-  assert_xml_match $TESTSDIR/$TESTNAME/actual_process_1_xml.xml $TESTSDIR/$TESTNAME/deploy-files/process.bpmn
+  assert_xml_match $TESTSDIR/$TESTNAME/actual_process_1_xml.xml $TESTSDIR/$TESTNAME/process.bpmn
 }
 
 ############################################################################
