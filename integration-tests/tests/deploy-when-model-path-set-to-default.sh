@@ -59,7 +59,7 @@ Given () {
 
   # Just trying some stuff out. This probably needs to go into functions later
   # Assumes that we have already run 'docker-compose -f ../deploy-compose.yaml up -d'
-
+  mkdir -p $TESTSDIR/$TESTNAME
   cp files/*.bpmn $TESTSDIR/$TESTNAME
 
   get_access_token
