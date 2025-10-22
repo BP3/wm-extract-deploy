@@ -98,7 +98,7 @@ Then () {
   # and not the root of the repository
   docker exec "$DOCKER_TTY_OPTS" -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null
   echo "docker exec exit code = $?"
-  $?
+  assert_equals $? 1
 }
 
 ############################################################################
@@ -108,8 +108,6 @@ _setup
 
   Given
   When
-  rc=Then
+  Then
 
 _teardown
-
-exit $rc
