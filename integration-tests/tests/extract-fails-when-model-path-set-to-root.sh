@@ -97,7 +97,6 @@ Then () {
   # This should now fail because we are trying to extract to the root of the GH runner
   # and not the root of the repository
   docker exec "$DOCKER_TTY_OPTS" -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null
-  echo "docker exec exit code = $?"
   assert_equals $? 1
 }
 
