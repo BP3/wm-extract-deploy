@@ -104,16 +104,16 @@ Then () {
   expected_version=1
   get_access_token
 
-  # Get the deployed version and key for the first process
+  # Get the deployed version and key for the process
   search_process_definitions_by_bpmn_id "Process_ConnectorTest"
   actual_version=$(echo $response | jq ".items[0].version")
   assert_equals $actual_version $expected_version
-  process_1_key=$(echo $response | jq ".items[0].key")
+  process_key=$(echo $response | jq ".items[0].key")
 
   # Now get back the deployed XML for the key, and check that it exactly matches what we deployed
-  get_process_definition_xml_by_key "$process_1_key"
-  echo $response >> $TESTSDIR/$TESTNAME/actual_process_1_xml.xml
-  assert_xml_match $TESTSDIR/$TESTNAME/actual_process_1_xml.xml $TESTSDIR/$TESTNAME/process.bpmn
+  get_process_definition_xml_by_key "$process_key"
+  echo $response >> $TESTSDIR/$TESTNAME/actual_process_xml.xml
+  assert_xml_match $TESTSDIR/$TESTNAME/actual_process_xml.xml $TESTSDIR/$TESTNAME/process.bpmn
 }
 
 ############################################################################
