@@ -56,14 +56,10 @@ run_test () {
 
   echo "Running test $2"
 
-  grep 'EXPECTED_TO_FAIL' $TESTSDIR/tests/$2
-  expected_to_fail=$((1 - $?)) # flip grep EC so it makes more sense
-  echo "expected_to_fail = $expected_to_fail"
-
   TESTSDIR=$TESTSDIR DOCKER_TTY_OPTS=$docker_tty_opts /bin/sh -x $TESTSDIR/tests/$2 $IMAGE_REF
 
   rc=$?
-  if [ $rc -ne 0 ] && [ $expected_to_fail = 0 ]; then
+  if [ $rc -ne 0 ]; then
     echo "Test '$2' completed with an error (exit code '$rc')"
     testStatus='Failure'
   else

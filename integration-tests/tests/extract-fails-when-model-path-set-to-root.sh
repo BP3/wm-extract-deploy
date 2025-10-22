@@ -29,10 +29,6 @@
 #
 ############################################################################
 
-# Used to indicate if this text is expected to fail or not
-# If this is not set then it is assumed it is not expected to fail
-#EXPECTED_TO_FAIL
-
 TESTNAME=`basename $0 .sh`
 IMAGE_NAME=ghcr.io/bp3/wm-extract-deploy
 IMAGE_REF=$1
