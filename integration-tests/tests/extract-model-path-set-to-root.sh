@@ -29,6 +29,10 @@
 #
 ############################################################################
 
+# Used to indicate if this text is expected to fail or not
+# If this is not set then it is assumed it is not expected to fail
+#EXPECTED_TO_FAIL
+
 TESTNAME=`basename $0 .sh`
 IMAGE_NAME=ghcr.io/bp3/wm-extract-deploy
 IMAGE_REF=$1
@@ -85,22 +89,14 @@ When () {
 
   echo Sleep for a few seconds whilst docker container comes up ...
   sleep 5
-
-  docker exec "$DOCKER_TTY_OPTS" -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null
 }
 
 Then () {
   echo "$TESTNAME: Then"
 
-#  docker exec "$DOCKER_TTY_OPTS" -w /local wmed env
-
-  #docker exec -i -w /local wmed env > envvars.txt
-  #docker container cp envvars.txt to local then look for var value
-
-#  model_path=$(docker exec "$DOCKER_TTY_OPTS" wmed /bin/sh -c 'echo $MODEL_PATH')
-#  echo "Then: The MODEL_PATH has been set to '$model_path'"
-#
-#  assert_equals "$model_path" "."
+  # This should now fail because we are trying to extract to the root of the GH runner
+  # and not the root of the repository
+  docker exec "$DOCKER_TTY_OPTS" -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null
 }
 
 ############################################################################
