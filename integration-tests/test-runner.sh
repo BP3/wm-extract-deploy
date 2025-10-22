@@ -58,11 +58,12 @@ run_test () {
 
   TESTSDIR=$TESTSDIR DOCKER_TTY_OPTS=$docker_tty_opts /bin/sh -x $TESTSDIR/tests/$2 $IMAGE_REF
 
-  expected_to_fail=$(grep 'EXPECTED_TO_FAIL' $TESTSDIR/tests/$2)
+  grep 'EXPECTED_TO_FAIL' $TESTSDIR/tests/$2
+  expected_to_fail=$?
   echo "expected_to_fail = $expected_to_fail"
 
   rc=$?
-  if [ $rc -ne 0 ] && [ -z "$expected_to_fail" ]; then
+  if [ $rc -ne 0 ] && [ $expected_to_fail = 1 ]; then
     echo "Test '$2' completed with an error (exit code '$rc')"
     testStatus='Failure'
   else
