@@ -100,7 +100,6 @@ Then () {
   # In the GH pipeline logs
   docker exec "$DOCKER_TTY_OPTS" -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null
   assert_equals $? 1
-  $? # Return back so we can run the teardown function then propagate back to the test runner
 }
 
 ############################################################################
@@ -110,8 +109,6 @@ _setup
 
   Given
   When
-  rc=Then
+  Then
 
 _teardown
-
-exit $rc
