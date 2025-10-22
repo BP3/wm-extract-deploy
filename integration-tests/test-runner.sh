@@ -62,7 +62,7 @@ run_test () {
   echo "expected_to_fail = $expected_to_fail"
 
   rc=$?
-  if [ $rc -ne 0 ] -a [ -z $expected_to_fail ]; then
+  if [ $rc -ne 0 ] && [ -z "$expected_to_fail" ]; then
     echo "Test $1 completed with an error"
     testStatus='Failure'
   else
