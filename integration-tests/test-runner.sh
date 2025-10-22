@@ -63,10 +63,10 @@ run_test () {
 
   rc=$?
   if [ $rc -ne 0 ] && [ -z "$expected_to_fail" ]; then
-    echo "Test $1 completed with an error"
+    echo "Test '$2' completed with an error (exit code '$rc')"
     testStatus='Failure'
   else
-    echo "Test completed successfully"
+    echo "Test '$2' completed successfully (exit code '$rc')"
   fi
 
   # Kind of want a "finally" section to execute this in - it always has to happen
