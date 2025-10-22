@@ -96,6 +96,8 @@ Then () {
 
   # This should now fail because we are trying to extract to the root of the GH runner
   # and not the root of the repository
+  # We should see the message "PermissionError: [Errno 13] Permission denied: '//process.bpmn'"
+  # In the GH pipeline logs
   docker exec "$DOCKER_TTY_OPTS" -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null
   assert_equals $? 1
 }
