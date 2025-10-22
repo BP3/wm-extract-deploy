@@ -76,6 +76,7 @@ When () {
   # before we get a chance to check
   docker run -d "$DOCKER_TTY_OPTS" --name wmed --net=host -w /local \
     -e APP=/app -e NO_GIT=true \
+    -e MODEL_PATH=/ \
     -e OAUTH2_CLIENT_ID=wmed -e OAUTH2_CLIENT_SECRET=wmed \
     -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
     -e CAMUNDA_WM_PROJECT="$project_id" \
@@ -91,7 +92,7 @@ When () {
 Then () {
   echo "$TESTNAME: Then"
 
-  docker exec "$DOCKER_TTY_OPTS" -w /local wmed env
+#  docker exec "$DOCKER_TTY_OPTS" -w /local wmed env
 
   #docker exec -i -w /local wmed env > envvars.txt
   #docker container cp envvars.txt to local then look for var value
