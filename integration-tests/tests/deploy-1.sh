@@ -70,18 +70,7 @@ When () {
   echo "$TESTNAME: When"
   mkdir -p $TESTSDIR/$TESTNAME
 
-  # The mount command won't work properly when using dind!
-  #  --mount type=bind,src=$PWD/$TESTSDIR/$TESTNAME,dst=/local --workdir=/local \
-  # So, although this command demonstrates how we might normally run the command it is actually
-  # the following command below that will allow us to grab the data
-#  docker run --rm --net=host --mount type=bind,src=${PWD},dst=/local --workdir /local \
-#    -e NO_GIT=true \
-#    -e OAUTH2_CLIENT_ID=$CLIENT_ID -e OAUTH2_CLIENT_SECRET=$CLIENT_SECRET \
-#    -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
-#    -e CLUSTER_HOST=localhost \
-#    -e MODEL_PATH=./files \
-#      $IMAGE_NAME:$IMAGE_REF deploy
-
+  # The mount command won't work properly when using dind, so we have to do it this way to allow us to grab the data
   docker run -d $DOCKER_TTY_OPTS --name wmed --net=host -w /local \
     -e NO_GIT=true \
     -e CLUSTER_HOST=localhost \
