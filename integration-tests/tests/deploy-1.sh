@@ -70,7 +70,8 @@ When () {
   echo "$TESTNAME: When"
   mkdir -p $TESTSDIR/$TESTNAME
 
-  # The mount command won't work properly when using dind, so we have to do it this way to allow us to grab the data
+  # The mount command won't work properly when using dind, so we have to do it this way to allow us to grab
+  # Also it allows us to call the extractDeploy.sh script interactively otherwise the container will run and complete
   docker run -d $DOCKER_TTY_OPTS --name wmed --net=host -w /local \
     -e NO_GIT=true \
     -e CLUSTER_HOST=localhost \

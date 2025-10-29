@@ -71,9 +71,9 @@ When () {
   echo "$TESTNAME: When"
   mkdir -p $TESTSDIR/$TESTNAME
 
-  # Running this in interactive mode so we can run the extract script and check for the MODEL_PATH
-  # env var, otherwise if we run it without overriding the entry point the container will have exited
-  # before we get a chance to check
+  # The mount command won't work properly when using dind, so we have to do it this way to allow us to grab
+  # Also it allows us to call the extractDeploy.sh script interactively otherwise the container will run and complete
+  # Set the MODEL_PATH to root, which should then throw an error when running inside the GH pipeline runner
   docker run -d "$DOCKER_TTY_OPTS" --name wmed --net=host -w /local \
     -e APP=/app -e NO_GIT=true \
     -e MODEL_PATH=/ \
