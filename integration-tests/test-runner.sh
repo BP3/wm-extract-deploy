@@ -60,10 +60,10 @@ run_test () {
 
   rc=$?
   if [ $rc -ne 0 ]; then
-    echo "Test $1 completed with an error"
+    echo "Test '$2' completed with an error (exit code '$rc')"
     testStatus='Failure'
   else
-    echo "Test completed successfully"
+    echo "Test '$2' completed successfully (exit code '$rc')"
   fi
 
   # Kind of want a "finally" section to execute this in - it always has to happen
@@ -72,15 +72,16 @@ run_test () {
 
 if [ $composeFile = "extract-compose.yaml" ]; then
   'ls' -1S $TESTSDIR/tests/extract*.sh | while read tst; do
-    tst=`basename $tst`
-    run_test $composeFile $tst
+    next_tst=`basename $tst`
+    run_test $composeFile $next_tst
   done
+
 fi
 
 if [ $composeFile = "deploy-compose.yaml" ]; then
   'ls' -1S $TESTSDIR/tests/deploy*.sh | while read tst; do
-    tst=`basename $tst`
-    run_test $composeFile $tst
+    next_tst=`basename $tst`
+    run_test $composeFile $next_tst
   done
 fi
 

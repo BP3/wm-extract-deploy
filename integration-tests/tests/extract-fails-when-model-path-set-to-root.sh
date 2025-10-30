@@ -47,7 +47,9 @@ _setup () {
 }
 
 _teardown () {
-  :
+  docker container stop wmed
+  docker container rm wmed
+
   # Or we could leave everything behind so that it can be checked later
 #  if [ -d $TESTSDIR/$TESTNAME ]; then
 #    rm -rf $TESTSDIR/$TESTNAME
@@ -56,40 +58,13 @@ _teardown () {
 
 Given () {
   echo "$TESTNAME: Given"
-  # 1.  Need a local version of what project will look like - maybe in a separate directory
-  # 2.  Will first need to create/import project into Web Modeler
-
-  # Just trying some stuff out. This probably needs to go into functions later
-  # Assumes that we have already run 'docker-compose -f ../extract-compose.yaml up -d'
 
   get_access_token
 
-  # Big picture is
-  #
-  #   Project
-  #     Readme[.md]
-  #     process[.bpmn]
-  #     Folder1
-  #       Readme[.md]
-  #       process1[.bpmn]
-  #       process2.wmedIgnore[.bpmn]
-  #     Folder2.wmedIgnore
-  #       Readme[.md]
-  #       process[.bpmn]
-
+  # Give us something to extract although we are not testing this specifically
+  # as that test case is handled in other tests
   create_project "Project"
-#  add_collaborator demo@acme.com $project_id
-  create_file Readme $project_id files/Readme.md markdown
   create_file process $project_id files/process.bpmn bpmn
-
-  create_folder Folder1 $project_id
-  create_file Readme $project_id files/Readme.md markdown $folder_id
-  create_file process1 $project_id files/process.bpmn bpmn $folder_id
-  create_file process2-wmedIgnore $project_id files/process.bpmn bpmn $folder_id
-
-  create_folder Folder2.wmedIgnore $project_id
-  create_file Readme $project_id files/Readme.md markdown $folder_id
-  create_file process $project_id files/process.bpmn bpmn $folder_id
 }
 
 When () {
@@ -99,8 +74,10 @@ When () {
   # The mount command won't work properly when using dind, so we have to do it this way to allow us to grab
   # any test files we might need for testing.
   # Also it allows us to call the extractDeploy.sh script interactively otherwise the container will run and complete
-  docker run -d $DOCKER_TTY_OPTS --name wmed --net=host -w /local \
+  # Set the MODEL_PATH to root, which should then throw an error when running inside the GH pipeline runner
+  docker run -d "$DOCKER_TTY_OPTS" --name wmed --net=host -w /local \
     -e APP=/app -e NO_GIT=true \
+    -e MODEL_PATH=/ \
     -e OAUTH2_CLIENT_ID=wmed -e OAUTH2_CLIENT_SECRET=wmed \
     -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
     -e CAMUNDA_WM_PROJECT="$project_id" \
@@ -109,39 +86,17 @@ When () {
 
   echo Sleep for a few seconds whilst docker container comes up ...
   sleep 5
-
-  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null
-  docker container cp wmed:/local $TESTSDIR/$TESTNAME
-  docker container stop wmed
-  docker container rm wmed
-
-  # Move the data where we want it
-  mv $TESTSDIR/$TESTNAME/local/* $TESTSDIR/$TESTNAME
-  rm -fr $TESTSDIR/$TESTNAME/local
 }
 
 Then () {
   echo "$TESTNAME: Then"
-  # Then we have validate what we got back
-  # Might be able to do this with a directory level diff
 
-  assert_file_exists $TESTSDIR/$TESTNAME/config.yml
-  ext_project_id=`yq '.project.id' $TESTSDIR/$TESTNAME/config.yml`
-  if [ "$ext_project_id" != "$project_id" ]; then
-    exit 1
-  fi
-  assert_file_exists $TESTSDIR/$TESTNAME/Readme.md
-  assert_file_exists $TESTSDIR/$TESTNAME/process.bpmn
-  assert_xml_match $TESTSDIR/$TESTNAME/process.bpmn files/process.bpmn
-
-  assert_folder_exists $TESTSDIR/$TESTNAME/Folder1
-  assert_file_exists $TESTSDIR/$TESTNAME/Folder1/Readme.md
-
-  assert_file_exists $TESTSDIR/$TESTNAME/Folder1/process1.bpmn
-  assert_xml_match $TESTSDIR/$TESTNAME/Folder1/process1.bpmn files/process.bpmn
-  assert_file_not_exists $TESTSDIR/$TESTNAME/Folder1/process2-wmedIgnore.bpmn
-
-  assert_folder_not_exists $TESTSDIR/$TESTNAME/Folder2.wmedIgnore
+  # This should now fail because we are trying to extract to the root of the GH runner
+  # and not the root of the repository
+  # We should see the message "PermissionError: [Errno 13] Permission denied: '//process.bpmn'"
+  # In the GH pipeline logs
+  docker exec "$DOCKER_TTY_OPTS" -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null
+  assert_equals $? 1
 }
 
 ############################################################################

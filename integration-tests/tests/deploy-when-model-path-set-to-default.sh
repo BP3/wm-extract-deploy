@@ -59,9 +59,8 @@ Given () {
 
   # Just trying some stuff out. This probably needs to go into functions later
   # Assumes that we have already run 'docker-compose -f ../deploy-compose.yaml up -d'
-
-  mkdir -p $TESTSDIR/$TESTNAME/deploy-files
-  cp files/*.bpmn $TESTSDIR/$TESTNAME/deploy-files
+  mkdir -p $TESTSDIR/$TESTNAME
+  cp files/*.bpmn $TESTSDIR/$TESTNAME
 
   get_access_token
 }
@@ -73,17 +72,18 @@ When () {
   # The mount command won't work properly when using dind, so we have to do it this way to allow us to grab
   # any test files we might need for testing.
   # Also it allows us to call the extractDeploy.sh script interactively otherwise the container will run and complete
+  # Don't set the MODEL_PATH so it defaults to the root of the repository (i.e. '.')
   docker run -d $DOCKER_TTY_OPTS --name wmed --net=host -w /local \
     -e NO_GIT=true \
     -e CLUSTER_HOST=localhost \
-    -e MODEL_PATH=./deploy-files \
       --entrypoint /bin/sh $IMAGE_NAME:$IMAGE_REF
 
   echo Sleep for a few seconds whilst docker container comes up ...
   sleep 5
 
-  # Now we can copy into the container the files that we will want to deploy
-  docker container cp $TESTSDIR/$TESTNAME/deploy-files wmed:/local
+  # Now we can copy into the container the files to the root of the repository which is the default location
+  # of MODEL_PATH that is set by the 'deploy.sh' script, which is where we will deploy the process models from
+  docker container cp $TESTSDIR/$TESTNAME wmed:/local
   docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh deploy < /dev/null
   docker container stop wmed
   docker container rm wmed
@@ -95,26 +95,16 @@ Then () {
   expected_version=1
   get_access_token
 
-  # Get the deployed version and key for the first process
+  # Get the deployed version and key for the process
   search_process_definitions_by_bpmn_id "Process_ConnectorTest"
   actual_version=$(echo $response | jq ".items[0].version")
   assert_equals $actual_version $expected_version
-  process_1_key=$(echo $response | jq ".items[0].key")
-
-  # Get the deployed version and key for the second process
-  search_process_definitions_by_bpmn_id "Process_Second"
-  actual_version=$(echo $response | jq ".items[0].version")
-  assert_equals $actual_version $expected_version
-  process_2_key=$(echo $response | jq ".items[0].key")
+  process_key=$(echo $response | jq ".items[0].key")
 
   # Now get back the deployed XML for the key, and check that it exactly matches what we deployed
-  get_process_definition_xml_by_key "$process_1_key"
-  echo $response >> $TESTSDIR/$TESTNAME/actual_process_1_xml.xml
-  assert_xml_match $TESTSDIR/$TESTNAME/actual_process_1_xml.xml $TESTSDIR/$TESTNAME/deploy-files/process.bpmn
-
-  get_process_definition_xml_by_key "$process_2_key"
-  echo $response >> $TESTSDIR/$TESTNAME/actual_process_2_xml.xml
-  assert_xml_match $TESTSDIR/$TESTNAME/actual_process_2_xml.xml $TESTSDIR/$TESTNAME/deploy-files/process2.bpmn
+  get_process_definition_xml_by_key "$process_key"
+  echo $response >> $TESTSDIR/$TESTNAME/actual_process_xml.xml
+  assert_xml_match $TESTSDIR/$TESTNAME/actual_process_xml.xml $TESTSDIR/$TESTNAME/process.bpmn
 }
 
 ############################################################################

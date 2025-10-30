@@ -14,6 +14,11 @@
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 . "${SCRIPT_DIR}"/functions.sh
 
+if [ "$MODEL_PATH" = "" ]; then
+  MODEL_PATH=.
+  echo "MODEL_PATH variable not set, defaulting to '$MODEL_PATH'"
+fi
+
 if [ -z "$NO_GIT" ]; then
   GIT_REPO_URL="$(getGitRepoUrl)"
   setupGit
