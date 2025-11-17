@@ -30,13 +30,13 @@ class AuthenticationError(Exception):
 class OAuth2:
     @staticmethod
     def add_deprecated_options(client_id_group: _MutuallyExclusiveGroup, client_secret_group: _MutuallyExclusiveGroup):
-        client_id_group.add_argument("--camunda-wm-client-id", dest="client_id", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth-client-id instead",
+        client_id_group.add_argument("--camunda-wm-client-id", dest="client_id", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth2-client-id instead",
                                      env_var = "CAMUNDA_WM_CLIENT_ID", deprecated = True)
-        client_id_group.add_argument("--zeebe-client-id", dest="client_id", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth-client-id instead",
+        client_id_group.add_argument("--zeebe-client-id", dest="client_id", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth2-client-id instead",
                                      env_var = "ZEEBE_CLIENT_ID", deprecated = True)
-        client_secret_group.add_argument("--camunda-wm-client-secret", dest="client_secret", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth-client-secret instead",
+        client_secret_group.add_argument("--camunda-wm-client-secret", dest="client_secret", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth2-client-secret instead",
                                          env_var = "CAMUNDA_WM_CLIENT_SECRET", deprecated = True)
-        client_secret_group.add_argument("--zeebe-client-secret", dest="client_secret", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth-client-secret instead",
+        client_secret_group.add_argument("--zeebe-client-secret", dest="client_secret", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth2-client-secret instead",
                                          env_var = "ZEEBE_CLIENT_SECRET", deprecated = True)
 
     parser = configargparse.ArgumentParser(add_help = False)
