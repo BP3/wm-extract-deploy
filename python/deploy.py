@@ -85,9 +85,6 @@ class Deployment(ModelAction):
     async def deploy(self, resource_file_paths: List[os.PathLike[str]], tenant_id: str = None) -> None:
         logger.info("Deploying resources: %s" + (" to tenant %s" if tenant_id is not None else "") + "...", resource_file_paths, tenant_id)
 
-        total_resource_sizes = sum(self.get_resource_size(resource_file_path) for resource_file_path in resource_file_paths)
-        logger.info("Total size of all the deployed resources is '%d' bytes", total_resource_sizes)
-
         if self.continue_on_error:
             for resource_file_path in resource_file_paths:
                 try:
@@ -96,6 +93,9 @@ class Deployment(ModelAction):
                     logger.exception("*** FILE: %s COULD NOT BE DEPLOYED ***", resource_file_path)
         else:
             await self.zeebe_client.deploy_resource(*resource_file_paths, tenant_id = tenant_id)
+
+        total_resource_sizes = sum(self.get_resource_size(resource_file_path) for resource_file_path in resource_file_paths)
+        logger.info("Total size of all the deployed resources is '%d' bytes", total_resource_sizes)
 
     def get_resource_size(self, resource_file_path):
         size = os.path.getsize(resource_file_path)
