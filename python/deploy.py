@@ -14,9 +14,9 @@ from argparse import _MutuallyExclusiveGroup
 import configargparse
 import asyncio
 import glob
-import os
 import humanize
-
+import os
+import logging
 from typing import List, cast
 from grpc.aio import AioRpcError
 from pyzeebe import (
@@ -29,7 +29,6 @@ from pyzeebe.errors import ZeebeGatewayUnavailableError, ProcessInvalidError
 
 from model_action import ModelAction
 from oauth import OAuth2
-from logger import get_logger
 
 class Deployment(ModelAction):
     logger = None
@@ -37,9 +36,9 @@ class Deployment(ModelAction):
     def __init__(self, args: configargparse.Namespace):
         super().__init__(args)
 
-        self.logger = get_logger(type(self).__name__, self.log_level)
+        self.logger = logging.getLogger(type(self).__name__)
 
-        self.oauth = OAuth2(args, self.log_level)
+        self.oauth = OAuth2(args)
         if args.cluster_id is not None:
             self.cluster_id = args.cluster_id
             self.region = args.cluster_region

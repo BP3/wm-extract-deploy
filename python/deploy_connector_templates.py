@@ -9,16 +9,14 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
-import logging
-
 import configargparse
 import glob
 import json
+import logging
 
 from model_action import ModelAction
 from web_modeler import WebModeler, NotFoundError, MultipleFoundError
 from oauth import AuthenticationError
-from logger import get_logger
 
 class DeployTemplates(ModelAction):
     logger = None
@@ -26,9 +24,9 @@ class DeployTemplates(ModelAction):
     def __init__(self, args: configargparse.Namespace):
         super().__init__(args)
 
-        self.logger = get_logger(type(self).__name__, self.log_level)
+        self.logger = logging.getLogger(type(self).__name__)
 
-        self.wm = WebModeler(args, self.log_level)
+        self.wm = WebModeler(args)
 
     def deploy_template(self, template_path: str, project_id: str):
         self.logger.info("Processing template %s", template_path)
@@ -111,5 +109,5 @@ if __name__ == "__main__":
     try:
         DeployTemplates(args).main(args)
     except (AuthenticationError, NotFoundError, MultipleFoundError) as ex:
-        get_logger("DeployTemplates.main", logging.ERROR).error(ex)
+        logging.getLogger("DeployTemplates.main").error(ex)
         exit(3)

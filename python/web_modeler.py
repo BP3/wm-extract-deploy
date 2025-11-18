@@ -16,7 +16,6 @@ import os
 import json
 import yaml
 from oauth import OAuth2
-from logger import get_logger
 
 class NotFoundError(Exception):
     def __init__(self, resource_type: str, key: str = None, value: str = None):
@@ -47,12 +46,12 @@ class WebModeler:
                         env_var="OAUTH_PLATFORM", choices=['KEYCLOAK', 'ENTRA'], default='KEYCLOAK', deprecated = True )
 
 
-    def __init__(self, args: configargparse.Namespace, log_level):
+    def __init__(self, args: configargparse.Namespace):
         super().__init__()
 
-        self.logger = get_logger(type(self).__name__, log_level)
+        self.logger = logging.getLogger(type(self).__name__)
 
-        self.oauth = OAuth2(args, log_level)
+        self.oauth = OAuth2(args)
 
         # TODO replace this with web modeler url
         # Current options require port to be specified with the host which is not intuitive

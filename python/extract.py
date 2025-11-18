@@ -9,14 +9,13 @@
 # the laws of the United States and other countries.
 #
 ############################################################################
-import logging
 import configargparse
+import logging
 import os
 import re
 from model_action import ModelAction
 from web_modeler import WebModeler, NotFoundError, MultipleFoundError
 from oauth import AuthenticationError
-from logger import get_logger
 
 class Extraction(ModelAction):
     logger = None
@@ -24,9 +23,9 @@ class Extraction(ModelAction):
     def __init__(self, args):
         super().__init__(args)
 
-        self.logger = get_logger(type(self).__name__, self.log_level)
+        self.logger = logging.getLogger(type(self).__name__)
 
-        self.wm = WebModeler(args, self.log_level)
+        self.wm = WebModeler(args)
         if args.exclude is not None:
             self.logger.info("Excluding paths with segments that match %s", args.exclude)
             self.exclude_pattern = re.compile(args.exclude)
@@ -80,5 +79,5 @@ if __name__ == "__main__":
     try:
         Extraction(args).main()
     except (AuthenticationError, NotFoundError, MultipleFoundError) as ex:
-        get_logger("Extraction.main", logging.ERROR).error(ex)
+        logging.getLogger("Extraction.main").error(ex)
         exit(3)

@@ -13,10 +13,10 @@ import os
 from argparse import _MutuallyExclusiveGroup
 
 import configargparse
+import logging
 import requests
 from oauthlib.oauth2 import BackendApplicationClient, OAuth2Error
 from requests_oauthlib import OAuth2Session
-from logger import get_logger
 
 class AuthenticationError(Exception):
     def __init__(self, status_code = None, response_text = None):
@@ -56,10 +56,10 @@ class OAuth2:
                         env_var = "OAUTH2_SCOPE")
     add_deprecated_options(client_id_group, client_secret_group)
 
-    def __init__(self, args, log_level):
+    def __init__(self, args):
         super().__init__()
 
-        self.logger = get_logger(type(self).__name__, log_level)
+        self.logger = logging.getLogger(type(self).__name__)
 
         self.token_url = args.token_url
         self.audience = args.audience
@@ -94,5 +94,5 @@ class OAuth2:
             self.logger.exception("Error while authenticating")
             exit(3)
         except requests.exceptions.ConnectionError as ex:
-            self.logger.exception("Error while retrieving OAuth token")
+            self.logger.error(f"Error while retrieving OAuth token {ex}")
             exit(3)
