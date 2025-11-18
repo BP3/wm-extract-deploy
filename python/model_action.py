@@ -14,7 +14,7 @@ import configargparse
 class ModelAction:
     parser = configargparse.ArgumentParser(add_help = False)
     parser.add_argument("--model-path", dest="model_path", help = "Model file path", env_var = "MODEL_PATH", default=".")
-    parser.add_argument("--log-level", dest="log_level", help = "Log level", env_var = "LOG_LEVEL", default="INFO")
+    parser.add_argument("--log-level", dest="log_level", help = "Log level", env_var = "LOG_LEVEL", default="ERROR")
 
     def __init__(self, args):
         super().__init__()
