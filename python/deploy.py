@@ -15,6 +15,7 @@ import configargparse
 import asyncio
 import glob
 import os
+import humanize
 
 from typing import List, cast
 from grpc.aio import AioRpcError
@@ -97,12 +98,14 @@ class Deployment(ModelAction):
         else:
             await self.zeebe_client.deploy_resource(*resource_file_paths, tenant_id = tenant_id)
 
-        total_resource_sizes = sum(self.get_resource_size(resource_file_path) for resource_file_path in resource_file_paths)
-        self.logger.info("Total size of all the deployed resources is '%d' bytes", total_resource_sizes)
+        total_resource_sizes = sum(self.get_resource_size(resource_file_path)
+                                   for resource_file_path in resource_file_paths)
+        self.logger.info("Total size of all the deployed resources is %s",
+                         humanize.naturalsize(total_resource_sizes, binary=True))
 
     def get_resource_size(self, resource_file_path):
         size = os.path.getsize(resource_file_path)
-        self.logger.info("Resource '%s' has a size of '%d' bytes", resource_file_path, size)
+        self.logger.info("Resource '%s' has a size of %s", resource_file_path, humanize.naturalsize(size, binary=True))
 
         return size
 
