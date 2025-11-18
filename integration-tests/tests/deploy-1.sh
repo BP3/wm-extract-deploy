@@ -77,6 +77,7 @@ When () {
     -e NO_GIT=true \
     -e CLUSTER_HOST=localhost \
     -e MODEL_PATH=./deploy-files \
+    -e LOG_LEVEL=DEBUG \
       --entrypoint /bin/sh $IMAGE_NAME:$IMAGE_REF
 
   echo Sleep for a few seconds whilst docker container comes up ...
