@@ -37,9 +37,9 @@ class Deployment(ModelAction):
     def __init__(self, args: configargparse.Namespace):
         super().__init__(args)
 
-        self.logger = get_logger("Deploy", self.log_level)
+        self.logger = get_logger(type(self).__name__, self.log_level)
 
-        self.oauth = OAuth2(args)
+        self.oauth = OAuth2(args, self.log_level)
         if args.cluster_id is not None:
             self.cluster_id = args.cluster_id
             self.region = args.cluster_region

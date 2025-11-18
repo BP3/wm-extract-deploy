@@ -13,12 +13,10 @@ import os
 from argparse import _MutuallyExclusiveGroup
 
 import configargparse
-import logging
 import requests
 from oauthlib.oauth2 import BackendApplicationClient, OAuth2Error
 from requests_oauthlib import OAuth2Session
-
-logger = logging.getLogger()
+from logger import get_logger
 
 class AuthenticationError(Exception):
     def __init__(self, status_code = None, response_text = None):
@@ -28,6 +26,8 @@ class AuthenticationError(Exception):
 
 
 class OAuth2:
+    logger = None
+
     @staticmethod
     def add_deprecated_options(client_id_group: _MutuallyExclusiveGroup, client_secret_group: _MutuallyExclusiveGroup):
         client_id_group.add_argument("--camunda-wm-client-id", dest="client_id", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth2-client-id instead",
@@ -56,8 +56,11 @@ class OAuth2:
                         env_var = "OAUTH2_SCOPE")
     add_deprecated_options(client_id_group, client_secret_group)
 
-    def __init__(self, args):
+    def __init__(self, args, log_level):
         super().__init__()
+
+        self.logger = get_logger(type(self).__name__, log_level)
+
         self.token_url = args.token_url
         self.audience = args.audience
         self.grant_type = args.grant_type
@@ -88,8 +91,8 @@ class OAuth2:
                                                     client_secret=self.client_secret,
                                                     kwargs=data)["access_token"]
         except OAuth2Error as ex:
-            logger.exception("Error while authenticating")
+            self.logger.exception("Error while authenticating")
             exit(3)
         except requests.exceptions.ConnectionError as ex:
-            logger.exception("Error while retrieving OAuth token")
+            self.logger.exception("Error while retrieving OAuth token")
             exit(3)
