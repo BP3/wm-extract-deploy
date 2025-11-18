@@ -52,7 +52,7 @@ class WebModeler:
 
         self.logger = get_logger(type(self).__name__, log_level)
 
-        self.oauth = OAuth2(args)
+        self.oauth = OAuth2(args, log_level)
 
         # TODO replace this with web modeler url
         # Current options require port to be specified with the host which is not intuitive
