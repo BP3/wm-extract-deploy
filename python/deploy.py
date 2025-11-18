@@ -36,7 +36,6 @@ class Deployment(ModelAction):
     def __init__(self, args: configargparse.Namespace):
         super().__init__(args)
 
-        print(self.log_level)
         self.logger = get_logger("Deploy", self.log_level)
 
         self.oauth = OAuth2(args)
