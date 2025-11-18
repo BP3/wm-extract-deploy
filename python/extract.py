@@ -28,7 +28,7 @@ class Extraction(ModelAction):
 
         self.wm = WebModeler(args, self.log_level)
         if args.exclude is not None:
-            self.self.logger.info("Excluding paths with segments that match %s", args.exclude)
+            self.logger.info("Excluding paths with segments that match %s", args.exclude)
             self.exclude_pattern = re.compile(args.exclude)
         else:
             self.exclude_pattern = None
