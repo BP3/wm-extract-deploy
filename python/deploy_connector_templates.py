@@ -18,15 +18,18 @@ from model_action import ModelAction
 from web_modeler import WebModeler, NotFoundError, MultipleFoundError
 from oauth import AuthenticationError
 
-logger = logging.getLogger()
-
 class DeployTemplates(ModelAction):
+    logger = None
+
     def __init__(self, args: configargparse.Namespace):
         super().__init__(args)
+
+        self.logger = logging.getLogger(type(self).__name__)
+
         self.wm = WebModeler(args)
 
     def deploy_template(self, template_path: str, project_id: str):
-        logger.info("Processing template %s", template_path)
+        self.logger.info("Processing template %s", template_path)
         with open(template_path, 'r') as file:
             content = json.load(file)
             source_version = content["version"]
@@ -54,7 +57,7 @@ class DeployTemplates(ModelAction):
                         revision = files["items"][0]["revision"]
                     )
                 else:
-                    logger.info("\tNo changes to the template, skipping it.")
+                    self.logger.info("\tNo changes to the template, skipping it.")
             else:
                 try:
                     response = self.wm.post_file(
@@ -66,7 +69,7 @@ class DeployTemplates(ModelAction):
                     if response is not None:
                         file_id = response["id"]
                 except RuntimeError as error:
-                    logger.exception("\tError processing template %s", template_path)
+                    self.logger.exception("\tError processing template %s", template_path)
                     return
 
             if response is not None:
@@ -75,22 +78,22 @@ class DeployTemplates(ModelAction):
                     name = source_version
                 )
                 if milestone_response is not None:
-                    logger.info("Created milestone %s", milestone_response["name"])
+                    self.logger.info("Created milestone %s", milestone_response["name"])
 
     def main(self, args: configargparse.Namespace):
         templates = glob.glob(f"{self.model_path}/**/element-templates/*.json", recursive = True)
         if len(templates) == 0:
-            logger.warning("No templates to deploy.")
+            self.logger.warning("No templates to deploy.")
             return
 
-        logger.debug("Found templates: %s", templates)
+        self.logger.debug("Found templates: %s", templates)
 
         try:
             self.wm.authenticate()
 
             project_id = self.wm.get_project(args.project)["id"]
         except ValueError as error:
-            logger.error(error)
+            self.logger.error(error)
             parser.print_usage()
             exit(2)
 
@@ -106,5 +109,5 @@ if __name__ == "__main__":
     try:
         DeployTemplates(args).main(args)
     except (AuthenticationError, NotFoundError, MultipleFoundError) as ex:
-        logger.error(ex)
+        logging.getLogger("DeployTemplates.main").error(ex)
         exit(3)

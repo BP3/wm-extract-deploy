@@ -14,6 +14,7 @@ from argparse import _MutuallyExclusiveGroup
 import configargparse
 import asyncio
 import glob
+import humanize
 import os
 import logging
 from typing import List, cast
@@ -29,12 +30,14 @@ from pyzeebe.errors import ZeebeGatewayUnavailableError, ProcessInvalidError
 from model_action import ModelAction
 from oauth import OAuth2
 
-logger = logging.getLogger()
-
 class Deployment(ModelAction):
+    logger = None
 
     def __init__(self, args: configargparse.Namespace):
         super().__init__(args)
+
+        self.logger = logging.getLogger(type(self).__name__)
+
         self.oauth = OAuth2(args)
         if args.cluster_id is not None:
             self.cluster_id = args.cluster_id
@@ -83,15 +86,27 @@ class Deployment(ModelAction):
         self.zeebe_client = ZeebeClient(grpc_channel)
 
     async def deploy(self, resource_file_paths: List[os.PathLike[str]], tenant_id: str = None) -> None:
-        logger.info("Deploying resources: %s" + (" to tenant %s" if tenant_id is not None else "") + "...", resource_file_paths, tenant_id)
+        self.logger.info("Deploying resources: %s" + (" to tenant %s".format(tenant_id) if tenant_id is not None else "") + "...", resource_file_paths)
+
+        total_resource_sizes = sum(self.get_resource_size(resource_file_path)
+                                   for resource_file_path in resource_file_paths)
+        self.logger.info("Total size of all the resources to be deployed is %s",
+                         humanize.naturalsize(total_resource_sizes, binary=True))
+
         if self.continue_on_error:
             for resource_file_path in resource_file_paths:
                 try:
                     await self.zeebe_client.deploy_resource(resource_file_path, tenant_id = tenant_id)
                 except Exception as x:
-                    logger.exception("*** FILE: %s COULD NOT BE DEPLOYED ***", resource_file_path)
+                    self.logger.exception("*** FILE: %s COULD NOT BE DEPLOYED ***", resource_file_path)
         else:
             await self.zeebe_client.deploy_resource(*resource_file_paths, tenant_id = tenant_id)
+
+    def get_resource_size(self, resource_file_path):
+        size = os.path.getsize(resource_file_path)
+        self.logger.info("Resource '%s' has a size of %s", resource_file_path, humanize.naturalsize(size, binary=True))
+
+        return size
 
     async def main(self):
         # Types we need to support, according to:
@@ -101,10 +116,10 @@ class Deployment(ModelAction):
         for file_type in file_types:
             files.extend(glob.glob(f"{self.model_path}/**/{file_type}", recursive=True))
         if len(files) == 0:
-            logger.warning("Didn't find any files to deploy in '%s' matching %s.", self.model_path, file_types)
+            self.logger.warning("Didn't find any files to deploy in '%s' matching %s.", self.model_path, file_types)
             return
 
-        logger.debug("Found files: %s", files)
+        self.logger.debug("Found files: %s", files)
 
         self.create_zeebe_client()
         try:
@@ -115,10 +130,10 @@ class Deployment(ModelAction):
             else:
                 await self.deploy(files)
         except ZeebeGatewayUnavailableError as ex:
-            logger.error(ex.grpc_error)
+            self.logger.error(ex.grpc_error)
             exit(3)
         except ProcessInvalidError as ex:
-            logger.error(cast(AioRpcError, ex.__cause__)._details)
+            self.logger.error(cast(AioRpcError, ex.__cause__)._details)
             exit(3)
 
     @staticmethod

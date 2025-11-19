@@ -10,11 +10,16 @@
 #
 ############################################################################
 import configargparse
+import logging
+import sys
 
 class ModelAction:
     parser = configargparse.ArgumentParser(add_help = False)
+    parser.add_argument("--log-level", dest="log_level", help = "Log level", env_var = "LOG_LEVEL", default = "ERROR",
+                        choices = ["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "NOTSET"], nargs = "?")
     parser.add_argument("--model-path", dest="model_path", help = "Model file path", env_var = "MODEL_PATH", default=".")
 
     def __init__(self, args):
         super().__init__()
         self.model_path = args.model_path
+        logging.basicConfig(stream=sys.stdout, level=args.log_level.upper())

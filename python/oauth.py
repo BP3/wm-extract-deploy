@@ -18,8 +18,6 @@ import requests
 from oauthlib.oauth2 import BackendApplicationClient, OAuth2Error
 from requests_oauthlib import OAuth2Session
 
-logger = logging.getLogger()
-
 class AuthenticationError(Exception):
     def __init__(self, status_code = None, response_text = None):
         super().__init__(f"Attempt to authenticate failed: {status_code} - {response_text}")
@@ -28,15 +26,17 @@ class AuthenticationError(Exception):
 
 
 class OAuth2:
+    logger = None
+
     @staticmethod
     def add_deprecated_options(client_id_group: _MutuallyExclusiveGroup, client_secret_group: _MutuallyExclusiveGroup):
-        client_id_group.add_argument("--camunda-wm-client-id", dest="client_id", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth-client-id instead",
+        client_id_group.add_argument("--camunda-wm-client-id", dest="client_id", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth2-client-id instead",
                                      env_var = "CAMUNDA_WM_CLIENT_ID", deprecated = True)
-        client_id_group.add_argument("--zeebe-client-id", dest="client_id", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth-client-id instead",
+        client_id_group.add_argument("--zeebe-client-id", dest="client_id", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth2-client-id instead",
                                      env_var = "ZEEBE_CLIENT_ID", deprecated = True)
-        client_secret_group.add_argument("--camunda-wm-client-secret", dest="client_secret", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth-client-secret instead",
+        client_secret_group.add_argument("--camunda-wm-client-secret", dest="client_secret", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth2-client-secret instead",
                                          env_var = "CAMUNDA_WM_CLIENT_SECRET", deprecated = True)
-        client_secret_group.add_argument("--zeebe-client-secret", dest="client_secret", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth-client-secret instead",
+        client_secret_group.add_argument("--zeebe-client-secret", dest="client_secret", help = configargparse.SUPPRESS, #"Deprecated: Use --oauth2-client-secret instead",
                                          env_var = "ZEEBE_CLIENT_SECRET", deprecated = True)
 
     parser = configargparse.ArgumentParser(add_help = False)
@@ -58,6 +58,9 @@ class OAuth2:
 
     def __init__(self, args):
         super().__init__()
+
+        self.logger = logging.getLogger(type(self).__name__)
+
         self.token_url = args.token_url
         self.audience = args.audience
         self.grant_type = args.grant_type
@@ -88,8 +91,8 @@ class OAuth2:
                                                     client_secret=self.client_secret,
                                                     kwargs=data)["access_token"]
         except OAuth2Error as ex:
-            logger.exception("Error while authenticating")
+            self.logger.exception("Error while authenticating")
             exit(3)
         except requests.exceptions.ConnectionError as ex:
-            logger.exception("Error while retrieving OAuth token")
+            self.logger.error(f"Error while retrieving OAuth token {ex}")
             exit(3)

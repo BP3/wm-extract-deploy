@@ -17,8 +17,6 @@ import json
 import yaml
 from oauth import OAuth2
 
-logger = logging.getLogger()
-
 class NotFoundError(Exception):
     def __init__(self, resource_type: str, key: str = None, value: str = None):
         super().__init__(f"{resource_type} with {key} = '{value}' not found.")
@@ -35,6 +33,8 @@ class MultipleFoundError(Exception):
 class WebModeler:
     __SAAS_HOST: str = 'modeler.cloud.camunda.io'
 
+    logger = None
+
     parser = configargparse.ArgumentParser(parents=[OAuth2.parser], add_help=False)
     parser.add_argument("--host", help="Web Modeler host",
                         env_var="CAMUNDA_WM_HOST", default='modeler.cloud.camunda.io')
@@ -48,6 +48,9 @@ class WebModeler:
 
     def __init__(self, args: configargparse.Namespace):
         super().__init__()
+
+        self.logger = logging.getLogger(type(self).__name__)
+
         self.oauth = OAuth2(args)
 
         # TODO replace this with web modeler url
@@ -103,7 +106,7 @@ class WebModeler:
                 },
                 headers=headers
             )
-            logger.debug("Find project response %s", response.status_code)
+            self.logger.debug("Find project response %s", response.status_code)
             if response.status_code == 404:
                 raise NotFoundError("Project", key, value)
             elif response.status_code == 401:
@@ -112,7 +115,7 @@ class WebModeler:
                 raise RuntimeError("Find project failed:", response.status_code, response.text)
             return response.json()
         except requests.exceptions.ConnectionError as ex:
-            logger.exception("Error while finding project")
+            self.logger.exception("Error while finding project")
             exit(3)
 
     def list_files(self, project_id: str, name: str = None) -> dict:
@@ -161,7 +164,7 @@ class WebModeler:
             self.__wm_api_url + "/files/" + file_id,
             headers = self.__get_headers()
         )
-        logger.debug("Retrieve file content response %s", response.status_code)
+        self.logger.debug("Retrieve file content response %s", response.status_code)
         return response.json()
 
     def __create_config_file(self, data: dict):
@@ -185,7 +188,7 @@ class WebModeler:
                     self.__config = yaml.safe_load(file)
                 elif self.config_file.endswith("json"):
                     self.__config = json.load(file)
-                logger.info("Loaded config %s from %s", self.__config, self.config_file)
+                self.logger.info("Loaded config %s from %s", self.__config, self.config_file)
 
     def get_project(self, project_ref: str) -> dict:
         projects = None
@@ -196,7 +199,7 @@ class WebModeler:
         if self.__config is not None:
             project_ = self.__config["project"]
             if project_ref is not None and project_ref != project_["name"]:
-                logger.info("The project '%s' does not match the project '%s' from %s, ignoring contents and regenerating.",
+                self.logger.info("The project '%s' does not match the project '%s' from %s, ignoring contents and regenerating.",
                             project_ref, project_["name"], self.config_file)
                 self.__delete_config_file()
                 projects = None
@@ -204,16 +207,16 @@ class WebModeler:
                 project_id = project_["id"]
                 projects = self.find_project("id", project_id)
                 if projects is None:
-                    logger.warning("Project not found using project ID %s from %s", project_id, self.config_file)
+                    self.logger.warning("Project not found using project ID %s from %s", project_id, self.config_file)
                 elif not projects['items']:
-                    logger.warning("Project not found using project ID %s from %s", project_id, self.config_file)
+                    self.logger.warning("Project not found using project ID %s from %s", project_id, self.config_file)
                     projects = None
 
         # If we failed to find the specified project, or no config was supplied, then try looking it up by project_ref
         if projects is None:
             create_config_file = True
             # First, try by id
-            logger.debug("project_ref = '%s'", project_ref)
+            self.logger.debug("project_ref = '%s'", project_ref)
             if project_ref is not None and project_ref != "":
                 projects = self.find_project("id", project_ref)
                 # Then try by name
@@ -272,7 +275,7 @@ class WebModeler:
             headers = self.__get_headers()
         )
 
-        logger.info("Update file response %s", response.status_code)
+        self.logger.info("Update file response %s", response.status_code)
         if response.status_code != 200:
             raise RuntimeError("Attempt to update file failed.", response.json())
         return response.json()
@@ -287,7 +290,7 @@ class WebModeler:
             headers = self.__get_headers()
         )
 
-        logger.info("Create milestone response %s", response.status_code)
+        self.logger.info("Create milestone response %s", response.status_code)
         if response.status_code != 200:
             raise RuntimeError("Attempt to create milestone failed.", response.json())
         return response.json()

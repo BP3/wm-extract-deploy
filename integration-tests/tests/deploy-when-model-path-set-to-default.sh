@@ -76,6 +76,7 @@ When () {
   docker run -d $DOCKER_TTY_OPTS --name wmed --net=host -w /local \
     -e NO_GIT=true \
     -e CLUSTER_HOST=localhost \
+    -e LOG_LEVEL=DEBUG \
       --entrypoint /bin/sh $IMAGE_NAME:$IMAGE_REF
 
   echo Sleep for a few seconds whilst docker container comes up ...
