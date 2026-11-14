@@ -99,16 +99,16 @@ Then () {
   expected_version=1
   get_access_token
 
-  # Get the deployed version and key for the first process
-  search_process_definitions_by_bpmn_id "Process_ConnectorTest"
+  # Get the deployed version and key for the first process, once Operate has imported it
+  wait_for_process_definition "Process_ConnectorTest" "$expected_version"
   actual_version=$(echo $response | jq ".items[0].version")
-  assert_equals $actual_version $expected_version
+  assert_equals "$actual_version" "$expected_version"
   process_1_key=$(echo $response | jq ".items[0].key")
 
   # Get the deployed version and key for the second process
-  search_process_definitions_by_bpmn_id "Process_Second"
+  wait_for_process_definition "Process_Second" "$expected_version"
   actual_version=$(echo $response | jq ".items[0].version")
-  assert_equals $actual_version $expected_version
+  assert_equals "$actual_version" "$expected_version"
   process_2_key=$(echo $response | jq ".items[0].key")
 
   # Now get back the deployed XML for the key, and check that it exactly matches what we deployed

@@ -29,9 +29,16 @@ get_access_token () {
     --data-urlencode 'grant_type=client_credentials' | jq '.access_token' | tr -d '"')
 }
 
+# Usage: assert_equals <actual> <expected>
+# Compares as strings, and treats an empty or "null" actual value (e.g. from jq when nothing was found) as a failure.
+# Quote the arguments when calling it, otherwise an empty value disappears and the arguments shift.
 assert_equals() {
-  if [ "$1" -ne "$2" ]; then
-    echo "$1 does not equal $2"
+  if [ -z "$1" ] || [ "$1" = "null" ]; then
+    echo "Expected '$2' but got no value ('$1')"
+    exit 1
+  fi
+  if [ "$1" != "$2" ]; then
+    echo "Expected '$2' but got '$1'"
     exit 1
   fi
 }

@@ -102,7 +102,7 @@ Then () {
   # The command is expected to fail, so capture its exit code rather than letting 'set -e' end the test
   rc=0
   docker exec "$DOCKER_TTY_OPTS" -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null || rc=$?
-  assert_equals $rc 1
+  assert_equals "$rc" 1
 }
 
 ############################################################################

@@ -99,10 +99,10 @@ Then () {
   expected_version=1
   get_access_token
 
-  # Get the deployed version and key for the process
-  search_process_definitions_by_bpmn_id "Process_ConnectorTest"
+  # Get the deployed version and key for the process, once Operate has imported it
+  wait_for_process_definition "Process_ConnectorTest" "$expected_version"
   actual_version=$(echo $response | jq ".items[0].version")
-  assert_equals $actual_version $expected_version
+  assert_equals "$actual_version" "$expected_version"
   process_key=$(echo $response | jq ".items[0].key")
 
   # Now get back the deployed XML for the key, and check that it exactly matches what we deployed
