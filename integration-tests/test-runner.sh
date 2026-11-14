@@ -32,13 +32,7 @@ else
 fi
 
 testStatus='Success'
-# Are we running as part of a pipeline
-if [ ! -n "$CI" ]; then
-  alias "docker-compose"='docker compose'
-  docker_tty_opts=-i
-else
-  docker_tty_opts=-i
-fi
+docker_tty_opts=-i
 
 # How long to wait for the compose stack's services to respond before giving up
 STACK_WAIT_SECONDS=${STACK_WAIT_SECONDS:-300}
@@ -98,18 +92,20 @@ wait_for_stack () {
 # This function will run a single test. It runs the actual test in a new shell.
 # Each test enables "set -e" itself, and we also pass -e here as a backstop for any test that forgets to.
 # So if it fails for any reason then it will cause the shell to terminate and
-# return back here where we can run 'docker-compose down' to tidy everything up
+# return back here where we can run 'docker compose down' to tidy everything up
 # Longer-term it probably makes sense to make this function accept an array of tests
 # which can all be run in the same docker compose session
 #
 
 run_test () {
-  docker-compose -f $1 up -d
+  # The Compose plugin ('docker compose'), not the standalone 'docker-compose' command, which current GitHub runners
+  # don't have: on Ubuntu 26.04 the docker-compose package only provides the plugin
+  docker compose -f $1 up -d
   echo "Waiting for the compose stack to be ready (up to ${STACK_WAIT_SECONDS}s for each service) ..."
   if ! wait_for_stack $1; then
     echo "Test '$2' not run: the compose stack wasn't ready"
     testStatus='Failure'
-    docker-compose -f $1 down
+    docker compose -f $1 down
     return
   fi
 
@@ -126,7 +122,7 @@ run_test () {
   fi
 
   # Kind of want a "finally" section to execute this in - it always has to happen
-  docker-compose -f $1 down
+  docker compose -f $1 down
 }
 
 if [ $composeFile = "extract-compose.yaml" ]; then

@@ -61,7 +61,7 @@ Given () {
   echo "$TESTNAME: Given"
 
   # Just trying some stuff out. This probably needs to go into functions later
-  # Assumes that we have already run 'docker-compose -f ../deploy-compose.yaml up -d'
+  # Assumes that we have already run 'docker compose -f ../deploy-compose.yaml up -d'
 
   mkdir -p $TESTSDIR/$TESTNAME/deploy-files
   cp files/*.bpmn $TESTSDIR/$TESTNAME/deploy-files

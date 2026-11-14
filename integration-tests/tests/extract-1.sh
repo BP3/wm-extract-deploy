@@ -63,7 +63,7 @@ Given () {
   # 2.  Will first need to create/import project into Web Modeler
 
   # Just trying some stuff out. This probably needs to go into functions later
-  # Assumes that we have already run 'docker-compose -f ../extract-compose.yaml up -d'
+  # Assumes that we have already run 'docker compose -f ../extract-compose.yaml up -d'
 
   get_access_token
 
