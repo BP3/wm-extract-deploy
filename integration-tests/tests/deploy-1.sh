@@ -73,26 +73,14 @@ When () {
   echo "$TESTNAME: When"
   mkdir -p $TESTSDIR/$TESTNAME
 
-  # The mount command won't work properly when using dind, so we have to do it this way to allow us to grab
-  # any test files we might need for testing.
-  # Also it allows us to call the extractDeploy.sh script interactively otherwise the container will run and complete
-  docker run -d $DOCKER_TTY_OPTS --name wmed --net=host -w /local \
-    -e NO_GIT=true \
-    -e CLUSTER_HOST=localhost \
-    -e MODEL_PATH=./deploy-files \
-    -e LOG_LEVEL=DEBUG \
-      --entrypoint /bin/sh $IMAGE_NAME:$IMAGE_REF
-
-  echo Sleep for a few seconds whilst docker container comes up ...
-  sleep 5
-
-  # Now we can copy into the container the files that we will want to deploy
-  docker container cp $TESTSDIR/$TESTNAME/deploy-files wmed:/local
-  # Capture the exit code so the container is always removed before we check it
+  # Run WMED in the image, or from this checkout with WMED_RUN=local, capturing its exit code
   rc=0
-  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh deploy < /dev/null || rc=$?
-  docker container stop wmed
-  docker container rm wmed
+  run_wmed $TESTSDIR/$TESTNAME deploy <<EOF || rc=$?
+NO_GIT=true
+CLUSTER_HOST=localhost
+MODEL_PATH=./deploy-files
+LOG_LEVEL=DEBUG
+EOF
   assert_success "$rc" "WMED deploy"
 }
 

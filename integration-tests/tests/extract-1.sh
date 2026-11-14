@@ -99,32 +99,19 @@ When () {
   echo "$TESTNAME: When"
   mkdir -p $TESTSDIR/$TESTNAME
 
-  # The mount command won't work properly when using dind, so we have to do it this way to allow us to grab
-  # any test files we might need for testing.
-  # Also it allows us to call the extractDeploy.sh script interactively otherwise the container will run and complete
-  docker run -d $DOCKER_TTY_OPTS --name wmed --net=host -w /local \
-    -e APP=/app -e NO_GIT=true \
-    -e OAUTH2_CLIENT_ID=wmed -e OAUTH2_CLIENT_SECRET=wmed \
-    -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
-    -e CAMUNDA_WM_PROJECT="$project_id" \
-    -e CAMUNDA_WM_HOST="localhost:8070" \
-    -e LOG_LEVEL=DEBUG \
-      --entrypoint /bin/sh $IMAGE_NAME:$IMAGE_REF
-
-  echo Sleep for a few seconds whilst docker container comes up ...
-  sleep 5
-
-  # Capture the exit code so the container is always removed before we check it
+  # Run WMED in the image, or from this checkout with WMED_RUN=local, capturing its exit code.
+  # The extracted files end up in $TESTSDIR/$TESTNAME
   rc=0
-  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null || rc=$?
-  docker container cp wmed:/local $TESTSDIR/$TESTNAME
-  docker container stop wmed
-  docker container rm wmed
+  run_wmed $TESTSDIR/$TESTNAME extract <<EOF || rc=$?
+NO_GIT=true
+OAUTH2_CLIENT_ID=wmed
+OAUTH2_CLIENT_SECRET=wmed
+OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token
+CAMUNDA_WM_PROJECT=$project_id
+CAMUNDA_WM_HOST=localhost:8070
+LOG_LEVEL=DEBUG
+EOF
   assert_success "$rc" "WMED extract"
-
-  # Move the data where we want it
-  mv $TESTSDIR/$TESTNAME/local/* $TESTSDIR/$TESTNAME
-  rm -fr $TESTSDIR/$TESTNAME/local
 }
 
 Then () {

@@ -50,13 +50,22 @@ offer a Web Modeler compatible atomic mode and a changed-only mode, and a move f
   integration-tests/test-runner.sh local deploy-compose.yaml
   ```
 
+- To run the same tests against WMED from the checkout instead of an image, set `WMED_RUN=local` with a Python 3.10+
+  virtualenv (with `requirements.txt`) activated. The image tag argument is then ignored:
+
+  ```bash
+  WMED_RUN=local integration-tests/test-runner.sh local deploy-compose.yaml
+  ```
+
+  Local mode runs as you rather than `bp3user`, with your git and Python; CI always uses image mode.
+- Tests run WMED only through `run_wmed <work dir> <mode>` (in `core-functions.sh`), with its settings as `VAR=value`
+  lines on stdin. It copies the work dir into the container and back in image mode, or runs `scripts/*.sh` from a
+  temporary folder of links to `scripts/` and `python/` in local mode, and returns WMED's exit code.
 - `test-runner.sh` brings the compose stack up and down around each `tests/<mode>*.sh`, waits until the services
   respond (`STACK_WAIT_SECONDS`, default 300 per service), and exits non-zero if any test fails. Each test follows
-  the `_setup` / `Given` / `When` / `Then` / `_teardown` template in the existing tests, and runs the image with
-  `docker run` rather than calling the scripts directly.
-- Tests run with `set -e`, so any failing command fails the test. Capture an expected failure with `|| rc=$?`, and
-  capture WMED's exit code the same way so the `wmed` container is removed before checking it with
-  `assert_success`. Quote arguments to `assert_equals`. Operate shows a deployment a few seconds after it happens, so
+  the `_setup` / `Given` / `When` / `Then` / `_teardown` template in the existing tests.
+- Tests run with `set -e`, so any failing command fails the test. Call `run_wmed` with `|| rc=$?` and check the code
+  with `assert_success` (or `assert_equals` for an expected failure). Quote arguments to `assert_equals`. Operate shows a deployment a few seconds after it happens, so
   use `wait_for_process_definition` rather than searching once. Helpers are in `core-functions.sh`,
   `deploy-functions.sh` and `extract-functions.sh`.
 - Needs `jq`, `yq` (mikefarah's) and `xmllint` on the host.

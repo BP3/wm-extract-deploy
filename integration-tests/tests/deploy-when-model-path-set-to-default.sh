@@ -72,27 +72,14 @@ When () {
   echo "$TESTNAME: When"
   mkdir -p $TESTSDIR/$TESTNAME
 
-  # The mount command won't work properly when using dind, so we have to do it this way to allow us to grab
-  # any test files we might need for testing.
-  # Also it allows us to call the extractDeploy.sh script interactively otherwise the container will run and complete
-  # Don't set the MODEL_PATH so it defaults to the root of the repository (i.e. '.')
-  docker run -d $DOCKER_TTY_OPTS --name wmed --net=host -w /local \
-    -e NO_GIT=true \
-    -e CLUSTER_HOST=localhost \
-    -e LOG_LEVEL=DEBUG \
-      --entrypoint /bin/sh $IMAGE_NAME:$IMAGE_REF
-
-  echo Sleep for a few seconds whilst docker container comes up ...
-  sleep 5
-
-  # Now we can copy into the container the files to the root of the repository which is the default location
-  # of MODEL_PATH that is set by the 'deploy.sh' script, which is where we will deploy the process models from
-  docker container cp $TESTSDIR/$TESTNAME wmed:/local
-  # Capture the exit code so the container is always removed before we check it
+  # Run WMED in the image, or from this checkout with WMED_RUN=local, capturing its exit code.
+  # Don't set MODEL_PATH, so it defaults to the working directory ('.'), where the process models are
   rc=0
-  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh deploy < /dev/null || rc=$?
-  docker container stop wmed
-  docker container rm wmed
+  run_wmed $TESTSDIR/$TESTNAME deploy <<EOF || rc=$?
+NO_GIT=true
+CLUSTER_HOST=localhost
+LOG_LEVEL=DEBUG
+EOF
   assert_success "$rc" "WMED deploy"
 }
 
