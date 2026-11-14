@@ -34,10 +34,11 @@ offer a Web Modeler compatible atomic mode and a changed-only mode, and a move f
 - The full compose stacks (`docker-compose.yaml`, `deploy-compose.yaml`, `extract-compose.yaml`) are only needed
   for extract, Web Modeler or identity. Their image versions are in `.env` and come from `ghcr.io/bp3`, which
   needs `docker login ghcr.io`.
-- The images mirrored in `ghcr.io/bp3` are amd64 only (#102). On Apple Silicon they run under emulation, which is
-  slow, and Elasticsearch doesn't start at all (it needs seccomp). Until #102 is fixed, run the stacks with
-  `ELASTIC_REGISTRY=docker.io/library`. Overriding the other `*_REGISTRY` variables in `.env` with the upstream
-  registries gives native images for everything, at the cost of Docker Hub rate limits.
+- The images in `ghcr.io/bp3` are mirrored from their upstream sources with every platform, so the stacks run
+  natively on Apple Silicon as well as on the amd64 CI runners. When a version in `.env` changes, re-mirror with
+  `tools/sync-images-to-ghcr.sh` (`DRY_RUN=true` first; it needs `GHCR_PAT` with `write:packages`,
+  `GITHUB_USERNAME`, and `docker login` to Docker Hub to avoid its rate limit). Docker keeps images it has already
+  pulled, so after a re-mirror run `docker compose -f <file> pull` to replace them.
 - Always use `docker compose` (the plugin). GitHub's Ubuntu 26.04 runners don't have the standalone `docker-compose`.
 
 ## Integration tests
