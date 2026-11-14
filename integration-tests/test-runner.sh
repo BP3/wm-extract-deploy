@@ -23,9 +23,8 @@ composeFile=$2
 image=`docker images --format "{{.ID}} \t{{.Repository}} \t{{.Tag}}" --filter=reference="$IMAGE_NAME:$IMAGE_REF" | wc -l`
 if [ $(( image )) -ne 1 ]; then
   echo "Image $IMAGE_NAME:$IMAGE_REF not found, so pull it from registry"
-  docker pull $IMAGE_NAME:$IMAGE_REF
-  if [ $? -ge 0 ]; then
-    echo "Image $IMAGE_NAME:$IMAGE_REF not found in registry, so exit\!"
+  if ! docker pull $IMAGE_NAME:$IMAGE_REF; then
+    echo "Image $IMAGE_NAME:$IMAGE_REF not found in registry, so exit!"
     exit 1
   fi
 else
