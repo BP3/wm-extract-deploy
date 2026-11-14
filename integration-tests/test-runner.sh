@@ -43,7 +43,8 @@ fi
 
 #
 # This function will run a single test. It runs the actual test in a new shell.
-# Since the test has "set -e" enabled then if it fails for any reason then it will cause the shell to terminate and
+# Each test enables "set -e" itself, and we also pass -e here as a backstop for any test that forgets to.
+# So if it fails for any reason then it will cause the shell to terminate and
 # return back here where we can run 'docker-compose down' to tidy everything up
 # Longer-term it probably makes sense to make this function accept an array of tests
 # which can all be run in the same docker compose session
@@ -56,7 +57,7 @@ run_test () {
 
   echo "Running test $2"
 
-  TESTSDIR=$TESTSDIR DOCKER_TTY_OPTS=$docker_tty_opts /bin/sh -x $TESTSDIR/tests/$2 $IMAGE_REF
+  TESTSDIR=$TESTSDIR DOCKER_TTY_OPTS=$docker_tty_opts /bin/sh -e -x $TESTSDIR/tests/$2 $IMAGE_REF
 
   rc=$?
   if [ $rc -ne 0 ]; then

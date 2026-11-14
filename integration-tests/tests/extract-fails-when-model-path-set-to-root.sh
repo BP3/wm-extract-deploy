@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 
 ############################################################################
 #
@@ -32,6 +32,9 @@
 TESTNAME=`basename $0 .sh`
 IMAGE_NAME=ghcr.io/bp3/wm-extract-deploy
 IMAGE_REF=$1
+
+# Stop at the first failing command
+set -e
 
 # Load reusable extract functions
 . $TESTSDIR/extract-functions.sh
@@ -96,8 +99,10 @@ Then () {
   # and not the root of the repository
   # We should see the message "PermissionError: [Errno 13] Permission denied: '//process.bpmn'"
   # In the GH pipeline logs
-  docker exec "$DOCKER_TTY_OPTS" -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null
-  assert_equals $? 1
+  # The command is expected to fail, so capture its exit code rather than letting 'set -e' end the test
+  rc=0
+  docker exec "$DOCKER_TTY_OPTS" -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null || rc=$?
+  assert_equals $rc 1
 }
 
 ############################################################################

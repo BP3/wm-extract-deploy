@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 
 ############################################################################
 #
@@ -32,6 +32,9 @@
 TESTNAME=`basename $0 .sh`
 IMAGE_NAME=ghcr.io/bp3/wm-extract-deploy
 IMAGE_REF=$1
+
+# Stop at the first failing command
+set -e
 
 # Load reusable extract functions
 . $TESTSDIR/extract-functions.sh
