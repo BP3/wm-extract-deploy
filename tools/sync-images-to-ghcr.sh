@@ -26,8 +26,8 @@
 #
 # Run from the repository root:
 #
-#   DRY_RUN=true integration-tests/sync-images-to-ghcr.sh    # list what would be copied, and check the sources
-#   integration-tests/sync-images-to-ghcr.sh                 # copy (needs GHCR_PAT and GITHUB_USERNAME)
+#   DRY_RUN=true tools/sync-images-to-ghcr.sh    # list what would be copied, and check the sources
+#   tools/sync-images-to-ghcr.sh                 # copy (needs GHCR_PAT and GITHUB_USERNAME)
 #
 # GHCR_PAT is a classic personal access token with the write:packages scope.
 
