@@ -88,9 +88,12 @@ When () {
   # Now we can copy into the container the files to the root of the repository which is the default location
   # of MODEL_PATH that is set by the 'deploy.sh' script, which is where we will deploy the process models from
   docker container cp $TESTSDIR/$TESTNAME wmed:/local
-  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh deploy < /dev/null
+  # Capture the exit code so the container is always removed before we check it
+  rc=0
+  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh deploy < /dev/null || rc=$?
   docker container stop wmed
   docker container rm wmed
+  assert_success "$rc" "WMED deploy"
 }
 
 Then () {

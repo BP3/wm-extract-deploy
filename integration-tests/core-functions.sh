@@ -43,6 +43,15 @@ assert_equals() {
   fi
 }
 
+# Usage: assert_success <exit code> <description of the command>
+# For commands whose exit code is captured with '|| rc=$?' so that clean-up can run before the check.
+assert_success () {
+  if [ "$1" != "0" ]; then
+    echo "$2 failed (exit code $1)"
+    exit 1
+  fi
+}
+
 # Usage: assert_xml_match <actual file> <expected file>
 # Formats the actual XML with xmllint, then compares it with the expected file, ignoring whitespace.
 # Fails explicitly rather than relying on 'set -e'.

@@ -114,10 +114,13 @@ When () {
   echo Sleep for a few seconds whilst docker container comes up ...
   sleep 5
 
-  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null
+  # Capture the exit code so the container is always removed before we check it
+  rc=0
+  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null || rc=$?
   docker container cp wmed:/local $TESTSDIR/$TESTNAME
   docker container stop wmed
   docker container rm wmed
+  assert_success "$rc" "WMED extract"
 
   # Move the data where we want it
   mv $TESTSDIR/$TESTNAME/local/* $TESTSDIR/$TESTNAME
