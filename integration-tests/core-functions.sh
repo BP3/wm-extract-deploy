@@ -43,7 +43,16 @@ assert_equals() {
   fi
 }
 
+# Usage: assert_xml_match <actual file> <expected file>
+# Formats the actual XML with xmllint, then compares it with the expected file, ignoring whitespace.
+# Fails explicitly rather than relying on 'set -e'.
 assert_xml_match () {
-  xmllint --format $1 > $1.format
-  diff --ignore-all-space $2 $1.format
+  if ! xmllint --format "$1" > "$1.format"; then
+    echo "'$1' is not valid XML"
+    exit 1
+  fi
+  if ! diff --ignore-all-space "$2" "$1.format"; then
+    echo "XML in '$1' does not match '$2' (differences above)"
+    exit 1
+  fi
 }

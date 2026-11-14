@@ -107,7 +107,8 @@ Then () {
 
   # Now get back the deployed XML for the key, and check that it exactly matches what we deployed
   get_process_definition_xml_by_key "$process_key"
-  echo $response >> $TESTSDIR/$TESTNAME/actual_process_xml.xml
+  # printf rather than an unquoted echo, so the XML is written exactly as Operate returned it
+  printf "%s\n" "$response" > $TESTSDIR/$TESTNAME/actual_process_xml.xml
   assert_xml_match $TESTSDIR/$TESTNAME/actual_process_xml.xml $TESTSDIR/$TESTNAME/process.bpmn
 }
 
