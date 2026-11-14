@@ -40,6 +40,60 @@ else
   docker_tty_opts=-i
 fi
 
+# How long to wait for the compose stack's services to respond before giving up
+STACK_WAIT_SECONDS=${STACK_WAIT_SECONDS:-300}
+TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token
+
+# Usage: get_token <client id> <client secret>
+# Prints an access token from Keycloak, and fails if there isn't one yet
+get_token () {
+  curl -s -X POST $TOKEN_URL \
+    --data-urlencode "client_id=$1" --data-urlencode "client_secret=$2" \
+    --data-urlencode 'grant_type=client_credentials' | jq -re '.access_token'
+}
+
+operate_ready () {
+  token=`get_token zeebe zecret` || return 1
+  curl -sf -H "Authorization: Bearer $token" -H "Content-Type: application/json" --data '{}' \
+    -X POST http://localhost:8081/v1/process-definitions/search
+}
+
+web_modeler_ready () {
+  token=`get_token wmed wmed` || return 1
+  curl -sf -H "Authorization: Bearer $token" http://localhost:8070/api/v1/info
+}
+
+# Usage: wait_for <description> <command> [args...]
+# Runs the command every 5 seconds until it succeeds, or fails after STACK_WAIT_SECONDS
+wait_for () {
+  description=$1
+  shift
+  waited=0
+  until "$@" > /dev/null 2>&1; do
+    if [ $waited -ge $STACK_WAIT_SECONDS ]; then
+      echo "Timed out after ${STACK_WAIT_SECONDS}s waiting for $description"
+      return 1
+    fi
+    sleep 5
+    waited=$((waited + 5))
+  done
+  echo "$description is ready (after ${waited}s)"
+}
+
+# Usage: wait_for_stack <compose file>
+# Waits until the services the tests use respond, rather than sleeping for a fixed time
+wait_for_stack () {
+  if [ "$1" = "deploy-compose.yaml" ]; then
+    wait_for "Keycloak (zeebe client)" get_token zeebe zecret &&
+    wait_for "Zeebe" curl -sf http://localhost:9600/actuator/health/readiness &&
+    wait_for "Operate" operate_ready
+  else
+    wait_for "Keycloak (wmed client)" get_token wmed wmed &&
+    wait_for "Web Modeler REST API" curl -sf http://localhost:8091/health/readiness &&
+    wait_for "Web Modeler API" web_modeler_ready
+  fi
+}
+
 #
 # This function will run a single test. It runs the actual test in a new shell.
 # Each test enables "set -e" itself, and we also pass -e here as a backstop for any test that forgets to.
@@ -51,8 +105,13 @@ fi
 
 run_test () {
   docker-compose -f $1 up -d
-  echo Sleeping whilst compose stack comes up properly ...
-  sleep 15
+  echo "Waiting for the compose stack to be ready (up to ${STACK_WAIT_SECONDS}s for each service) ..."
+  if ! wait_for_stack $1; then
+    echo "Test '$2' not run: the compose stack wasn't ready"
+    testStatus='Failure'
+    docker-compose -f $1 down
+    return
+  fi
 
   echo "Running test $2"
 
