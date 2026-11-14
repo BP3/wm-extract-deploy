@@ -72,7 +72,8 @@ run_test () {
 }
 
 if [ $composeFile = "extract-compose.yaml" ]; then
-  'ls' -1S $TESTSDIR/tests/extract*.sh | while read tst; do
+  # A for loop rather than 'ls | while read': the piped loop runs in a subshell, so testStatus set by run_test was lost
+  for tst in `'ls' -1S $TESTSDIR/tests/extract*.sh`; do
     next_tst=`basename $tst`
     run_test $composeFile $next_tst
   done
@@ -80,7 +81,8 @@ if [ $composeFile = "extract-compose.yaml" ]; then
 fi
 
 if [ $composeFile = "deploy-compose.yaml" ]; then
-  'ls' -1S $TESTSDIR/tests/deploy*.sh | while read tst; do
+  # A for loop rather than 'ls | while read': the piped loop runs in a subshell, so testStatus set by run_test was lost
+  for tst in `'ls' -1S $TESTSDIR/tests/deploy*.sh`; do
     next_tst=`basename $tst`
     run_test $composeFile $next_tst
   done
