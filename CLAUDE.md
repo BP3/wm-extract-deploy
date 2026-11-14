@@ -58,6 +58,11 @@ offer a Web Modeler compatible atomic mode and a changed-only mode, and a move f
   ```
 
   Local mode runs as you rather than `bp3user`, with your git and Python; CI always uses image mode.
+- To measure the coverage of WMED's Python code, add `WMED_COVERAGE=true` to a local-mode run, with
+  `requirements-test.txt` installed too. The runner reports it at the end and writes an HTML report to
+  `integration-tests/coverage/html/`. The data accumulates across runs, so running both suites gives their combined
+  coverage; delete `integration-tests/coverage/` to start again. Shell scripts aren't measured, and the figures are a
+  guide to what's untested, not a target.
 - Tests run WMED only through `run_wmed <work dir> <mode>` (in `core-functions.sh`), with its settings as `VAR=value`
   lines on stdin. It copies the work dir into the container and back in image mode, or runs `scripts/*.sh` from a
   temporary folder of links to `scripts/` and `python/` in local mode, and returns WMED's exit code.
