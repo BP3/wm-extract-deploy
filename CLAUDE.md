@@ -1,0 +1,85 @@
+# WMED (Web Modeler Extract Deploy)
+
+CI/CD tooling that moves Camunda 8 assets between Web Modeler, source control and a Zeebe cluster. It ships as a
+Docker image (`ghcr.io/bp3/wm-extract-deploy`) that customers run in their own pipelines. User docs are in the
+GitHub wiki, not this repo.
+
+## Current direction
+
+Read [docs/direction.md](docs/direction.md) before proposing changes to deploy or extract. In short: extract stays
+(some customers have no source control, so GitSync is no use to them) but gets maintenance only, deploy is the
+priority, WMED deploys what is in the working tree (no tag checkout), deploy will
+offer a Web Modeler compatible atomic mode and a changed-only mode, and a move from gRPC to REST is likely.
+
+## How it runs
+
+- Entry point: `docker-entrypoint.sh` → `scripts/extractDeploy.sh <mode>` → `scripts/<mode>.sh` → `python/<mode>.py`.
+  Modes are `extract`, `deploy` and `deploy templates`.
+- If `CI` is set, the entrypoint just execs a shell, because GitLab pipes the job script into it.
+- Configuration comes from environment variables. Each option is declared once with `configargparse` (`env_var=`),
+  and shared options live in `ModelAction.parser` and `OAuth2.parser`. Keep the deprecated aliases working
+  (see `Deployment.add_deprecated_options`).
+- The Dockerfile copies `python/*.py` into `/app/scripts/` next to the shell scripts. That's why the scripts call
+  `python "${SCRIPT_DIR}"/deploy.py`, and why `scripts/*.sh` don't work directly from a checkout.
+- `NO_GIT`, `NO_GIT_FETCH` and `NO_GIT_SETUP` skip the git steps in the shell scripts.
+- Deploy talks to Zeebe over gRPC via `pyzeebe`. Moving to the 8.8+ REST API is open (issue #94).
+
+## Running locally
+
+- Python: use a virtualenv and `pip install -r requirements.txt`. The image uses Python 3.13; pyzeebe needs 3.9 or
+  later.
+- To test deploy behaviour, a single `camunda/camunda:<version>` container is enough (gRPC on 26500). If the API
+  rejects calls, set `CAMUNDA_SECURITY_AUTHENTICATION_UNPROTECTEDAPI=true`. Then run `python/deploy.py` with
+  `CLUSTER_HOST=localhost` and `MODEL_PATH=<dir>`.
+- The full compose stacks (`docker-compose.yaml`, `deploy-compose.yaml`, `extract-compose.yaml`) are only needed
+  for extract, Web Modeler or identity. Their image versions are in `.env` and come from `ghcr.io/bp3`, which
+  needs `docker login ghcr.io`.
+- The images mirrored in `ghcr.io/bp3` are amd64 only (#102). On Apple Silicon they run under emulation, which is
+  slow, and Elasticsearch doesn't start at all (it needs seccomp). Until #102 is fixed, run the stacks with
+  `ELASTIC_REGISTRY=docker.io/library`. Overriding the other `*_REGISTRY` variables in `.env` with the upstream
+  registries gives native images for everything, at the cost of Docker Hub rate limits.
+- Always use `docker compose` (the plugin). GitHub's Ubuntu 26.04 runners don't have the standalone `docker-compose`.
+
+## Integration tests
+
+- Shell based, in `integration-tests/`. Run from the repo root against a built image tag:
+
+  ```bash
+  docker build -t ghcr.io/bp3/wm-extract-deploy:local .
+  integration-tests/test-runner.sh local deploy-compose.yaml
+  ```
+
+- `test-runner.sh` brings the compose stack up and down around each `tests/<mode>*.sh`, waits until the services
+  respond (`STACK_WAIT_SECONDS`, default 300 per service), and exits non-zero if any test fails. Each test follows
+  the `_setup` / `Given` / `When` / `Then` / `_teardown` template in the existing tests, and runs the image with
+  `docker run` rather than calling the scripts directly.
+- Tests run with `set -e`, so any failing command fails the test. Capture an expected failure with `|| rc=$?`, and
+  capture WMED's exit code the same way so the `wmed` container is removed before checking it with
+  `assert_success`. Quote arguments to `assert_equals`. Operate shows a deployment a few seconds after it happens, so
+  use `wait_for_process_definition` rather than searching once. Helpers are in `core-functions.sh`,
+  `deploy-functions.sh` and `extract-functions.sh`.
+- Needs `jq`, `yq` (mikefarah's) and `xmllint` on the host.
+- CI (`.github/workflows/branch-build.yaml`) builds the branch image, then runs the extract and deploy suites. It
+  runs on pull requests (and manually), not on a plain push.
+- The testing plan (order of the testing work before the deploy refactoring) is kept outside the repo, as the
+  "WMED Testing Plan" page.
+
+## Zeebe deploy behaviour (tested on 8.7.5 and 8.10.7, Nov 2026)
+
+These shape the deploy design. Re-check them on new Camunda versions rather than assuming.
+
+- **Duplicate detection covers the whole deployment.** Re-deploying an identical set creates no new versions, but if
+  any resource in a multi-resource deployment changed, *every* resource in it gets a new version.
+- Comparison is on raw bytes plus resource name. pyzeebe uses the file's basename as the name, so a whitespace-only
+  change or a rename creates a new version. Re-deploying older content creates a new latest version.
+- A rejected deployment lists the errors for every invalid resource, and nothing in it is deployed.
+- `bindingType="deployment"` (call activities, business rule tasks, linked forms): 8.10 rejects the deployment
+  unless the target is in the same deployment, even if it already exists on the cluster. 8.7 doesn't check.
+- Files with the same basename in different directories can go in one deployment.
+
+## Conventions
+
+- Python, shell and Dockerfile sources start with the BP3 licence header block (compose and workflow YAML don't);
+  copy it from an existing file and use the current year for new files.
+- Shell scripts are POSIX `sh` (the image is Alpine), not bash.
+- Match the existing style: logging via `self.logger`, options declared next to the class that uses them.
