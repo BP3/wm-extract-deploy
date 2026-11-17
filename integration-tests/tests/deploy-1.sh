@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 
 ############################################################################
 #
@@ -33,6 +33,9 @@ TESTNAME=`basename $0 .sh`
 IMAGE_NAME=ghcr.io/bp3/wm-extract-deploy
 IMAGE_REF=$1
 
+# Stop at the first failing command
+set -e
+
 # Load reusable extract functions
 . $TESTSDIR/deploy-functions.sh
 
@@ -58,7 +61,7 @@ Given () {
   echo "$TESTNAME: Given"
 
   # Just trying some stuff out. This probably needs to go into functions later
-  # Assumes that we have already run 'docker-compose -f ../deploy-compose.yaml up -d'
+  # Assumes that we have already run 'docker compose -f ../deploy-compose.yaml up -d'
 
   mkdir -p $TESTSDIR/$TESTNAME/deploy-files
   cp files/*.bpmn $TESTSDIR/$TESTNAME/deploy-files
@@ -85,9 +88,12 @@ When () {
 
   # Now we can copy into the container the files that we will want to deploy
   docker container cp $TESTSDIR/$TESTNAME/deploy-files wmed:/local
-  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh deploy < /dev/null
+  # Capture the exit code so the container is always removed before we check it
+  rc=0
+  docker exec $DOCKER_TTY_OPTS -w /local wmed /app/scripts/extractDeploy.sh deploy < /dev/null || rc=$?
   docker container stop wmed
   docker container rm wmed
+  assert_success "$rc" "WMED deploy"
 }
 
 Then () {
@@ -96,25 +102,27 @@ Then () {
   expected_version=1
   get_access_token
 
-  # Get the deployed version and key for the first process
-  search_process_definitions_by_bpmn_id "Process_ConnectorTest"
+  # Get the deployed version and key for the first process, once Operate has imported it
+  wait_for_process_definition "Process_ConnectorTest" "$expected_version"
   actual_version=$(echo $response | jq ".items[0].version")
-  assert_equals $actual_version $expected_version
+  assert_equals "$actual_version" "$expected_version"
   process_1_key=$(echo $response | jq ".items[0].key")
 
   # Get the deployed version and key for the second process
-  search_process_definitions_by_bpmn_id "Process_Second"
+  wait_for_process_definition "Process_Second" "$expected_version"
   actual_version=$(echo $response | jq ".items[0].version")
-  assert_equals $actual_version $expected_version
+  assert_equals "$actual_version" "$expected_version"
   process_2_key=$(echo $response | jq ".items[0].key")
 
   # Now get back the deployed XML for the key, and check that it exactly matches what we deployed
   get_process_definition_xml_by_key "$process_1_key"
-  echo $response >> $TESTSDIR/$TESTNAME/actual_process_1_xml.xml
+  # printf rather than an unquoted echo, so the XML is written exactly as Operate returned it
+  printf "%s\n" "$response" > $TESTSDIR/$TESTNAME/actual_process_1_xml.xml
   assert_xml_match $TESTSDIR/$TESTNAME/actual_process_1_xml.xml $TESTSDIR/$TESTNAME/deploy-files/process.bpmn
 
   get_process_definition_xml_by_key "$process_2_key"
-  echo $response >> $TESTSDIR/$TESTNAME/actual_process_2_xml.xml
+  # printf rather than an unquoted echo, so the XML is written exactly as Operate returned it
+  printf "%s\n" "$response" > $TESTSDIR/$TESTNAME/actual_process_2_xml.xml
   assert_xml_match $TESTSDIR/$TESTNAME/actual_process_2_xml.xml $TESTSDIR/$TESTNAME/deploy-files/process2.bpmn
 }
 

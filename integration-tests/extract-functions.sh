@@ -135,7 +135,7 @@ create_file () {
   echo "  file: $1"
   echo "  projectId: $2"
   echo "  file: $3"
-  type "  type: $4"
+  echo "  type: $4"
   if [ $# -gt 2 ]; then
     echo "  folder: $5"
   fi

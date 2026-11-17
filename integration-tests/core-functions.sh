@@ -29,14 +29,39 @@ get_access_token () {
     --data-urlencode 'grant_type=client_credentials' | jq '.access_token' | tr -d '"')
 }
 
+# Usage: assert_equals <actual> <expected>
+# Compares as strings, and treats an empty or "null" actual value (e.g. from jq when nothing was found) as a failure.
+# Quote the arguments when calling it, otherwise an empty value disappears and the arguments shift.
 assert_equals() {
-  if [ "$1" -ne "$2" ]; then
-    echo "$1 does not equal $2"
+  if [ -z "$1" ] || [ "$1" = "null" ]; then
+    echo "Expected '$2' but got no value ('$1')"
+    exit 1
+  fi
+  if [ "$1" != "$2" ]; then
+    echo "Expected '$2' but got '$1'"
     exit 1
   fi
 }
 
+# Usage: assert_success <exit code> <description of the command>
+# For commands whose exit code is captured with '|| rc=$?' so that clean-up can run before the check.
+assert_success () {
+  if [ "$1" != "0" ]; then
+    echo "$2 failed (exit code $1)"
+    exit 1
+  fi
+}
+
+# Usage: assert_xml_match <actual file> <expected file>
+# Formats the actual XML with xmllint, then compares it with the expected file, ignoring whitespace.
+# Fails explicitly rather than relying on 'set -e'.
 assert_xml_match () {
-  xmllint --format $1 > $1.format
-  diff --ignore-all-space $2 $1.format
+  if ! xmllint --format "$1" > "$1.format"; then
+    echo "'$1' is not valid XML"
+    exit 1
+  fi
+  if ! diff --ignore-all-space "$2" "$1.format"; then
+    echo "XML in '$1' does not match '$2' (differences above)"
+    exit 1
+  fi
 }
