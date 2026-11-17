@@ -62,8 +62,8 @@ for us, so WMED has to:
    JSON.
 2. Look up the latest deployed version of that id on the cluster and download its content. As far as we know, the
    API doesn't expose a hash, so the content has to be downloaded.
-3. Hash both (MD5 is fine) and compare. Zeebe itself compares raw bytes, so a byte comparison matches what Zeebe
-   would treat as changed.
+3. Compare the bytes of the two. Both are in hand, so a direct comparison is simpler and faster than hashing them
+   first, and it matches what Zeebe treats as changed (Zeebe compares raw bytes).
 4. Deploy the changed files together in one atomic deployment.
 
 A file whose id doesn't exist on the cluster yet counts as changed.
@@ -173,6 +173,8 @@ Tested on Zeebe 8.7.5 and Camunda 8.10.7 in November 2026 (see `CLAUDE.md` for t
   links transitively?
 - **Version support.** The REST deploy and resource-content endpoints need 8.8 or later. Do we still need to
   support 8.7 or earlier clusters, and if so, do they keep the gRPC path or get Web Modeler compatible mode only?
+  *Review comment on #103:* everything new from Camunda targets 8.8+, so lean towards 8.8+ only; customers on 8.7
+  and earlier keep using the current WMED release.
 - **Deployment unit.** In Web Modeler compatible mode, is the unit the whole `MODEL_PATH`, or each directory
   (matching a Web Modeler project), as raised in issue #52? *Update, 12 November 2026:* Camunda now defines this.
   A Camunda project (called a process application before 8.10, when Web Modeler became part of Camunda Hub) is
