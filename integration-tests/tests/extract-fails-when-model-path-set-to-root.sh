@@ -50,9 +50,7 @@ _setup () {
 }
 
 _teardown () {
-  docker container stop wmed
-  docker container rm wmed
-
+  :
   # Or we could leave everything behind so that it can be checked later
 #  if [ -d $TESTSDIR/$TESTNAME ]; then
 #    rm -rf $TESTSDIR/$TESTNAME
@@ -74,34 +72,27 @@ When () {
   echo "$TESTNAME: When"
   mkdir -p $TESTSDIR/$TESTNAME
 
-  # The mount command won't work properly when using dind, so we have to do it this way to allow us to grab
-  # any test files we might need for testing.
-  # Also it allows us to call the extractDeploy.sh script interactively otherwise the container will run and complete
-  # Set the MODEL_PATH to root, which should then throw an error when running inside the GH pipeline runner
-  docker run -d "$DOCKER_TTY_OPTS" --name wmed --net=host -w /local \
-    -e APP=/app -e NO_GIT=true \
-    -e MODEL_PATH=/ \
-    -e OAUTH2_CLIENT_ID=wmed -e OAUTH2_CLIENT_SECRET=wmed \
-    -e OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token \
-    -e CAMUNDA_WM_PROJECT="$project_id" \
-    -e CAMUNDA_WM_HOST="localhost:8070" \
-    -e LOG_LEVEL=DEBUG \
-      --entrypoint /bin/sh $IMAGE_NAME:$IMAGE_REF
-
-  echo Sleep for a few seconds whilst docker container comes up ...
-  sleep 5
+  # Set MODEL_PATH to the root of the file system, which WMED can't write to, so the extract should fail.
+  # The exit code is captured rather than letting 'set -e' end the test, and checked in Then
+  rc=0
+  run_wmed $TESTSDIR/$TESTNAME extract <<EOF || rc=$?
+NO_GIT=true
+MODEL_PATH=/
+OAUTH2_CLIENT_ID=wmed
+OAUTH2_CLIENT_SECRET=wmed
+OAUTH2_TOKEN_URL=http://localhost:18080/auth/realms/camunda-platform/protocol/openid-connect/token
+CAMUNDA_WM_PROJECT=$project_id
+CAMUNDA_WM_HOST=localhost:8070
+LOG_LEVEL=DEBUG
+EOF
 }
 
 Then () {
   echo "$TESTNAME: Then"
 
-  # This should now fail because we are trying to extract to the root of the GH runner
-  # and not the root of the repository
-  # We should see the message "PermissionError: [Errno 13] Permission denied: '//process.bpmn'"
-  # In the GH pipeline logs
-  # The command is expected to fail, so capture its exit code rather than letting 'set -e' end the test
-  rc=0
-  docker exec "$DOCKER_TTY_OPTS" -w /local wmed /app/scripts/extractDeploy.sh extract < /dev/null || rc=$?
+  # The extract should have failed, because it can't write to the root of the file system. In the image we should
+  # see "PermissionError: [Errno 13] Permission denied: '//process.bpmn'" in the output; locally the error may differ
+  # (on macOS the root is read-only)
   assert_equals "$rc" 1
 }
 

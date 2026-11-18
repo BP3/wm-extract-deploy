@@ -15,20 +15,27 @@
 if [ "$TESTSDIR" = "" ]; then
   TESTSDIR=`dirname $0`
 fi
+# Usage: test-runner.sh <image tag> <compose file>
+# With WMED_RUN=local the tests run WMED from this checkout instead of the image, and the image tag isn't used
+# (see run_wmed in core-functions.sh).
 IMAGE_NAME=ghcr.io/bp3/wm-extract-deploy
 IMAGE_REF=$1
 composeFile=$2
 
-# Want to make sure that we have the image we are supposed to be working with
-image=`docker images --format "{{.ID}} \t{{.Repository}} \t{{.Tag}}" --filter=reference="$IMAGE_NAME:$IMAGE_REF" | wc -l`
-if [ $(( image )) -ne 1 ]; then
-  echo "Image $IMAGE_NAME:$IMAGE_REF not found, so pull it from registry"
-  if ! docker pull $IMAGE_NAME:$IMAGE_REF; then
-    echo "Image $IMAGE_NAME:$IMAGE_REF not found in registry, so exit!"
-    exit 1
-  fi
+if [ "${WMED_RUN:-image}" = "local" ]; then
+  echo "Running WMED from this checkout (WMED_RUN=local), not from an image"
 else
-  echo "Docker image $IMAGE_NAME:$IMAGE_REF found"
+  # Want to make sure that we have the image we are supposed to be working with
+  image=`docker images --format "{{.ID}} \t{{.Repository}} \t{{.Tag}}" --filter=reference="$IMAGE_NAME:$IMAGE_REF" | wc -l`
+  if [ $(( image )) -ne 1 ]; then
+    echo "Image $IMAGE_NAME:$IMAGE_REF not found, so pull it from registry"
+    if ! docker pull $IMAGE_NAME:$IMAGE_REF; then
+      echo "Image $IMAGE_NAME:$IMAGE_REF not found in registry, so exit!"
+      exit 1
+    fi
+  else
+    echo "Docker image $IMAGE_NAME:$IMAGE_REF found"
+  fi
 fi
 
 testStatus='Success'
