@@ -1,0 +1,65 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "schedule": ["before 4am on Tuesday"],
+  "timezone": "Europe/London",
+  "labels": ["dependencies"],
+  "minimumReleaseAge": "3 days",
+  "prConcurrentLimit": 4,
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"]
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Test stack image versions in .env, each marked with a '# renovate: datasource=… depName=…' comment",
+      "managerFilePatterns": ["/^\\.env$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+\\w+_VERSION=(?<currentValue>\\S+)"
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Test stack images: CI pulls them from ghcr.io/bp3, so a new version has to be mirrored there before the integration tests can pass",
+      "matchFileNames": [".env"],
+      "labels": ["dependencies", "needs-image-mirror"],
+      "prBodyNotes": [
+        "**Before CI can pass**, mirror the new image versions into `ghcr.io/bp3` from this branch: run `DRY_RUN=true tools/sync-images-to-ghcr.sh`, then `tools/sync-images-to-ghcr.sh` (needs `GHCR_PAT`, `GITHUB_USERNAME` and `docker login` to Docker Hub)."
+      ]
+    },
+    {
+      "description": "Camunda images move together, as one PR",
+      "matchFileNames": [".env"],
+      "matchPackageNames": ["camunda/**"],
+      "groupName": "Camunda test stack"
+    },
+    {
+      "description": "Moving the test stack to a new Camunda minor version (e.g. 8.8) is a deliberate change, not a routine update",
+      "matchFileNames": [".env"],
+      "matchPackageNames": ["camunda/**"],
+      "matchUpdateTypes": ["minor", "major"],
+      "enabled": false
+    },
+    {
+      "description": "Stay on Elasticsearch 8, which the Camunda 8.7 test stack supports",
+      "matchFileNames": [".env"],
+      "matchPackageNames": ["elasticsearch"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "A new Python minor version in the image's base needs a deliberate look",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["python"],
+      "matchUpdateTypes": ["minor", "major"],
+      "labels": ["dependencies", "needs-review"]
+    },
+    {
+      "description": "GitHub Actions updates as one PR",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions"
+    }
+  ]
+}
