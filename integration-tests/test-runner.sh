@@ -17,13 +17,25 @@ if [ "$TESTSDIR" = "" ]; then
 fi
 # Usage: test-runner.sh <image tag> <compose file>
 # With WMED_RUN=local the tests run WMED from this checkout instead of the image, and the image tag isn't used
-# (see run_wmed in core-functions.sh).
+# (see run_wmed in core-functions.sh). Adding WMED_COVERAGE=true measures the coverage of WMED's Python code, and
+# reports it at the end. The data accumulates in integration-tests/coverage/ across runs, so running both suites gives
+# their combined coverage; delete that folder to start again.
 IMAGE_NAME=ghcr.io/bp3/wm-extract-deploy
 IMAGE_REF=$1
 composeFile=$2
 
+if [ "$WMED_COVERAGE" = "true" ] && [ "${WMED_RUN:-image}" != "local" ]; then
+  echo "WMED_COVERAGE=true only works with WMED_RUN=local"
+  exit 1
+fi
+WMED_COVERAGE_DIR=`cd $TESTSDIR && pwd`/coverage
+export WMED_COVERAGE_DIR
+
 if [ "${WMED_RUN:-image}" = "local" ]; then
   echo "Running WMED from this checkout (WMED_RUN=local), not from an image"
+  if [ "$WMED_COVERAGE" = "true" ]; then
+    mkdir -p "$WMED_COVERAGE_DIR"
+  fi
 else
   # Want to make sure that we have the image we are supposed to be working with
   image=`docker images --format "{{.ID}} \t{{.Repository}} \t{{.Tag}}" --filter=reference="$IMAGE_NAME:$IMAGE_REF" | wc -l`
@@ -147,6 +159,16 @@ if [ $composeFile = "deploy-compose.yaml" ]; then
     next_tst=`basename $tst`
     run_test $composeFile $next_tst
   done
+fi
+
+# Combine this run's coverage data with any from earlier runs, and report it
+if [ "$WMED_COVERAGE" = "true" ]; then
+  coverage_cfg=$TESTSDIR/coverage.cfg
+  python -m coverage combine --append --quiet --rcfile=$coverage_cfg &&
+    echo "Coverage of WMED's Python code (all runs since $WMED_COVERAGE_DIR was created):" &&
+    python -m coverage report --rcfile=$coverage_cfg &&
+    python -m coverage html --quiet --rcfile=$coverage_cfg &&
+    echo "HTML report: $WMED_COVERAGE_DIR/html/index.html"
 fi
 
 # See if ANY of the tests failed

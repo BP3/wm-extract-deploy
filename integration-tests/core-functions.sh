@@ -30,6 +30,8 @@ WMED_REPO=`cd $TESTSDIR/.. && pwd`
 #     contents are copied into the container's /local before the run and copied back out afterwards.
 #   WMED_RUN=local: runs the scripts from this checkout, with the 'python' on PATH (3.10 or later, with
 #     requirements.txt installed, e.g. an activated virtualenv), as you rather than bp3user.
+#     With WMED_COVERAGE=true as well, WMED's Python runs under coverage (requirements-test.txt), writing its data
+#     to $WMED_COVERAGE_DIR; test-runner.sh combines and reports it at the end.
 run_wmed () {
   wmed_dir=$1
   shift
@@ -78,12 +80,28 @@ run_wmed_local () {
   fi
 
   # The scripts expect the Python files next to them, as the Dockerfile arranges in the image
-  local_app=`mktemp -d`
+  local_app=`mktemp -d "${TMPDIR:-/tmp}/wmed-local.XXXXXX"`
   ln -s "$WMED_REPO"/scripts/*.sh "$WMED_REPO"/python/*.py "$local_app"/
 
+  local_path=$PATH
+  if [ "$WMED_COVERAGE" = "true" ]; then
+    if ! python -c 'import coverage' 2> /dev/null; then
+      echo "WMED_COVERAGE=true needs coverage installed for 'python' (pip install -r requirements-test.txt)"
+      rm -rf "$local_app"
+      return 1
+    fi
+    # The scripts run 'python', so put one first on PATH that runs WMED's Python under coverage. Coverage resolves
+    # the links, so it measures (and reports) the files in python/
+    mkdir "$local_app/bin"
+    printf '#!/bin/sh\nexec "%s" -m coverage run --rcfile="%s" --source="%s" "$@"\n' \
+      "`command -v python`" "$WMED_REPO/integration-tests/coverage.cfg" "$WMED_REPO/python" > "$local_app/bin/python"
+    chmod +x "$local_app/bin/python"
+    local_path="$local_app/bin:$PATH"
+  fi
+
   local_rc=0
-  (cd "$local_dir" && set -a && . "$local_env" && set +a && "$local_app"/extractDeploy.sh "$@" < /dev/null) \
-    || local_rc=$?
+  (cd "$local_dir" && set -a && . "$local_env" && set +a && PATH="$local_path" \
+    && "$local_app"/extractDeploy.sh "$@" < /dev/null) || local_rc=$?
 
   rm -rf "$local_app"
   return $local_rc
