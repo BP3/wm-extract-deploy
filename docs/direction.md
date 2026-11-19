@@ -126,6 +126,60 @@ To verify before building this:
 - **Whether the ids match.** Is the project id WMED stores the same id that `hub.projectId` expects?
 - **Whether WMED's Web Modeler API calls (`/api/v1/...`) still work against Camunda Hub in 8.10.**
 
+## Deprecation
+
+*Added 18 November 2026.* Features and settings that the decisions above make candidates for deprecation. None has
+been deprecated yet: this is a list to decide on, grouped by how firmly each one follows from the decisions.
+
+### Follow from decisions already made
+
+- **Deploy's git checkout (decision 2).** Once `scripts/deploy.sh` no longer fetches and checks out a ref,
+  `PROJECT_TAG` and `CICD_BRANCH` have no effect on deploy, `NO_GIT` and `NO_GIT_FETCH` have nothing to skip there,
+  and deploy no longer needs `GIT_USERNAME` or `GIT_USER_EMAIL`, because it never commits. Could be deprecated now,
+  with a warning when they're set for deploy.
+- **`CONTINUE_ON_ERROR` (decision 3).** File-by-file deploy allows partial deploys and exits 0 when files fail.
+  Deprecate it once the Web Modeler compatible and changed-only modes exist to replace it.
+- **`config.yml` and `WM_PROJECT_METADATA_FILE` (decision 5).** Deprecate once extract writes `camunda.json`, and
+  keep reading `config.yml` for at least one release.
+
+### Already deprecated, so candidates for removal
+
+- **Old setting names:** `CAMUNDA_CLUSTER_*` and `ZEEBE_CLUSTER_*` (now `CLUSTER_ID`, `CLUSTER_HOST`,
+  `CLUSTER_REGION`, `CLUSTER_PORT`), and `CAMUNDA_WM_CLIENT_*` and `ZEEBE_CLIENT_*` (now `OAUTH2_CLIENT_ID` and
+  `OAUTH2_CLIENT_SECRET`). They're hidden from `--help` but still work. `CLAUDE.md` says to keep them working, so
+  removing them means changing that and choosing the release they go in.
+- **`OAUTH_PLATFORM`** (KEYCLOAK/ENTRA). Its help already says to use scope and audience instead.
+
+### Depend on the open questions about REST and version support
+
+- **gRPC connection settings.** `CLUSTER_PORT` (default 26500) is gRPC only, and `CLUSTER_ID` with `CLUSTER_REGION`
+  is pyzeebe's SaaS connection. A REST client takes a single URL instead, as c8ctl does. If deploy moves to REST and
+  supports 8.8+ only, these are replaced, and 8.7 users stay on the current release.
+- **`ZEEBE_TENANT_IDS`.** The last setting with the `ZEEBE_` prefix. Rename it (to `TENANT_IDS`, say) and keep the
+  old name as a deprecated alias, as the other renames did. Cosmetic.
+
+### Need discussion
+
+- **Extract's git mode** (commit and push, with `CICD_PLATFORM`, `CICD_ACCESS_TOKEN`, `CICD_REPOSITORY_PATH`,
+  `CICD_SERVER_HOST`, `COMMIT_MSG` and `SKIP_CI`). Customers with source control are expected to use GitSync, and
+  the customer who is the reason extract stays has no source control, so uses `NO_GIT`. That makes git mode the part
+  of extract GitSync replaced. But maintenance only isn't the same as deprecated, and some customers may rely on it.
+- **`deploy templates` mode.** It uploads connector templates to Web Modeler and commits `config.*`. Nothing above
+  covers it. Find out whether anyone uses it, and whether Camunda Hub in 8.10 handles templates its own way.
+- **`OAUTH2_GRANT_TYPE=password`.** The password grant is being phased out in OAuth generally (OAuth 2.1 removes
+  it). Low priority; we don't know whether any customer uses it.
+
+### Not candidates
+
+The `CI` entrypoint behaviour for GitLab, `NO_GIT` for extract (the customer without source control needs it),
+`MODEL_PATH`, `EXCLUDE`, and the remaining `OAUTH2_*` settings.
+
+### How to deprecate
+
+- Python settings: `deprecated=True` on the option, as the old names and `OAUTH_PLATFORM` already use.
+- Settings only the shell scripts read (deploy's git settings, extract's git mode): print a warning from the script.
+- List each deprecation on the wiki, with its replacement and the release it will be removed in.
+
 ## Things we have verified
 
 Tested on Zeebe 8.7.5 and Camunda 8.10.7 in November 2026 (see `CLAUDE.md` for the full list):

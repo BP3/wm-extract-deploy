@@ -12,11 +12,30 @@ on:
       branch-name:
         required: true
         type: string
+    outputs:
+      image-tag:
+        description: The tag the image was pushed with, made from the branch name
+        value: ${{ jobs.build-image.outputs.image-tag }}
 
 jobs:
   build-image:
     runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.image-tag.outputs.image-tag }}
     steps:
+
+      # Docker tags allow only letters, digits, '_', '.' and '-' (up to 128), so a branch such as
+      # 'renovate/python-3.x' becomes 'renovate-python-3.x'. The branch name is passed in through env rather than
+      # written into the script, so a crafted branch name can't inject shell commands
+      - name: Make the image tag from the branch name
+        id: image-tag
+        env:
+          BRANCH_NAME: ${{ inputs.branch-name }}
+        run: |
+          tag=$(printf '%s' "$BRANCH_NAME" | tr -c 'A-Za-z0-9_.-' '-' | cut -c 1-128)
+          echo "branch-name = $BRANCH_NAME"
+          echo "image-tag = $tag"
+          echo "image-tag=$tag" >> "$GITHUB_OUTPUT"
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -29,13 +48,15 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Find previous image tagged with branch name - and delete it
+        env:
+          IMAGE_TAG: ${{ steps.image-tag.outputs.image-tag }}
         run: |
           id=$(curl -s -L \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/orgs/bp3/packages/container/wm-extract-deploy/versions" \
-              | jq -r ".[] | select(.metadata.container.tags | index(\"${{ inputs.branch-name }}\")) | .id")
+              | jq -r ".[] | select(.metadata.container.tags | index(\"$IMAGE_TAG\")) | .id")
           if [ "$id" != "" ]; then
             # First call is just to see the result
             curl -s -L \
@@ -52,11 +73,14 @@ jobs:
           fi
 
       - name: Build Docker image of application, tag with branch name
+        env:
+          IMAGE: ${{ inputs.image-name }}:${{ steps.image-tag.outputs.image-tag }}
         run: |
-          echo "image-name = ${{ inputs.image-name }}"
-          echo "branch-name = ${{ inputs.branch-name}}"
-          docker build -t ${{ inputs.image-name }}:${{ inputs.branch-name }} .
+          echo "image = $IMAGE"
+          docker build -t "$IMAGE" .
 
       - name: Push to local registry
+        env:
+          IMAGE: ${{ inputs.image-name }}:${{ steps.image-tag.outputs.image-tag }}
         run: |
-          docker push ${{ inputs.image-name }}:${{ inputs.branch-name }}
+          docker push "$IMAGE"
