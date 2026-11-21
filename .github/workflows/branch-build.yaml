@@ -57,7 +57,8 @@ jobs:
 
   # Runs the same suites as run-integration-tests, but from the checkout (WMED_RUN=local) with coverage measured
   # (WMED_COVERAGE=true), so it needs no image and runs alongside them. Image mode stays the real check of the image;
-  # this job reports which of WMED's Python lines the tests reach. The figures are a guide, not a gate: no thresholds.
+  # this job reports which of WMED's Python lines the tests reach. It fails if overall coverage drops below 60%, a
+  # starting point to review as the tests grow.
   measure-coverage:
     name: Measure coverage
     permissions:
@@ -139,5 +140,7 @@ jobs:
         with:
           coverageFile: integration-tests/coverage/coverage.xml
           token: ${{ secrets.GITHUB_TOKEN }}
+          # Fail if overall coverage is below 60%. Overall only: new and modified files have no threshold
+          thresholdAll: 0.6
           # No sourceDir: the XML already names files from the repository root (python/deploy.py), as in the PR's diff
           title: Coverage of WMED's Python code

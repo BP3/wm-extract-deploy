@@ -78,8 +78,9 @@ offer a Web Modeler compatible atomic mode and a changed-only mode, and a move f
 - CI (`.github/workflows/branch-build.yaml`) builds the branch image, then runs the extract and deploy suites. It
   runs on pull requests (and manually), not on a plain push. Alongside, the `measure-coverage` job runs both suites in
   local mode with `WMED_COVERAGE=true`, writes the coverage table to the run's summary page, uploads the HTML report as
-  the `coverage-html` artifact, and comments the figures on the PR (`orgoro/coverage`). It has no thresholds, so it
-  only fails if a test fails.
+  the `coverage-html` artifact, and comments the figures on the PR (`orgoro/coverage`). It fails if a test fails, or
+  if overall coverage is below 60% (`thresholdAll` in the workflow; a starting point, to review as the tests grow). The PR comment step
+  applies it, so it's only enforced on pull requests.
 - The testing plan (order of the testing work before the deploy refactoring) is kept outside the repo, as the
   "WMED Testing Plan" page.
 
