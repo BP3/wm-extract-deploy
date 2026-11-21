@@ -54,3 +54,90 @@ jobs:
 
       - name: Run deploy tests
         run: integration-tests/test-runner.sh "$IMAGE_TAG" deploy-compose.yaml
+
+  # Runs the same suites as run-integration-tests, but from the checkout (WMED_RUN=local) with coverage measured
+  # (WMED_COVERAGE=true), so it needs no image and runs alongside them. Image mode stays the real check of the image;
+  # this job reports which of WMED's Python lines the tests reach. The figures are a guide, not a gate: no thresholds.
+  measure-coverage:
+    name: Measure coverage
+    permissions:
+      contents: read
+      packages: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    env:
+      WMED_RUN: local
+      WMED_COVERAGE: "true"
+      # Where test-runner.sh writes the coverage data, also read by coverage.cfg for the reports
+      WMED_COVERAGE_DIR: ${{ github.workspace }}/integration-tests/coverage
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          # The image's Python version (see the Dockerfile)
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Install WMED's and the tests' Python dependencies
+        run: pip install -r requirements.txt -r requirements-test.txt
+
+      - name: Set up Docker and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose-v2 libxml2-utils
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pre-fetch the images we want to use
+        run: integration-tests/load-images.sh
+
+      # In local mode the image tag argument isn't used
+      - name: Run extract tests
+        run: integration-tests/test-runner.sh local extract-compose.yaml
+
+      - name: Run deploy tests
+        if: ${{ !cancelled() }}
+        run: integration-tests/test-runner.sh local deploy-compose.yaml
+
+      # Reported even if a test failed, from whatever ran
+      - name: Write the coverage reports
+        id: reports
+        if: ${{ !cancelled() }}
+        run: |
+          if [ ! -f "$WMED_COVERAGE_DIR/.coverage" ]; then
+            echo "No coverage data: no test ran WMED"
+            exit 0
+          fi
+          python -m coverage xml --rcfile=integration-tests/coverage.cfg
+          {
+            echo "## Coverage of WMED's Python code"
+            echo
+            python -m coverage report --format=markdown --rcfile=integration-tests/coverage.cfg
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "written=true" >> "$GITHUB_OUTPUT"
+
+      - name: Upload the HTML report
+        if: ${{ !cancelled() && steps.reports.outputs.written == 'true' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-html
+          path: integration-tests/coverage/html/
+
+      - name: Comment the coverage on the PR
+        if: ${{ !cancelled() && steps.reports.outputs.written == 'true' && github.event_name == 'pull_request' }}
+        # Pinned to the commit of v3.3.1, as a third-party action
+        uses: orgoro/coverage@ca0c362dc1a4f100447309405e6dfea47e251495 # v3.3.1
+        with:
+          coverageFile: integration-tests/coverage/coverage.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # No sourceDir: the XML already names files from the repository root (python/deploy.py), as in the PR's diff
+          title: Coverage of WMED's Python code
