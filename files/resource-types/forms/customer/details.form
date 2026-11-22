@@ -1,0 +1,15 @@
+{
+  "id": "customer-details",
+  "type": "default",
+  "schemaVersion": 16,
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.7.0",
+  "components": [
+    {
+      "label": "Customer name",
+      "type": "textfield",
+      "key": "customerName",
+      "id": "Field_customerName"
+    }
+  ]
+}

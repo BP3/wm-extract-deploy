@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_Discount" name="Discount" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="5.30.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.7.0">
+  <decision id="Decision_Discount" name="Discount">
+    <decisionTable id="DecisionTable_Discount">
+      <input id="Input_1" label="Order total">
+        <inputExpression id="InputExpression_1" typeRef="number">
+          <text>total</text>
+        </inputExpression>
+      </input>
+      <output id="Output_1" label="Discount" name="discount" typeRef="number" />
+      <rule id="Rule_1">
+        <inputEntry id="InputEntry_1">
+          <text>&gt;= 100</text>
+        </inputEntry>
+        <outputEntry id="OutputEntry_1">
+          <text>10</text>
+        </outputEntry>
+      </rule>
+      <rule id="Rule_2">
+        <inputEntry id="InputEntry_2">
+          <text>&lt; 100</text>
+        </inputEntry>
+        <outputEntry id="OutputEntry_2">
+          <text>0</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
