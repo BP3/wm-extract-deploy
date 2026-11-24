@@ -1,5 +1,5 @@
 pyzeebe==4.7.0
 ConfigArgParse==1.9.0
 requests==2.34.2
-pyyaml==6.0.3
+pyyaml==6.0.4
 humanize==4.17.0
