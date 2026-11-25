@@ -16,6 +16,31 @@ jobs:
       branch-name: ${{ github.head_ref || github.ref_name }}
     secrets: inherit
 
+  # The Python unit tests in tests/unit (pytest.ini sets the paths). They need no image or stack, so they run alongside
+  # the build and give a fast result
+  run-unit-tests:
+    name: Run unit tests
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          # The image's Python version (see the Dockerfile)
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Install WMED's and the tests' Python dependencies
+        run: pip install -r requirements.txt -r requirements-test.txt
+
+      - name: Run unit tests
+        run: python -m pytest
+
   run-integration-tests:
     name: Run Integration tests
     permissions:
