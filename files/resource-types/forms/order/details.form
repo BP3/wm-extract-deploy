@@ -1,0 +1,15 @@
+{
+  "id": "order-details",
+  "type": "default",
+  "schemaVersion": 16,
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.7.0",
+  "components": [
+    {
+      "label": "Order reference",
+      "type": "textfield",
+      "key": "orderName",
+      "id": "Field_orderName"
+    }
+  ]
+}

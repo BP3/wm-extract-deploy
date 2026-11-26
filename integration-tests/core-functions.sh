@@ -156,3 +156,12 @@ assert_xml_match () {
     exit 1
   fi
 }
+
+# Usage: assert_same_file <actual file> <expected file>
+# Fails unless the two files are byte for byte the same, as Zeebe compares resources.
+assert_same_file () {
+  if ! cmp "$1" "$2"; then
+    echo "'$1' is not the same as '$2'"
+    exit 1
+  fi
+}
