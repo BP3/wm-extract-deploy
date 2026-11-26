@@ -47,31 +47,8 @@ jobs:
           username: ${{ inputs.username }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Find previous image tagged with branch name - and delete it
-        env:
-          IMAGE_TAG: ${{ steps.image-tag.outputs.image-tag }}
-        run: |
-          id=$(curl -s -L \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/orgs/bp3/packages/container/wm-extract-deploy/versions" \
-              | jq -r ".[] | select(.metadata.container.tags | index(\"$IMAGE_TAG\")) | .id")
-          if [ "$id" != "" ]; then
-            # First call is just to see the result
-            curl -s -L \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/orgs/bp3/packages/container/wm-extract-deploy/versions/$id"
-            # Second call does the actual delete
-            curl -s -L -X DELETE \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/orgs/bp3/packages/container/wm-extract-deploy/versions/$id"
-          fi
-
+      # Pushing moves the branch's tag to the new image. The old one is left untagged, along with its platform and
+      # attestation manifests, and clean-up-images.yaml deletes it later (#125)
       - name: Build Docker image of application, tag with branch name
         env:
           IMAGE: ${{ inputs.image-name }}:${{ steps.image-tag.outputs.image-tag }}
