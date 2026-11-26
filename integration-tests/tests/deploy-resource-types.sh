@@ -65,8 +65,8 @@ Given () {
   mkdir -p $TESTSDIR/$TESTNAME/deploy-files
   cp -R $MODELS/. $TESTSDIR/$TESTNAME/deploy-files
 
-  # The stack keeps its data between runs, so note the latest deployment of these models before deploying, and check
-  # only a newer one
+  # Note the latest deployment of these models before deploying, and check only a newer one, so the test can't pass on
+  # an earlier deployment even if the stack isn't empty
   deployment_before=$(latest_deployment_key_with_process "Process_ResourceTypes")
   echo "Latest deployment with these models before the deploy: $deployment_before"
 
@@ -98,7 +98,6 @@ Then () {
   deployed=$(echo "$response" | jq -r '[.hits.hits[0]._source.value |
     (.processesMetadata[], .decisionRequirementsMetadata[], .formMetadata[]) | .resourceName] | sort | join(" ")')
   assert_equals "$deployed" "approval.bpmn details.form details.form discount.dmn"
-  # On a stack with data from an earlier run, the same content is a duplicate of version 1, not a new version
   versions=$(echo "$response" | jq -r '[.hits.hits[0]._source.value |
     (.processesMetadata[].version, .decisionsMetadata[].version, .formMetadata[].version)] | unique | join(" ")')
   assert_equals "$versions" "$expected_version"

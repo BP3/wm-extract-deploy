@@ -151,8 +151,9 @@ get_latest_deployment_with_process () {
 }
 
 # Usage: latest_deployment_key_with_process <bpmnProcessId>
-# Prints the key of the latest deployment that included the process, or 0 if there is none. The test stacks keep their
-# data between runs, so a test notes this before deploying and then waits for a newer deployment.
+# Prints the key of the latest deployment that included the process, or 0 if there is none. A test notes this before
+# deploying and then waits for a newer deployment, so it can only pass on its own deployment, even on a stack that
+# wasn't empty (test-runner.sh starts each test on an empty one).
 latest_deployment_key_with_process () {
   get_latest_deployment_with_process "$1"
   echo "$response" | jq '.hits.hits[0]._source.key // 0'
@@ -160,7 +161,7 @@ latest_deployment_key_with_process () {
 
 # Usage: wait_for_deployment_with_process <bpmnProcessId> <key before the deploy>
 # Waits until the exporter shows a deployment that included the process and is newer than the given key, so the checks
-# are on this test's deployment, not one left from an earlier run. Leaves its record in $response.
+# are on this test's deployment, not an earlier one. Leaves its record in $response.
 wait_for_deployment_with_process () {
   wait_id=$1
   wait_after=$2
