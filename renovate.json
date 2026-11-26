@@ -13,8 +13,8 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Test stack image versions in .env, each marked with a '# renovate: datasource=… depName=…' comment",
-      "managerFilePatterns": ["/^\\.env$/"],
+      "description": "Test stack image versions in .env (Camunda 8.7) and .env-8.8, each marked with a '# renovate: datasource=… depName=…' comment",
+      "managerFilePatterns": ["/^\\.env$/", "/^\\.env-8\\.8$/"],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+\\w+_VERSION=(?<currentValue>\\S+)"
       ]
@@ -23,7 +23,7 @@
   "packageRules": [
     {
       "description": "Test stack images: CI pulls them from ghcr.io/bp3, so a new version has to be mirrored there before the integration tests can pass",
-      "matchFileNames": [".env"],
+      "matchFileNames": [".env", ".env-8.8"],
       "labels": ["dependencies", "needs-image-mirror"],
       "prBodyNotes": [
         "**Before CI can pass**, mirror the new image versions into `ghcr.io/bp3` from this branch: run `DRY_RUN=true tools/sync-images-to-ghcr.sh`, then `tools/sync-images-to-ghcr.sh` (needs `GHCR_PAT`, `GITHUB_USERNAME` and `docker login` to Docker Hub)."
@@ -36,15 +36,21 @@
       "groupName": "Camunda test stack"
     },
     {
-      "description": "Moving the test stack to a new Camunda minor version (e.g. 8.8) is a deliberate change, not a routine update",
-      "matchFileNames": [".env"],
+      "description": "The Camunda 8.8 stacks' images move together too, in a PR of their own",
+      "matchFileNames": [".env-8.8"],
+      "matchPackageNames": ["camunda/**"],
+      "groupName": "Camunda 8.8 test stack"
+    },
+    {
+      "description": "Moving a test stack to a new Camunda minor version (e.g. 8.9) is a deliberate change, not a routine update",
+      "matchFileNames": [".env", ".env-8.8"],
       "matchPackageNames": ["camunda/**"],
       "matchUpdateTypes": ["minor", "major"],
       "enabled": false
     },
     {
-      "description": "Stay on Elasticsearch 8, which the Camunda 8.7 test stack supports",
-      "matchFileNames": [".env"],
+      "description": "Stay on Elasticsearch 8, which the Camunda 8.7 and 8.8 test stacks support",
+      "matchFileNames": [".env", ".env-8.8"],
       "matchPackageNames": ["elasticsearch"],
       "matchUpdateTypes": ["major"],
       "enabled": false

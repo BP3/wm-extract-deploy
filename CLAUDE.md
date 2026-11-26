@@ -35,10 +35,14 @@ offer a Web Modeler compatible atomic mode and a changed-only mode, and a move f
   for extract, Web Modeler or identity. Their image versions are in `.env` and come from `ghcr.io/bp3`, which
   needs `docker login ghcr.io`.
 - The images in `ghcr.io/bp3` are mirrored from their upstream sources with every platform, so the stacks run
-  natively on Apple Silicon as well as on the amd64 CI runners. When a version in `.env` changes, re-mirror with
-  `tools/sync-images-to-ghcr.sh` (`DRY_RUN=true` first; it needs `GHCR_PAT` with `write:packages`,
+  natively on Apple Silicon as well as on the amd64 CI runners. When a version in `.env` or `.env-8.8` changes,
+  re-mirror with `tools/sync-images-to-ghcr.sh` (`DRY_RUN=true` first; it needs `GHCR_PAT` with `write:packages`,
   `GITHUB_USERNAME`, and `docker login` to Docker Hub to avoid its rate limit). Docker keeps images it has already
   pulled, so after a re-mirror run `docker compose -f <file> pull` to replace them.
+- The Camunda 8.8 stacks (#123) have their versions in `.env-8.8` (used with `docker compose --env-file .env-8.8`).
+  Until their compose files exist, the sync script reads their images from `tools/images-8.8.txt`; 8.8 compose files
+  are named `*-8.8-compose.yaml` so the script reads them with `.env-8.8`. Camunda's Keycloak (used from 8.8) is
+  mirrored as `camunda-keycloak`, since `keycloak` is Bitnami's.
 - Always use `docker compose` (the plugin). GitHub's Ubuntu 26.04 runners don't have the standalone `docker-compose`.
 
 ## Integration tests

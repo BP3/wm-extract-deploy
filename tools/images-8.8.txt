@@ -1,0 +1,13 @@
+# The images the Camunda 8.8 test stacks use (#123), for tools/sync-images-to-ghcr.sh to mirror into ghcr.io/bp3.
+# The script reads the 8.7 images from the compose files; the 8.8 stacks' compose files don't exist yet, so their
+# images are listed here, in the compose files' form, with the versions from .env-8.8. Once the 8.8 compose files
+# exist, the script reads them too, and this list can go.
+image: ${CAMUNDA_REGISTRY}/camunda:${CAMUNDA_VERSION}
+image: ${ELASTIC_REGISTRY}/elasticsearch:${ELASTIC_VERSION}
+image: ${CAMUNDA_REGISTRY}/identity:${CAMUNDA_IDENTITY_VERSION}
+image: ${CAMUNDA_REGISTRY}/web-modeler-restapi:${CAMUNDA_WEB_MODELER_VERSION}
+image: ${CAMUNDA_REGISTRY}/web-modeler-webapp:${CAMUNDA_WEB_MODELER_VERSION}
+image: ${CAMUNDA_REGISTRY}/web-modeler-websockets:${CAMUNDA_WEB_MODELER_VERSION}
+image: ${CAMUNDA_REGISTRY}/camunda-keycloak:${KEYCLOAK_SERVER_VERSION}
+image: ${POSTGRES_REGISTRY}/postgres:${POSTGRES_VERSION}
+image: ${MAILPIT_REGISTRY}/mailpit:${MAILPIT_VERSION}
