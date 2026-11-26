@@ -107,6 +107,13 @@ wait_for_stack () {
   fi
 }
 
+# Usage: stack_down <compose file>
+# Stops the stack and removes its volumes, so no test sees the deployments, processes or exporter records of an earlier
+# test or run (#117). Each test starts on an empty stack, as on CI's fresh runners.
+stack_down () {
+  docker compose -f $1 down -v
+}
+
 #
 # This function will run a single test. It runs the actual test in a new shell.
 # Each test enables "set -e" itself, and we also pass -e here as a backstop for any test that forgets to.
@@ -119,12 +126,14 @@ wait_for_stack () {
 run_test () {
   # The Compose plugin ('docker compose'), not the standalone 'docker-compose' command, which current GitHub runners
   # don't have: on Ubuntu 26.04 the docker-compose package only provides the plugin
+  # Start from an empty stack, even if one was left running or a run was interrupted before its teardown
+  stack_down $1
   docker compose -f $1 up -d
   echo "Waiting for the compose stack to be ready (up to ${STACK_WAIT_SECONDS}s for each service) ..."
   if ! wait_for_stack $1; then
     echo "Test '$2' not run: the compose stack wasn't ready"
     testStatus='Failure'
-    docker compose -f $1 down
+    stack_down $1
     return
   fi
 
@@ -141,7 +150,7 @@ run_test () {
   fi
 
   # Kind of want a "finally" section to execute this in - it always has to happen
-  docker compose -f $1 down
+  stack_down $1
 }
 
 if [ $composeFile = "extract-compose.yaml" ]; then

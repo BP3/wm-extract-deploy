@@ -77,9 +77,10 @@ offer a Web Modeler compatible atomic mode and a changed-only mode, and a move f
 - On the 8.7 stack, Operate shows processes and decisions, but nothing shows forms, so deploy tests read Zeebe's
   Elasticsearch exporter records (`zeebe-record_form_*`, `zeebe-record_deployment_*` on port 9200) for forms and for
   what went into a deployment. They're internal records, not an API: move these checks to `/v2` with Camunda 8.8+.
-- The stacks keep their data between runs (`docker compose down` keeps the volumes), so a check can pass on an earlier
-  run's deployment. Note the latest deployment before deploying and wait for a newer one
-  (`latest_deployment_key_with_process`, `wait_for_deployment_with_process`), as `deploy-resource-types.sh` does.
+- `test-runner.sh` removes the stack's volumes before and after each test (`docker compose down -v`), so each test
+  starts on an empty stack, as on CI. Checks should still be specific to their own deployment where that's cheap:
+  note the latest deployment before deploying and wait for a newer one (`latest_deployment_key_with_process`,
+  `wait_for_deployment_with_process`), as `deploy-resource-types.sh` does.
 - Needs `jq`, `yq` (mikefarah's) and `xmllint` on the host.
 - CI (`.github/workflows/branch-build.yaml`) builds the branch image, then runs the extract and deploy suites. It
   runs on pull requests (and manually), not on a plain push. Alongside, the `measure-coverage` job runs both suites in
