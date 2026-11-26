@@ -30,19 +30,18 @@
 #   tools/sync-images-to-ghcr.sh                 # copy (needs GHCR_PAT and GITHUB_USERNAME)
 #
 # GHCR_PAT is a classic personal access token with the write:packages scope.
+#
+# The images come from the 8.7 compose files, with the versions in .env, and from the Camunda 8.8 stacks (#123):
+# their compose files (*-8.8-compose.yaml) and tools/images-8.8.txt, with the versions in .env-8.8.
 
-envFile=.env
 target=ghcr.io/bp3
 
-# Load environment variables
-. ./$envFile
-
 # Usage: upstream_for <image name>
-# Where each image we mirror comes from. The compose files read the images from ghcr.io/bp3 (via .env),
+# Where each image we mirror comes from. The compose files read the images from ghcr.io/bp3 (via .env or .env-8.8),
 # so the upstream source has to be listed here.
 upstream_for () {
   case $1 in
-    zeebe|operate|identity|web-modeler-restapi|web-modeler-webapp|web-modeler-websockets)
+    camunda|zeebe|operate|identity|web-modeler-restapi|web-modeler-webapp|web-modeler-websockets)
       echo docker.io/camunda/$1 ;;
     elasticsearch)
       echo docker.elastic.co/elasticsearch/elasticsearch ;;
@@ -51,11 +50,28 @@ upstream_for () {
     keycloak)
       # Bitnami removed its images from bitnami/keycloak; the same builds are kept in bitnamilegacy
       echo docker.io/bitnamilegacy/keycloak ;;
+    camunda-keycloak)
+      # Camunda's own Keycloak image, used from 8.8. Mirrored under another name, as keycloak is Bitnami's
+      echo docker.io/camunda/keycloak ;;
     mailpit)
       echo docker.io/axllent/mailpit ;;
     *)
       return 1 ;;
   esac
+}
+
+# Usage: image_refs <env file> [file...]
+# Prints name:tag for each 'image:' line in the files, with the env file's registry and version variables filled in
+image_refs () {
+  (
+    . ./$1
+    shift
+    [ $# -gt 0 ] || exit 0
+    cat "$@" | grep -v '^ *#' | grep 'image:' | sed 's/.*image: *//' | while read imgRef; do
+      # Use eval to de-reference the registry and version EnvVars, and basename to get just name:tag
+      basename `eval echo "$imgRef"`
+    done
+  )
 }
 
 # Usage: platforms_of <image reference>
@@ -70,11 +86,10 @@ if [ "$DRY_RUN" != "true" ]; then
   echo "$GHCR_PAT" | docker login ghcr.io -u "$GITHUB_USERNAME" --password-stdin
 fi
 
-# Read compose file(s) to find which images we need, as name:tag
-images=`cat *-compose.yaml | grep -v '^ *#' | grep 'image:' | sed 's/.*image: *//' | sort -u | while read imgRef; do
-  # Use eval to de-reference the registry and version EnvVars, and basename to get just name:tag
-  basename \`eval echo "$imgRef"\`
-done`
+# Find which images we need, as name:tag: the 8.7 compose files with .env, and the 8.8 ones with .env-8.8
+compose_87=`ls *-compose.yaml | grep -v -- '-8\.8-compose\.yaml$' || true`
+compose_88=`ls *-8.8-compose.yaml 2>/dev/null || true`
+images=`{ image_refs .env $compose_87; image_refs .env-8.8 tools/images-8.8.txt $compose_88; } | sort -u`
 
 failed=0
 for image in $images; do
