@@ -1,0 +1,106 @@
+# Removes images from ghcr.io/bp3/wm-extract-deploy that nothing needs any more (#125).
+#
+# Each build pushes three package versions: a tagged image index, and its untagged amd64 image and provenance
+# attestation manifests. The untagged ones belong to the tagged image, so they can't simply be deleted: that breaks
+# the image. dataaxiom/ghcr-cleanup-action understands this. It deletes a tag together with the manifests under it,
+# and deletes untagged versions only when no tagged image uses them.
+#
+#   - When a pull request closes, its branch's image goes.
+#   - Every week (and when run by hand), images for branches that no longer exist go, and so do untagged versions
+#     that no tagged image uses: old images whose tag moved on to a newer build of the branch or of main.
+#
+# 'main', 'latest' and the release tags (e.g. 2.3.3) are always kept.
+#
+# Deleting needs the repository to have the Admin role on the package (Package settings, Manage Actions access).
+
+name: Clean up images
+
+on:
+  pull_request:
+    types:
+      - closed
+  schedule:
+    # Mondays, 05:17 UTC
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Only list what would be deleted
+        type: boolean
+        default: true
+
+env:
+  PACKAGE: wm-extract-deploy
+  # Never deleted, whatever else the job works out. Release tags are versions such as 2.3.3
+  KEEP_TAGS: main,latest,*.*.*
+
+concurrency:
+  group: clean-up-images
+  cancel-in-progress: false
+
+jobs:
+  delete-pull-request-image:
+    name: Delete the pull request's image
+    # A pull request from a fork can't push an image, and its token can't delete one
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      # The same tag build-image.yaml pushes the branch's image with
+      - name: Make the image tag from the branch name
+        id: image-tag
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          tag=$(printf '%s' "$BRANCH_NAME" | tr -c 'A-Za-z0-9_.-' '-' | cut -c 1-128)
+          echo "image-tag = $tag"
+          echo "image-tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Delete the image
+        uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          package: ${{ env.PACKAGE }}
+          delete-tags: ${{ steps.image-tag.outputs.image-tag }}
+          exclude-tags: ${{ env.KEEP_TAGS }}
+
+  delete-stale-images:
+    name: Delete stale branch images and unused untagged versions
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      # A tag is stale when it isn't kept and no branch has it as its image tag (made as build-image.yaml makes it)
+      - name: Find the tags of branches that no longer exist
+        id: stale
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Stop if either listing fails: a missing branch list would make every branch's image look stale
+          set -o pipefail
+          gh api --paginate "/orgs/${GITHUB_REPOSITORY_OWNER}/packages/container/${PACKAGE}/versions?per_page=100" \
+            --jq '.[].metadata.container.tags[]' | sort -u > tags.txt
+          {
+            printf 'main\nlatest\n'
+            gh api --paginate "/repos/${GITHUB_REPOSITORY}/branches?per_page=100" --jq '.[].name' |
+              tr -c 'A-Za-z0-9_.\n-' '-' | cut -c 1-128
+          } | sort -u > keep.txt
+          stale=$({ grep -v -x -E '[0-9]+\.[0-9]+\.[0-9]+.*' tags.txt || true; } | { grep -v -x -F -f keep.txt || true; } |
+            paste -s -d , -)
+          echo "Tags: $(paste -s -d ' ' - < tags.txt)"
+          echo "Stale: ${stale:-none}"
+          echo "tags=$stale" >> "$GITHUB_OUTPUT"
+
+      - name: Delete them, and untagged versions no tagged image uses
+        uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          package: ${{ env.PACKAGE }}
+          delete-tags: ${{ steps.stale.outputs.tags }}
+          exclude-tags: ${{ env.KEEP_TAGS }}
+          delete-untagged: true
+          # Leave alone anything pushed in the last hour, so a build that is still pushing isn't caught half way
+          older-than: 1 hour
+          # A scheduled run deletes; a run by hand only lists, unless dry-run is unticked
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run }}

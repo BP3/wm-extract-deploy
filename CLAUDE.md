@@ -87,6 +87,11 @@ offer a Web Modeler compatible atomic mode and a changed-only mode, and a move f
   the `coverage-html` artifact, and comments the figures on the PR (`orgoro/coverage`). It fails if a test fails, or
   if overall coverage is below 60% (`thresholdAll` in the workflow; a starting point, to review as the tests grow). The PR comment step
   applies it, so it's only enforced on pull requests.
+- Each image build pushes three package versions to `ghcr.io/bp3/wm-extract-deploy`: a tagged image index and its
+  untagged amd64 and attestation manifests. Never delete untagged versions blindly, since that breaks tagged images.
+  `clean-up-images.yaml` (`dataaxiom/ghcr-cleanup-action`) deletes a closed PR's branch image, and weekly, images of
+  branches that no longer exist and untagged versions no tagged image uses. It always keeps `main`, `latest` and the
+  release tags. Run it by hand with `dry-run` (the default) to see what it would delete.
 - The testing plan (order of the testing work before the deploy refactoring) is kept outside the repo, as the
   "WMED Testing Plan" page.
 
