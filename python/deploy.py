@@ -86,7 +86,10 @@ class Deployment(ModelAction):
         self.zeebe_client = ZeebeClient(grpc_channel)
 
     async def deploy(self, resource_file_paths: List[os.PathLike[str]], tenant_id: str = None) -> None:
-        self.logger.info("Deploying resources: %s" + (" to tenant %s".format(tenant_id) if tenant_id is not None else "") + "...", resource_file_paths)
+        if tenant_id is not None:
+            self.logger.info("Deploying resources: %s to tenant %s...", resource_file_paths, tenant_id)
+        else:
+            self.logger.info("Deploying resources: %s...", resource_file_paths)
 
         total_resource_sizes = sum(self.get_resource_size(resource_file_path)
                                    for resource_file_path in resource_file_paths)
