@@ -198,6 +198,24 @@ def test_each_tenant_gets_its_own_deployment(channels, tmp_path):
     assert all(len(files) == 2 for files, _ in deployments)
 
 
+def test_logs_the_tenant_it_deploys_to(channels, tmp_path, caplog):
+    # #114: the tenant went into the message with str.format, leaving a %s with no argument, so each tenant's line
+    # failed with "not enough arguments for format string" instead of being logged
+    write_models(tmp_path, "a.bpmn")
+    deployment = Deployment(make_args(model_path=str(tmp_path), cluster_host="zeebe.local",
+                                      tenant_ids="tenant-a,tenant-b"))
+    # INFO, as the line isn't logged at the ERROR level make_args sets. caplog fails the test if a line can't be logged
+    caplog.set_level(logging.INFO, logger="Deployment")
+
+    asyncio.run(deployment.main())
+
+    deploying = sorted(record.getMessage() for record in caplog.records
+                       if record.getMessage().startswith("Deploying resources"))
+    file = str(tmp_path / "a.bpmn")
+    assert deploying == [f"Deploying resources: ['{file}'] to tenant tenant-a...",
+                         f"Deploying resources: ['{file}'] to tenant tenant-b..."]
+
+
 # CONTINUE_ON_ERROR
 
 def test_continue_on_error_deploys_file_by_file_past_a_failure(channels, tmp_path):
